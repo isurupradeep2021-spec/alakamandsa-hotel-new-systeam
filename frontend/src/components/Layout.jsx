@@ -1,0 +1,64 @@
+import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+const menuByRole = {
+  SUPER_ADMIN: [
+    { to: '/dashboard', label: 'Dashboard' },
+    { to: '/staff', label: 'User Management' },
+    { to: '/payroll', label: 'Payroll System' },
+    { to: '/profile', label: 'My Profile' }
+  ],
+  MANAGER: [
+    { to: '/dashboard', label: 'Dashboard' },
+    { to: '/staff', label: 'Staff Management' },
+    { to: '/payroll', label: 'Payroll System' },
+    { to: '/profile', label: 'My Profile' }
+  ],
+  STAFF_MEMBER: [{ to: '/my-payroll', label: 'My Salary' }, { to: '/profile', label: 'My Profile' }],
+  CUSTOMER: [{ to: '/dashboard', label: 'Customer Dashboard' }, { to: '/profile', label: 'My Profile' }],
+  RESTAURANT_MANAGER: [{ to: '/dashboard', label: 'Restaurant Dashboard' }, { to: '/profile', label: 'My Profile' }],
+  EVENT_MANAGER: [{ to: '/dashboard', label: 'Event Dashboard' }, { to: '/profile', label: 'My Profile' }]
+};
+
+function Layout() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const menu = menuByRole[user?.role] || [];
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div>
+          <h1>HotelFlow</h1>
+          <p className="sub">ALAKAMANDA HOTEL</p>
+        </div>
+        <nav>
+          {menu.map((item) => (
+            <Link key={item.to} to={item.to}>{item.label}</Link>
+          ))}
+        </nav>
+        <button
+          className="btn ghost"
+          onClick={() => {
+            logout();
+            navigate('/login');
+          }}
+        >
+          Logout
+        </button>
+      </aside>
+
+      <main className="main">
+        <header className="topbar">
+          <div>
+            <h2>{user?.fullName}</h2>
+            <p>{user?.role}</p>
+          </div>
+        </header>
+        <Outlet />
+      </main>
+    </div>
+  );
+}
+
+export default Layout;
