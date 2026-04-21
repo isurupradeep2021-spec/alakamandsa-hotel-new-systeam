@@ -197,6 +197,24 @@ textarea {
     grid-column: 1 / -1;
 }
 
+.latest-records-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 14px;
+}
+
+.latest-records-panel {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 14px;
+    background: #fbfdff;
+}
+
+.latest-records-panel h4 {
+    margin: 0 0 10px;
+    font-size: 16px;
+}
+
 .form-grid label {
     font-size: 13px;
     font-weight: 700;

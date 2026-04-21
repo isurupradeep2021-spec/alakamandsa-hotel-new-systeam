@@ -23,3 +23,9 @@ export const changeMyPassword = (payload) => http.post("/users/me/change-passwor
 
 export const createRoomRecord = (payload) => http.post("/rooms", payload);
 export const createRoomBooking = (payload) => http.post("/room-bookings", payload);
+export const getRooms = () => http.get("/rooms");
+export const updateRoomRecord = (id, payload) => http.put(`/rooms/${id}`, payload);
+export const deleteRoomRecord = (id) => http.delete(`/rooms/${id}`);
+export const getRoomBookings = () => http.get("/room-bookings");
+export const updateRoomBooking = (id, payload) => http.put(`/room-bookings/${id}`, payload);
+export const deleteRoomBooking = (id) => http.delete(`/room-bookings/${id}`);
