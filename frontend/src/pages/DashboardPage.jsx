@@ -7,6 +7,19 @@ function DashboardPage() {
     const { user } = useAuth();
     const [summary, setSummary] = useState(null);
 
+    const formatChange = (value) => {
+        const numeric = Number(value || 0);
+        const sign = numeric > 0 ? "+" : "";
+        return `${sign}${numeric.toFixed(1)}% this week`;
+    };
+
+    const changeClass = (value) => {
+        const numeric = Number(value || 0);
+        if (numeric > 0) return "change-positive";
+        if (numeric < 0) return "change-negative";
+        return "change-neutral";
+    };
+
     useEffect(() => {
         if (user?.role === "SUPER_ADMIN" || user?.role === "MANAGER") {
             getDashboardSummary()
@@ -38,6 +51,53 @@ function DashboardPage() {
                 <h3>Payroll Records</h3>
                 <p>{summary?.totalPayrollRecords ?? 0}</p>
             </div>
+            {user?.role === "MANAGER" && (
+                <>
+                    <div className="card stat">
+                        <h3>Total Rooms</h3>
+                        <p>{summary?.totalRooms ?? 0}</p>
+                        <small className={changeClass(summary?.totalRoomsChangePercent)}>
+                            ({formatChange(summary?.totalRoomsChangePercent)})
+                        </small>
+                    </div>
+                    <div className="card stat">
+                        <h3>Room Bookings</h3>
+                        <p>{summary?.roomBookings ?? 0}</p>
+                        <small className={changeClass(summary?.roomBookingsChangePercent)}>
+                            ({formatChange(summary?.roomBookingsChangePercent)})
+                        </small>
+                    </div>
+                    <div className="card">
+                        <h3>Room Booking Insights</h3>
+                        <div className="insight-grid">
+                            <section>
+                                <h4>Most Booked Rooms</h4>
+                                <ul className="insight-list">
+                                    {(summary?.mostBookedRooms || []).map((item) => (
+                                        <li key={`most-${item.roomNumber}`}>
+                                            <span>{item.roomNumber}</span>
+                                            <strong>{item.bookings}</strong>
+                                        </li>
+                                    ))}
+                                    {(summary?.mostBookedRooms || []).length === 0 && <li>No bookings yet</li>}
+                                </ul>
+                            </section>
+                            <section>
+                                <h4>Least Booked Rooms</h4>
+                                <ul className="insight-list">
+                                    {(summary?.leastBookedRooms || []).map((item) => (
+                                        <li key={`least-${item.roomNumber}`}>
+                                            <span>{item.roomNumber}</span>
+                                            <strong>{item.bookings}</strong>
+                                        </li>
+                                    ))}
+                                    {(summary?.leastBookedRooms || []).length === 0 && <li>No bookings yet</li>}
+                                </ul>
+                            </section>
+                        </div>
+                    </div>
+                </>
+            )}
             {user?.role === "MANAGER" && (
                 <div className="card">
                     <h3>Room Management</h3>
