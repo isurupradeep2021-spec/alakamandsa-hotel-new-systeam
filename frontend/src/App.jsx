@@ -5,6 +5,10 @@ import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import PayrollPage from './pages/PayrollPage';
 import ProfilePage from './pages/ProfilePage';
+import DiningPage from './pages/DiningPage';
+import ReserveTablePage from './pages/ReserveTablePage';
+import MenuManagementPage from './pages/MenuManagementPage';
+import TableReservationsPage from './pages/TableReservationsPage';
 import StaffPage from './pages/StaffPage';
 
 function App() {
@@ -45,6 +49,42 @@ function App() {
           }
         />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route
+          path="/dining"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER', 'RESTAURANT_MANAGER']}>
+              <DiningPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reserve-table"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']}>
+              <ReserveTablePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/menu-management"
+          element={
+            <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'MANAGER']}>
+              <MenuManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/table-reservations"
+          element={
+            <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'MANAGER', 'RESTAURANT_MANAGER']}>
+              <TableReservationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reservations"
+          element={<Navigate to="/table-reservations" replace />}
+        />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />
