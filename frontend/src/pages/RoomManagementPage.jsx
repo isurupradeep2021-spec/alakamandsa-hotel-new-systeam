@@ -1,14 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-    createRoomBooking,
-    createRoomRecord,
-    deleteRoomBooking,
-    deleteRoomRecord,
-    getRoomBookings,
-    getRooms,
-    updateRoomBooking,
-    updateRoomRecord,
-} from "../api/service";
+import { createRoomBooking, createRoomRecord, deleteRoomBooking, deleteRoomRecord, getRoomBookings, getRooms, updateRoomBooking, updateRoomRecord } from "../api/service";
 
 const initialRoomForm = {
     roomNumber: "",
@@ -174,12 +165,7 @@ function RoomManagementPage() {
                     <div className="form-grid">
                         <div>
                             <label>Room Number</label>
-                            <input
-                                value={roomForm.roomNumber}
-                                onChange={(e) => setRoomForm({ ...roomForm, roomNumber: e.target.value })}
-                                placeholder="Ex: 101"
-                                required
-                            />
+                            <input value={roomForm.roomNumber} onChange={(e) => setRoomForm({ ...roomForm, roomNumber: e.target.value })} placeholder="Ex: 101" required />
                         </div>
                         <div>
                             <label>Room Type</label>
@@ -192,55 +178,23 @@ function RoomManagementPage() {
                         </div>
                         <div>
                             <label>Photo URL</label>
-                            <input
-                                type="url"
-                                value={roomForm.photoUrl}
-                                onChange={(e) => setRoomForm({ ...roomForm, photoUrl: e.target.value })}
-                                placeholder="https://example.com/room.jpg"
-                                required
-                            />
+                            <input type="url" value={roomForm.photoUrl} onChange={(e) => setRoomForm({ ...roomForm, photoUrl: e.target.value })} placeholder="https://example.com/room.jpg" required />
                         </div>
                         <div>
                             <label>Capacity</label>
-                            <input
-                                type="number"
-                                min="1"
-                                value={roomForm.capacity}
-                                onChange={(e) => setRoomForm({ ...roomForm, capacity: e.target.value })}
-                                required
-                            />
+                            <input type="number" min="1" value={roomForm.capacity} onChange={(e) => setRoomForm({ ...roomForm, capacity: e.target.value })} required />
                         </div>
                         <div>
                             <label>Normal Price</label>
-                            <input
-                                type="number"
-                                min="0.01"
-                                step="0.01"
-                                value={roomForm.normalPrice}
-                                onChange={(e) => setRoomForm({ ...roomForm, normalPrice: e.target.value })}
-                                required
-                            />
+                            <input type="number" min="0.01" step="0.01" value={roomForm.normalPrice} onChange={(e) => setRoomForm({ ...roomForm, normalPrice: e.target.value })} required />
                         </div>
                         <div>
                             <label>Weekend Price</label>
-                            <input
-                                type="number"
-                                min="0.01"
-                                step="0.01"
-                                value={roomForm.weekendPrice}
-                                onChange={(e) => setRoomForm({ ...roomForm, weekendPrice: e.target.value })}
-                                required
-                            />
+                            <input type="number" min="0.01" step="0.01" value={roomForm.weekendPrice} onChange={(e) => setRoomForm({ ...roomForm, weekendPrice: e.target.value })} required />
                         </div>
                         <div>
                             <label>Seasonal Price (Optional)</label>
-                            <input
-                                type="number"
-                                min="0.01"
-                                step="0.01"
-                                value={roomForm.seasonalPrice}
-                                onChange={(e) => setRoomForm({ ...roomForm, seasonalPrice: e.target.value })}
-                            />
+                            <input type="number" min="0.01" step="0.01" value={roomForm.seasonalPrice} onChange={(e) => setRoomForm({ ...roomForm, seasonalPrice: e.target.value })} />
                         </div>
                         <div>
                             <label>Room Status</label>
@@ -269,7 +223,14 @@ function RoomManagementPage() {
                             {editingRoomId ? "Update Room" : "Create Record"}
                         </button>
                         {editingRoomId && (
-                            <button className="btn ghost" type="button" onClick={() => { setEditingRoomId(null); setRoomForm(initialRoomForm); }}>
+                            <button
+                                className="btn ghost"
+                                type="button"
+                                onClick={() => {
+                                    setEditingRoomId(null);
+                                    setRoomForm(initialRoomForm);
+                                }}
+                            >
                                 Cancel Edit
                             </button>
                         )}
@@ -288,12 +249,7 @@ function RoomManagementPage() {
                     <div className="form-grid">
                         <div>
                             <label>Booking Customer</label>
-                            <input
-                                value={bookingForm.bookingCustomer}
-                                onChange={(e) => setBookingForm({ ...bookingForm, bookingCustomer: e.target.value })}
-                                placeholder="Customer User"
-                                required
-                            />
+                            <input value={bookingForm.bookingCustomer} onChange={(e) => setBookingForm({ ...bookingForm, bookingCustomer: e.target.value })} placeholder="Customer User" required />
                         </div>
                         <div>
                             <label>Customer Email</label>
@@ -307,30 +263,15 @@ function RoomManagementPage() {
                         </div>
                         <div>
                             <label>Room Number</label>
-                            <input
-                                value={bookingForm.roomNumber}
-                                onChange={(e) => setBookingForm({ ...bookingForm, roomNumber: e.target.value })}
-                                placeholder="204"
-                                required
-                            />
+                            <input value={bookingForm.roomNumber} onChange={(e) => setBookingForm({ ...bookingForm, roomNumber: e.target.value })} placeholder="204" required />
                         </div>
                         <div>
                             <label>Check-In Date (mm/dd/yyyy)</label>
-                            <input
-                                type="date"
-                                value={bookingForm.checkInDate}
-                                onChange={(e) => setBookingForm({ ...bookingForm, checkInDate: e.target.value })}
-                                required
-                            />
+                            <input type="date" value={bookingForm.checkInDate} onChange={(e) => setBookingForm({ ...bookingForm, checkInDate: e.target.value })} required />
                         </div>
                         <div>
                             <label>Check-Out Date (mm/dd/yyyy)</label>
-                            <input
-                                type="date"
-                                value={bookingForm.checkOutDate}
-                                onChange={(e) => setBookingForm({ ...bookingForm, checkOutDate: e.target.value })}
-                                required
-                            />
+                            <input type="date" value={bookingForm.checkOutDate} onChange={(e) => setBookingForm({ ...bookingForm, checkOutDate: e.target.value })} required />
                         </div>
                     </div>
 
@@ -339,7 +280,14 @@ function RoomManagementPage() {
                             {editingBookingId ? "Update Booking" : "Create Booking"}
                         </button>
                         {editingBookingId && (
-                            <button className="btn ghost" type="button" onClick={() => { setEditingBookingId(null); setBookingForm(initialBookingForm); }}>
+                            <button
+                                className="btn ghost"
+                                type="button"
+                                onClick={() => {
+                                    setEditingBookingId(null);
+                                    setBookingForm(initialBookingForm);
+                                }}
+                            >
                                 Cancel Edit
                             </button>
                         )}
@@ -374,8 +322,12 @@ function RoomManagementPage() {
                                             <td>{room.roomStatus}</td>
                                             <td>Rs. {Number(room.normalPrice || 0).toLocaleString()}</td>
                                             <td>
-                                                <button className="btn small" type="button" onClick={() => editRoom(room)}>Edit</button>
-                                                <button className="btn danger small" type="button" onClick={() => removeRoom(room.id)}>Delete</button>
+                                                <button className="btn small" type="button" onClick={() => editRoom(room)}>
+                                                    Edit
+                                                </button>
+                                                <button className="btn danger small" type="button" onClick={() => removeRoom(room.id)}>
+                                                    Delete
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -410,8 +362,12 @@ function RoomManagementPage() {
                                             <td>{booking.bookingStatus}</td>
                                             <td>Rs. {Number(booking.amount || 0).toLocaleString()}</td>
                                             <td>
-                                                <button className="btn small" type="button" onClick={() => editBooking(booking)}>Edit</button>
-                                                <button className="btn danger small" type="button" onClick={() => removeBooking(booking.id)}>Delete</button>
+                                                <button className="btn small" type="button" onClick={() => editBooking(booking)}>
+                                                    Edit
+                                                </button>
+                                                <button className="btn danger small" type="button" onClick={() => removeBooking(booking.id)}>
+                                                    Delete
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
