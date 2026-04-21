@@ -22,3 +22,4 @@ export const updateMyProfile = (payload) => http.put("/users/me", payload);
 export const changeMyPassword = (payload) => http.post("/users/me/change-password", payload);
 
 export const createRoomRecord = (payload) => http.post("/rooms", payload);
+export const createRoomBooking = (payload) => http.post("/room-bookings", payload);
