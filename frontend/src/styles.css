@@ -193,6 +193,69 @@ textarea {
     color: #5c6f84;
 }
 
+.dashboard-manager-top-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+    gap: 14px;
+}
+
+.room-stat-card {
+    padding: 12px;
+}
+
+.room-stat-card h3 {
+    font-size: 16px;
+    margin: 0;
+}
+
+.room-stat-card p {
+    font-size: 24px;
+}
+
+.room-insights-card {
+    padding: 12px;
+    grid-column: 1 / -1;
+}
+
+.room-insights-card h3 {
+    font-size: 16px;
+    margin: 0 0 8px;
+}
+
+.room-insights-card h4 {
+    margin: 12px 0 6px;
+    font-size: 14px;
+}
+
+.insight-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.insight-column {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px;
+    background: #fbfdff;
+}
+
+.insight-lines p {
+    margin: 4px 0;
+    font-size: 13px;
+}
+
+@media (max-width: 760px) {
+    .dashboard-manager-top-row {
+        grid-template-columns: 1fr;
+    }
+
+    .insight-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
 .insight-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

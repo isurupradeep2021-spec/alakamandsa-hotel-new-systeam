@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { getDashboardSummary } from "../api/service";
 import { useAuth } from "../context/AuthContext";
 
@@ -18,6 +17,11 @@ function DashboardPage() {
         if (numeric > 0) return "change-positive";
         if (numeric < 0) return "change-negative";
         return "change-neutral";
+    };
+
+    const insightLines = (items) => {
+        if (!items || items.length === 0) return ["No bookings yet"];
+        return items.map((item) => `Room ${item.roomNumber}: ${item.bookings} booking${item.bookings === 1 ? "" : "s"}`);
     };
 
     useEffect(() => {
@@ -39,73 +43,70 @@ function DashboardPage() {
 
     return (
         <div className="grid">
-            <div className="card stat">
-                <h3>Total Staff</h3>
-                <p>{summary?.totalStaff ?? 0}</p>
-            </div>
-            <div className="card stat">
-                <h3>Total Salary Paid</h3>
-                <p>Rs. {Number(summary?.totalSalaryPaid || 0).toLocaleString()}</p>
-            </div>
-            <div className="card stat">
-                <h3>Payroll Records</h3>
-                <p>{summary?.totalPayrollRecords ?? 0}</p>
-            </div>
-            {user?.role === "MANAGER" && (
+            {user?.role === "MANAGER" ? (
                 <>
-                    <div className="card stat">
-                        <h3>Total Rooms</h3>
-                        <p>{summary?.totalRooms ?? 0}</p>
-                        <small className={changeClass(summary?.totalRoomsChangePercent)}>
-                            ({formatChange(summary?.totalRoomsChangePercent)})
-                        </small>
+                    <div className="dashboard-manager-top-row">
+                        <div className="card stat room-stat-card">
+                            <h3>Payroll Records</h3>
+                            <p>{summary?.totalPayrollRecords ?? 0}</p>
+                        </div>
+                        <div className="card stat room-stat-card">
+                            <h3>Total Rooms</h3>
+                            <p>{summary?.totalRooms ?? 0}</p>
+                            <small className={changeClass(summary?.totalRoomsChangePercent)}>({formatChange(summary?.totalRoomsChangePercent)})</small>
+                        </div>
+                        <div className="card stat room-stat-card">
+                            <h3>Room Bookings</h3>
+                            <p>{summary?.roomBookings ?? 0}</p>
+                            <small className={changeClass(summary?.roomBookingsChangePercent)}>({formatChange(summary?.roomBookingsChangePercent)})</small>
+                        </div>
                     </div>
                     <div className="card stat">
-                        <h3>Room Bookings</h3>
-                        <p>{summary?.roomBookings ?? 0}</p>
-                        <small className={changeClass(summary?.roomBookingsChangePercent)}>
-                            ({formatChange(summary?.roomBookingsChangePercent)})
-                        </small>
+                        <h3>Total Staff</h3>
+                        <p>{summary?.totalStaff ?? 0}</p>
                     </div>
-                    <div className="card">
+                    <div className="card stat">
+                        <h3>Total Salary Paid</h3>
+                        <p>Rs. {Number(summary?.totalSalaryPaid || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="card room-insights-card">
                         <h3>Room Booking Insights</h3>
-                        <div className="insight-grid">
-                            <section>
+                        <div className="insight-columns">
+                            <section className="insight-column">
                                 <h4>Most Booked Rooms</h4>
-                                <ul className="insight-list">
-                                    {(summary?.mostBookedRooms || []).map((item) => (
-                                        <li key={`most-${item.roomNumber}`}>
-                                            <span>{item.roomNumber}</span>
-                                            <strong>{item.bookings}</strong>
-                                        </li>
+                                <div className="insight-lines">
+                                    {insightLines(summary?.mostBookedRooms).map((line, index) => (
+                                        <p key={`most-line-${index}`}>{line}</p>
                                     ))}
-                                    {(summary?.mostBookedRooms || []).length === 0 && <li>No bookings yet</li>}
-                                </ul>
+                                </div>
                             </section>
-                            <section>
+
+                            <section className="insight-column">
                                 <h4>Least Booked Rooms</h4>
-                                <ul className="insight-list">
-                                    {(summary?.leastBookedRooms || []).map((item) => (
-                                        <li key={`least-${item.roomNumber}`}>
-                                            <span>{item.roomNumber}</span>
-                                            <strong>{item.bookings}</strong>
-                                        </li>
+                                <div className="insight-lines">
+                                    {insightLines(summary?.leastBookedRooms).map((line, index) => (
+                                        <p key={`least-line-${index}`}>{line}</p>
                                     ))}
-                                    {(summary?.leastBookedRooms || []).length === 0 && <li>No bookings yet</li>}
-                                </ul>
+                                </div>
                             </section>
                         </div>
                     </div>
                 </>
-            )}
-            {user?.role === "MANAGER" && (
-                <div className="card">
-                    <h3>Room Management</h3>
-                    <p>Create and maintain room records for booking operations.</p>
-                    <Link className="btn inline-link" to="/rooms">
-                        Open Create Record Form
-                    </Link>
-                </div>
+            ) : (
+                <>
+                    <div className="card stat">
+                        <h3>Total Staff</h3>
+                        <p>{summary?.totalStaff ?? 0}</p>
+                    </div>
+                    <div className="card stat">
+                        <h3>Total Salary Paid</h3>
+                        <p>Rs. {Number(summary?.totalSalaryPaid || 0).toLocaleString()}</p>
+                    </div>
+                    <div className="card stat">
+                        <h3>Payroll Records</h3>
+                        <p>{summary?.totalPayrollRecords ?? 0}</p>
+                    </div>
+                </>
             )}
         </div>
     );
