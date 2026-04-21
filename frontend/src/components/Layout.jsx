@@ -20,7 +20,8 @@ const menuByRole = {
         { to: "/profile", label: "My Profile" },
     ],
     CUSTOMER: [
-        { to: "/dashboard", label: "Customer Dashboard" },
+      { to: "/dashboard", label: "Customer Dashboard" },
+      { to: "/view-rooms", label: "View Rooms" },
         { to: "/profile", label: "My Profile" },
     ],
     RESTAURANT_MANAGER: [

@@ -328,6 +328,149 @@ textarea {
     font-size: 16px;
 }
 
+.room-filter-shell {
+    display: grid;
+    gap: 12px;
+    margin: 12px 0 14px;
+}
+
+.customer-booking-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.customer-booking-controls label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #284a66;
+    margin-bottom: 5px;
+}
+
+.room-filter-shell label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #284a66;
+    margin-bottom: 6px;
+}
+
+.filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    border: 1px solid #bfd0df;
+    background: #f5f9fd;
+    color: #1c3d58;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.chip.active {
+    background: #0a9396;
+    border-color: #0a9396;
+    color: #ffffff;
+}
+
+.room-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+}
+
+.room-card {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 8px 20px rgba(15, 31, 46, 0.08);
+}
+
+.room-card img {
+    display: block;
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+}
+
+.room-card-body {
+    padding: 10px 12px 12px;
+}
+
+.room-card-body h4 {
+    margin: 0 0 6px;
+    font-size: 16px;
+}
+
+.room-card-body p {
+    margin: 0;
+    font-size: 13px;
+    color: #a2a4a7;
+}
+
+.room-details-list {
+    margin: 6px 0;
+    display: grid;
+    gap: 4px;
+}
+
+.room-details-list p {
+    margin: 0;
+    font-size: 12px;
+}
+
+.room-meta {
+    font-weight: 700;
+    color: #0d5f78;
+    margin-bottom: 7px !important;
+}
+
+.room-title {
+    font-size: 14px !important;
+    font-weight: 700;
+    color: #75818a !important;
+    margin-bottom: 6px !important;
+}
+
+.room-feature-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 8px 0;
+    font-weight: 700;
+    font-size: 13px;
+    color: #16425f;
+}
+
+.room-stock-note {
+    font-size: 12px !important;
+    font-weight: 700;
+    color: #5ee7e9 !important;
+    margin-bottom: 8px !important;
+}
+
+.room-extra-prices {
+    display: grid;
+    gap: 3px;
+    margin-bottom: 10px;
+}
+
+.room-extra-prices p {
+    font-size: 12px !important;
+}
+
+.room-description {
+    margin-top: 8px !important;
+}
+
 .form-grid label {
     font-size: 13px;
     font-weight: 700;

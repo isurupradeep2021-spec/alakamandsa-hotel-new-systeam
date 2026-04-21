@@ -17,7 +17,7 @@ public class RoomBookingController {
 
     private final RoomBookingService roomBookingService;
 
-    @PreAuthorize("hasAnyRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('MANAGER','CUSTOMER')")
     @PostMapping
     public RoomBookingResponse create(@Valid @RequestBody RoomBookingRequest request) {
         return roomBookingService.create(request);

@@ -29,7 +29,7 @@ public class RoomController {
         return roomService.update(id, request);
     }
 
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','MANAGER','CUSTOMER')")
     @GetMapping
     public List<RoomResponse> getAll() {
         return roomService.getAll();

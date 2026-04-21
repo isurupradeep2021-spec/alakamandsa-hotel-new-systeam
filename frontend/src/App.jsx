@@ -7,6 +7,7 @@ import PayrollPage from "./pages/PayrollPage";
 import ProfilePage from "./pages/ProfilePage";
 import RoomManagementPage from "./pages/RoomManagementPage";
 import StaffPage from "./pages/StaffPage";
+import ViewRoomsPage from "./pages/ViewRoomsPage";
 
 function App() {
     return (
@@ -20,7 +21,14 @@ function App() {
                     </ProtectedRoute>
                 }
             >
-                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route
+                    path="/dashboard"
+                    element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "MANAGER"]}>
+                            <DashboardPage />
+                        </ProtectedRoute>
+                    }
+                />
                 <Route
                     path="/rooms"
                     element={
@@ -50,6 +58,14 @@ function App() {
                     element={
                         <ProtectedRoute allowedRoles={["STAFF_MEMBER"]}>
                             <PayrollPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/view-rooms"
+                    element={
+                        <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+                            <ViewRoomsPage />
                         </ProtectedRoute>
                     }
                 />
