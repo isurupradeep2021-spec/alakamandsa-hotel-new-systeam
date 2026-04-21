@@ -52,6 +52,23 @@ function RoomManagementPage() {
         setRoomError("");
 
         try {
+            const requiredChecks = [
+                { label: "Room Number", value: roomForm.roomNumber?.trim() },
+                { label: "Room Type", value: roomForm.roomType },
+                { label: "Photo URL", value: roomForm.photoUrl?.trim() },
+                { label: "Room Description", value: roomForm.roomDescription?.trim() },
+                { label: "Capacity", value: String(roomForm.capacity ?? "").trim() },
+                { label: "Normal Price", value: String(roomForm.normalPrice ?? "").trim() },
+                { label: "Weekend Price", value: String(roomForm.weekendPrice ?? "").trim() },
+                { label: "Room Status", value: roomForm.roomStatus },
+            ];
+
+            const missingFields = requiredChecks.filter((item) => !item.value).map((item) => item.label);
+            if (missingFields.length > 0) {
+                setRoomError(`Please fill in the following required field(s): ${missingFields.join(", ")}`);
+                return;
+            }
+
             const payload = {
                 roomNumber: roomForm.roomNumber.trim(),
                 roomType: roomForm.roomType,
@@ -186,15 +203,38 @@ function RoomManagementPage() {
                         </div>
                         <div>
                             <label>Normal Price</label>
-                            <input type="number" min="0.01" step="0.01" value={roomForm.normalPrice} onChange={(e) => setRoomForm({ ...roomForm, normalPrice: e.target.value })} required />
+                            <input
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                value={roomForm.normalPrice}
+                                onChange={(e) => setRoomForm({ ...roomForm, normalPrice: e.target.value })}
+                                placeholder="Example: 12000"
+                                required
+                            />
                         </div>
                         <div>
                             <label>Weekend Price</label>
-                            <input type="number" min="0.01" step="0.01" value={roomForm.weekendPrice} onChange={(e) => setRoomForm({ ...roomForm, weekendPrice: e.target.value })} required />
+                            <input
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                value={roomForm.weekendPrice}
+                                onChange={(e) => setRoomForm({ ...roomForm, weekendPrice: e.target.value })}
+                                placeholder="Example: 14500"
+                                required
+                            />
                         </div>
                         <div>
                             <label>Seasonal Price (Optional)</label>
-                            <input type="number" min="0.01" step="0.01" value={roomForm.seasonalPrice} onChange={(e) => setRoomForm({ ...roomForm, seasonalPrice: e.target.value })} />
+                            <input
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                value={roomForm.seasonalPrice}
+                                onChange={(e) => setRoomForm({ ...roomForm, seasonalPrice: e.target.value })}
+                                placeholder="Example: 17000"
+                            />
                         </div>
                         <div>
                             <label>Room Status</label>
