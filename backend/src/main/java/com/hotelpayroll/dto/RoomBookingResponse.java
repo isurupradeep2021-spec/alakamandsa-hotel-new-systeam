@@ -1,6 +1,7 @@
 package com.hotelpayroll.dto;
 
 import com.hotelpayroll.entity.RoomBookingStatus;
+import com.hotelpayroll.entity.RoomType;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,6 +16,10 @@ public class RoomBookingResponse {
     private String bookingCustomer;
     private String customerEmail;
     private String roomNumber;
+    private Integer bookedRooms;
+    private Integer guestCount;
+    private RoomType roomType;
+    private Integer guests;
     private RoomBookingStatus bookingStatus;
     private BigDecimal amount;
     private LocalDate checkInDate;

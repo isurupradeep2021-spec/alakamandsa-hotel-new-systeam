@@ -21,6 +21,17 @@ export const getMyProfile = () => http.get('/users/me');
 export const updateMyProfile = (payload) => http.put('/users/me', payload);
 export const changeMyPassword = (payload) => http.post('/users/me/change-password', payload);
 
+export const createRoomRecord = (payload) => http.post("/rooms", payload);
+export const createRoomBooking = (payload) => http.post("/room-bookings", payload);
+export const getRooms = (params) => http.get("/rooms", { params });
+export const updateRoomRecord = (id, payload) => http.put(`/rooms/${id}`, payload);
+export const deleteRoomRecord = (id) => http.delete(`/rooms/${id}`);
+export const getRoomBookings = () => http.get("/room-bookings");
+export const getMyRoomBookings = () => http.get("/room-bookings/my");
+export const checkRoomAvailability = (roomNumber, checkInDate, checkOutDate) =>
+    http.get("/room-bookings/check-availability", {
+        params: { roomNumber, checkInDate, checkOutDate }
+    });
 export const createReservation = (payload) => http.post('/reservations', payload);
 export const getReservations = () => http.get('/reservations');
 export const getMyReservations = () => http.get('/reservations/my');

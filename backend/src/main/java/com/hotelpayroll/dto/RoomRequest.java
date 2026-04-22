@@ -31,6 +31,10 @@ public class RoomRequest {
     @Min(value = 1, message = "Capacity must be at least 1")
     private Integer capacity;
 
+    @NotNull(message = "Total rooms is required")
+    @Min(value = 1, message = "Total rooms must be at least 1")
+    private Integer totalRooms;
+
     @NotNull(message = "Normal price is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Normal price must be greater than 0")
     private BigDecimal normalPrice;
