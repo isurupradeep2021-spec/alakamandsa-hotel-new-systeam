@@ -321,25 +321,11 @@ function RoomManagementPage() {
                         </div>
                         <div>
                             <label>Rooms to Book</label>
-                            <input
-                                type="number"
-                                min="1"
-                                value={bookingForm.bookedRooms}
-                                onChange={(e) => setBookingForm({ ...bookingForm, bookedRooms: e.target.value })}
-                                placeholder="1"
-                                required
-                            />
+                            <input type="number" min="1" value={bookingForm.bookedRooms} onChange={(e) => setBookingForm({ ...bookingForm, bookedRooms: e.target.value })} placeholder="1" required />
                         </div>
                         <div>
                             <label>Guest Count</label>
-                            <input
-                                type="number"
-                                min="1"
-                                value={bookingForm.guestCount}
-                                onChange={(e) => setBookingForm({ ...bookingForm, guestCount: e.target.value })}
-                                placeholder="2"
-                                required
-                            />
+                            <input type="number" min="1" value={bookingForm.guestCount} onChange={(e) => setBookingForm({ ...bookingForm, guestCount: e.target.value })} placeholder="2" required />
                         </div>
                         <div>
                             <label>Check-In Date (mm/dd/yyyy)</label>

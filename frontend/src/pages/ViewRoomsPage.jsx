@@ -16,9 +16,7 @@ function ViewRoomsPage() {
         setLoading(true);
         setError("");
 
-        const params = availabilityDates.checkInDate && availabilityDates.checkOutDate
-            ? { checkInDate: availabilityDates.checkInDate, checkOutDate: availabilityDates.checkOutDate }
-            : undefined;
+        const params = availabilityDates.checkInDate && availabilityDates.checkOutDate ? { checkInDate: availabilityDates.checkInDate, checkOutDate: availabilityDates.checkOutDate } : undefined;
 
         getRooms(params)
             .then((res) => setRooms(res.data || []))
@@ -46,6 +44,21 @@ function ViewRoomsPage() {
         });
     }, [rooms, roomType]);
 
+    const remainingByType = useMemo(() => {
+        return rooms.reduce(
+            (acc, room) => {
+                const type = String(room.roomType || "").toUpperCase();
+                if (!acc[type]) {
+                    acc[type] = 0;
+                }
+
+                acc[type] += Number(room.remainingRooms || 0);
+                return acc;
+            },
+            { DELUXE: 0, SUITE: 0, FAMILY: 0, STANDARD: 0 }
+        );
+    }, [rooms]);
+
     const formatType = (roomTypeValue) => roomTypeValue?.charAt(0) + roomTypeValue?.slice(1).toLowerCase();
 
     const openBookingPage = (room) => {
@@ -71,21 +84,20 @@ function ViewRoomsPage() {
                 <div className="customer-booking-controls">
                     <div>
                         <label>Check-In Date</label>
-                        <input
-                            type="date"
-                            value={availabilityDates.checkInDate}
-                            onChange={(e) => setAvailabilityDates({ ...availabilityDates, checkInDate: e.target.value })}
-                        />
+                        <input type="date" value={availabilityDates.checkInDate} onChange={(e) => setAvailabilityDates({ ...availabilityDates, checkInDate: e.target.value })} />
                     </div>
                     <div>
                         <label>Check-Out Date</label>
-                        <input
-                            type="date"
-                            value={availabilityDates.checkOutDate}
-                            onChange={(e) => setAvailabilityDates({ ...availabilityDates, checkOutDate: e.target.value })}
-                        />
+                        <input type="date" value={availabilityDates.checkOutDate} onChange={(e) => setAvailabilityDates({ ...availabilityDates, checkOutDate: e.target.value })} />
                     </div>
                 </div>
+            </div>
+
+            <div className="room-type-availability-summary">
+                <p>Family rooms: {remainingByType.FAMILY}</p>
+                <p>Suite rooms: {remainingByType.SUITE}</p>
+                <p>Deluxe rooms: {remainingByType.DELUXE}</p>
+                <p>Standard rooms: {remainingByType.STANDARD}</p>
             </div>
 
             {loading && <p>Loading rooms...</p>}

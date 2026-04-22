@@ -101,9 +101,7 @@ function BookRoomPage() {
         }
 
         if (selectedRoomAvailability && bookedRooms > Number(selectedRoomAvailability.remainingRooms || 0)) {
-            setBookingError(
-                `Only ${selectedRoomAvailability.remainingRooms} room(s) remaining for Room ${selectedRoomAvailability.roomNumber} in the selected dates.`
-            );
+            setBookingError(`Only ${selectedRoomAvailability.remainingRooms} room(s) remaining for Room ${selectedRoomAvailability.roomNumber} in the selected dates.`);
             return;
         }
 
@@ -178,12 +176,7 @@ function BookRoomPage() {
                         </div>
                         <div>
                             <label>Room Number</label>
-                            <input
-                                value={bookingForm.roomNumber}
-                                onChange={(e) => setBookingForm({ ...bookingForm, roomNumber: e.target.value })}
-                                placeholder={selectedRoomNumber || "204"}
-                                required
-                            />
+                            <input value={bookingForm.roomNumber} onChange={(e) => setBookingForm({ ...bookingForm, roomNumber: e.target.value })} placeholder={selectedRoomNumber || "204"} required />
                         </div>
                         <div>
                             <label>Rooms to Book</label>
@@ -199,14 +192,7 @@ function BookRoomPage() {
                         </div>
                         <div>
                             <label>Guest Count</label>
-                            <input
-                                type="number"
-                                min="1"
-                                value={bookingForm.guestCount}
-                                onChange={(e) => setBookingForm({ ...bookingForm, guestCount: e.target.value })}
-                                placeholder="2"
-                                required
-                            />
+                            <input type="number" min="1" value={bookingForm.guestCount} onChange={(e) => setBookingForm({ ...bookingForm, guestCount: e.target.value })} placeholder="2" required />
                         </div>
                         <div>
                             <label>Check-In Date (mm/dd/yyyy)</label>
@@ -221,7 +207,7 @@ function BookRoomPage() {
                             {!availabilityLoading && availabilityError && <p className="error">{availabilityError}</p>}
                             {!availabilityLoading && !availabilityError && selectedRoomAvailability && (
                                 <p className="room-stock-note">
-                                    Live availability for Room {selectedRoomAvailability.roomNumber}: {selectedRoomAvailability.remainingRooms} room
+                                    Room {selectedRoomAvailability.roomNumber}: {selectedRoomAvailability.remainingRooms} room
                                     {Number(selectedRoomAvailability.remainingRooms) === 1 ? "" : "s"} remaining
                                 </p>
                             )}
