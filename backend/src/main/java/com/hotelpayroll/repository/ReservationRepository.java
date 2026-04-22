@@ -11,6 +11,7 @@ import java.time.LocalDate;
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     List<Reservation> findAllByOrderByReservationDateAscCreatedAtDesc();
     List<Reservation> findAllByCreatedByUsernameOrderByReservationDateDescCreatedAtDesc(String createdByUsername);
+    boolean existsByEmail(String email);
     boolean existsByAssignedTableIgnoreCaseAndReservationDateAndMealTypeAndStatusInAndIdNot(
             String assignedTable,
             LocalDate reservationDate,
