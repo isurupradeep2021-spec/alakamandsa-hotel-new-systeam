@@ -23,7 +23,8 @@ public final class RolePermissions {
                     Permission.MANAGE_TABLES,
                     Permission.VIEW_MENU,
                     Permission.VIEW_REPORTS,
-                    Permission.VIEW_LIVE_DINING
+                    Permission.VIEW_LIVE_DINING,
+                    Permission.CREATE_RESERVATIONS
             );
             case CUSTOMER -> EnumSet.of(Permission.VIEW_MENU, Permission.CREATE_RESERVATIONS, Permission.VIEW_LIVE_DINING);
             case STAFF_MEMBER, EVENT_MANAGER -> EnumSet.noneOf(Permission.class);

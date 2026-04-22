@@ -86,13 +86,6 @@ function DiningPage() {
       </section>
 
       <section className="photo-gallery-wrapper">
-        <div className="social-sidebar">
-          <a href="#" className="social-icon">W</a>
-          <a href="#" className="social-icon">I</a>
-          <a href="#" className="social-icon">F</a>
-          <a href="#" className="social-icon">E</a>
-        </div>
-        
         <div className="gallery-carousel">
           <button className="gallery-nav left" onClick={prevSlide}>&lt;</button>
           
