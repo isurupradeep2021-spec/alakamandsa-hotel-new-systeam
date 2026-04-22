@@ -3,10 +3,11 @@ import { useLocation } from "react-router-dom";
 import { createRoomBooking, getMyRoomBookings, getRooms } from "../api/service";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
-
-const getRemainingRoomsCount = (availabilityData) => {
-    const value = Number(availabilityData?.remainingRooms);
-    return Number.isFinite(value) && value >= 0 ? value : null;
+const ROOM_TYPE_GUEST_LIMITS = {
+    STANDARD: 2,
+    DELUXE: 3,
+    SUITE: 4,
+    FAMILY: 6,
 };
 
 function BookRoomPage() {
@@ -70,7 +71,7 @@ function BookRoomPage() {
 
                 setAvailabilityData(matchedRoom);
 
-                if (Number(matchedRoom.remainingRooms ?? 0) <= 0) {
+                if (matchedRoom.roomStatus === "RESERVED") {
                     setAvailabilityError(`Room ${matchedRoom.roomNumber} is not available for the selected dates.`);
                 } else {
                     setAvailabilityError("");
@@ -96,7 +97,6 @@ function BookRoomPage() {
         const checkInDate = bookingForm.checkInDate;
         const checkOutDate = bookingForm.checkOutDate;
         const bookedRooms = 1;
-        const remainingRooms = getRemainingRoomsCount(availabilityData);
 
         if (!bookingCustomer || !customerEmail || !roomNumber || !checkInDate || !checkOutDate || !bookingForm.guestCount) {
             setBookingError("Please complete all booking fields.");
@@ -113,23 +113,23 @@ function BookRoomPage() {
             return;
         }
 
-        if (Number(availabilityData.remainingRooms ?? 0) <= 0) {
-            setBookingError(`Room ${roomNumber} is not available for the selected dates.`);
+        if (availabilityError) {
+            setBookingError(availabilityError);
             return;
         }
 
-        if (remainingRooms === null) {
-            setBookingError("Unable to determine room availability for the selected dates. Please try again.");
-            return;
-        }
-
-        if (bookedRooms > remainingRooms) {
-            setBookingError(`Only ${remainingRooms} room(s) remaining for Room ${availabilityData.roomNumber}.`);
-            return;
-        }
 
         if (!Number.isInteger(guestCount) || guestCount < 1) {
             setBookingError("Guest Count must be a whole number greater than 0.");
+            return;
+        }
+
+        const roomTypeLimit = availabilityData?.roomType ? ROOM_TYPE_GUEST_LIMITS[availabilityData.roomType] : null;
+        const roomCapacity = Number.isFinite(Number(availabilityData?.capacity)) ? Number(availabilityData.capacity) : null;
+        const maxGuestsAllowed = roomTypeLimit && roomCapacity ? Math.min(roomTypeLimit, roomCapacity) : roomTypeLimit || roomCapacity;
+
+        if (maxGuestsAllowed !== null && guestCount > maxGuestsAllowed) {
+            setBookingError(`Guest Count exceeds the maximum allowed for this room (${maxGuestsAllowed}).`);
             return;
         }
 
@@ -195,8 +195,11 @@ function BookRoomPage() {
     };
 
     const stayDuration = getStayDuration();
-    const remainingRooms = getRemainingRoomsCount(availabilityData);
     const guestCount = Number(bookingForm.guestCount);
+    const roomTypeLimit = availabilityData?.roomType ? ROOM_TYPE_GUEST_LIMITS[availabilityData.roomType] : null;
+    const roomCapacity = Number.isFinite(Number(availabilityData?.capacity)) ? Number(availabilityData.capacity) : null;
+    const maxGuestsAllowed = roomTypeLimit && roomCapacity ? Math.min(roomTypeLimit, roomCapacity) : roomTypeLimit || roomCapacity;
+    const hasGuestLimitViolation = Number.isInteger(guestCount) && guestCount > 0 && maxGuestsAllowed !== null && guestCount > maxGuestsAllowed;
 
     return (
         <div className="card">
@@ -226,7 +229,17 @@ function BookRoomPage() {
                         </div>
                         <div>
                             <label>Guest Count</label>
-                            <input type="number" min="1" value={bookingForm.guestCount} onChange={(e) => setBookingForm({ ...bookingForm, guestCount: e.target.value })} placeholder="2" required />
+                            <input
+                                type="number"
+                                min="1"
+                                max={maxGuestsAllowed ?? undefined}
+                                value={bookingForm.guestCount}
+                                onChange={(e) => setBookingForm({ ...bookingForm, guestCount: e.target.value })}
+                                placeholder="2"
+                                required
+                            />
+                            {maxGuestsAllowed !== null && <small>Maximum guests for this room: {maxGuestsAllowed}</small>}
+                            {hasGuestLimitViolation && <p className="error">Entered Guest Count is not allowed for this room type.</p>}
                         </div>
                         <div>
                             <label>Check-In Date (mm/dd/yyyy)</label>
@@ -241,19 +254,10 @@ function BookRoomPage() {
                             {!availabilityLoading && availabilityError && <p className="error">{availabilityError}</p>}
                             {!availabilityLoading && !availabilityError && availabilityData && (
                                 <div className="booking-preview">
-                                    {remainingRooms === null ? (
-                                        <p className="error">Room availability data is unavailable for the selected dates.</p>
-                                    ) : (
-                                        <>
-                                            <p className="success">
-                                                Room {availabilityData.roomNumber}: {remainingRooms} room{remainingRooms === 1 ? "" : "s"} remaining
-                                            </p>
-                                            <p>Room Availability: {remainingRooms} room{remainingRooms === 1 ? "" : "s"} remaining</p>
-                                            <p>
-                                                Stay Duration: {stayDuration} night{stayDuration === 1 ? "" : "s"}
-                                            </p>
-                                        </>
-                                    )}
+                                    <p className="success">Room {availabilityData.roomNumber} is available for the selected dates.</p>
+                                    <p>
+                                        Stay Duration: {stayDuration} night{stayDuration === 1 ? "" : "s"}
+                                    </p>
                                     <p>Total: LKR {Number(availabilityData.normalPrice || 0).toLocaleString()}</p>
                                 </div>
                             )}
