@@ -34,37 +34,103 @@ function DiningPage() {
 
   return (
     <div className="dining-page">
-      <section className="dining-hero card">
-        <div>
-          <p className="eyebrow">ALAKAMANDA DINING</p>
-          <h2>Oceanfront flavors crafted for every craving.</h2>
-          <p>
-            {isRestaurantOpsView
-              ? 'Live service view for restaurant operators: menu readiness, cuisine spread, and guest-facing quality.'
-              : 'Explore signature dishes from five cuisines and reserve your preferred table in minutes.'}
-          </p>
-          <div className="hero-cta">
-            {canCreateReservation && <Link to="/reserve-table" className="btn">Book a table</Link>}
-            <a href="#live-menu" className="btn ghost">View menu</a>
+      <section className="restaurant-dining-hero">
+        <h1 className="rd-title">Restaurant & Dining</h1>
+        <div className="rd-text">
+          <p>At Alakamanda Hotel's All Day Dining Restaurant, we redefine dining experiences with our exceptional offerings and personalized service. Here's why our restaurant stands out</p>
+          <p>Our restaurant boasts panoramic views of the Indian Ocean. Experience more than just dining – enjoy a unique culinary journey designed to delight your senses. Our dedication to personalised service ensures that every guest feels like a VIP, with our team going above and beyond to make your dining experience memorable.</p>
+          <p>Step into our fusion Bar and witness our seasoned chefs weave their culinary artistry, transforming ingredients into masterpieces before your eyes. We go beyond mere cooking; we craft personalised meals with passion and precision, ensuring each dish tells a story. Immerse yourself in a dining experience where every bite is a delightful adventure, making your visit to our restaurant an unforgettable and cherished memory.</p>
+        </div>
+
+        <div className="rd-info-row">
+          <div className="rd-info-item">
+            <span className="rd-icon">🛎️</span>
+            <div>
+              <strong>Menu</strong>
+              <span>A la carte</span>
+            </div>
+          </div>
+          <div className="rd-divider"></div>
+          <div className="rd-info-item">
+            <span className="rd-icon">👔</span>
+            <div>
+              <strong>Dress code</strong>
+              <span>Smart Casual</span>
+            </div>
+          </div>
+          <div className="rd-divider"></div>
+          <div className="rd-info-item">
+            <span className="rd-icon">👥</span>
+            <div>
+              <strong>Capacity</strong>
+              <span>Maximum - Indoor 60 pax, Outdoor 40 pax</span>
+            </div>
           </div>
         </div>
-        <div className="hours-strip">
-          <h4>Operating Hours</h4>
-          <p>Breakfast: 7:00 AM - 10:30 AM</p>
-          <p>Lunch: 12:00 PM - 3:30 PM</p>
-          <p>Dinner: 6:30 PM - 10:30 PM</p>
+
+        <div className="rd-quote">
+          <span className="quote-mark">“</span>
+          <h2>Dine in<br/>Elegance<br/>at Alakamanda</h2>
         </div>
       </section>
 
-      <section className="card">
-        <h3>Cuisine Overview</h3>
-        <div className="cuisine-grid">
-          {cuisineTypes.map((cuisine) => (
-            <article key={cuisine.value} className="cuisine-card">
-              <h4>{cuisine.label}</h4>
-              <p>Chef-selected highlights prepared with seasonal ingredients.</p>
-            </article>
-          ))}
+      <section className="reserve-banner">
+        <div className="rb-text">
+          <h2>Reserve a Table</h2>
+          <p>Step into culinary refinement. Secure your table for an exquisite dining experience, where flavours dance on your palate amid a sophisticated ambiance. Book now for a memorable indulgence.</p>
+        </div>
+        <div className="rb-actions">
+          {canCreateReservation ? (
+            <Link to="/reserve-table" className="btn-pill filled">• BOOK ONLINE •</Link>
+          ) : null}
+          <a href="tel:+94112345678" className="btn-pill outline">• CALL NOW •</a>
+          <a href="/alakamanda_menu.png" download="Alakamanda_Menu.png" className="btn-pill outline">• DOWNLOAD MENU •</a>
+        </div>
+      </section>
+
+      <section className="amenities-box">
+        <div className="amenity-grid">
+          <div className="amenity-item"><span className="sq">□</span> SeaScape Restaurant max 60 pax, Seacape Lounge max 40 pax</div>
+          <div className="amenity-item"><span className="sq">□</span> Special Needs</div>
+          <div className="amenity-item"><span className="sq">□</span> Air conditioning</div>
+          <div className="amenity-item"><span className="sq">□</span> Parking for guests</div>
+          <div className="amenity-item"><span className="sq">□</span> On site technical Support</div>
+          <div className="amenity-item"><span className="sq">□</span> Designated Smoking area</div>
+        </div>
+      </section>
+
+      <section className="types-of-cuisines">
+        <h2>Types of Cuisines</h2>
+        <div className="cuisines-list">
+          <div className="cuisine-col">
+            <strong>Western</strong>
+            <span>Everyday</span>
+            <small>Breakfast | Lunch | Dinner</small>
+          </div>
+          <div className="rd-divider"></div>
+          <div className="cuisine-col">
+            <strong>Thai/Chinese</strong>
+            <span>Everyday</span>
+            <small>Lunch | Dinner</small>
+          </div>
+          <div className="rd-divider"></div>
+          <div className="cuisine-col">
+            <strong>Sri Lankan</strong>
+            <span>Everyday</span>
+            <small>Breakfast | Lunch | Dinner</small>
+          </div>
+          <div className="rd-divider"></div>
+          <div className="cuisine-col">
+            <strong>Indian</strong>
+            <span>Everyday</span>
+            <small>Breakfast | Lunch | Dinner</small>
+          </div>
+          <div className="rd-divider"></div>
+          <div className="cuisine-col">
+            <strong>Italian</strong>
+            <span>Everyday</span>
+            <small>Lunch | Dinner</small>
+          </div>
         </div>
       </section>
 
@@ -100,17 +166,7 @@ function DiningPage() {
         </div>
       </section>
 
-      <section className="card amenities">
-        <div className="section-head">
-          <h3>Amenities</h3>
-          {canCreateReservation && <Link to="/reserve-table" className="btn small">Book a table</Link>}
-        </div>
-        <ul>
-          {amenities.map((amenity) => (
-            <li key={amenity}>{amenity}</li>
-          ))}
-        </ul>
-      </section>
+      {/* Amenities removed, now part of the amenities-box above */}
     </div>
   );
 }
