@@ -37,16 +37,27 @@ function RoomManagementPage() {
     const [editingBookingId, setEditingBookingId] = useState(null);
 
     const loadLatestRecords = async () => {
-        const [roomRes, bookingRes] = await Promise.all([getRooms(), getRoomBookings()]);
-        setRooms(roomRes.data || []);
-        setBookings(bookingRes.data || []);
+        const [roomRes, bookingRes] = await Promise.allSettled([getRooms(), getRoomBookings()]);
+
+        if (roomRes.status === "fulfilled") {
+            setRooms(roomRes.value.data || []);
+            setRoomError("");
+        } else {
+            const apiMessage = roomRes.reason?.response?.data?.message;
+            setRoomError(apiMessage || "Unable to refresh room records right now.");
+        }
+
+        if (bookingRes.status === "fulfilled") {
+            setBookings(bookingRes.value.data || []);
+            setBookingError("");
+        } else {
+            const apiMessage = bookingRes.reason?.response?.data?.message;
+            setBookingError(apiMessage || "Unable to refresh booking records right now.");
+        }
     };
 
     useEffect(() => {
-        loadLatestRecords().catch(() => {
-            setRooms([]);
-            setBookings([]);
-        });
+        loadLatestRecords();
     }, []);
 
     const handleRoomSubmit = async (e) => {

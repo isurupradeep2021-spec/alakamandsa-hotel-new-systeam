@@ -35,7 +35,7 @@ function BookRoomPage() {
             const res = await getMyRoomBookings();
             setMyBookings(res.data || []);
         } catch {
-            setMyBookings([]);
+            // Keep existing rows when refresh fails to avoid hiding successfully saved bookings.
         } finally {
             setBookingsLoading(false);
         }
@@ -118,7 +118,6 @@ function BookRoomPage() {
             return;
         }
 
-
         if (!Number.isInteger(guestCount) || guestCount < 1) {
             setBookingError("Guest Count must be a whole number greater than 0.");
             return;
@@ -134,7 +133,7 @@ function BookRoomPage() {
         }
 
         try {
-            await createRoomBooking({
+            const res = await createRoomBooking({
                 bookingCustomer,
                 customerEmail,
                 roomNumber,
@@ -143,6 +142,10 @@ function BookRoomPage() {
                 checkInDate,
                 checkOutDate,
             });
+            const savedBooking = res?.data;
+            if (savedBooking?.id) {
+                setMyBookings((prev) => [savedBooking, ...prev.filter((item) => item.id !== savedBooking.id)]);
+            }
             setBookingMessage(`Booking created successfully for Room ${roomNumber}.`);
             setBookingForm({
                 bookingCustomer: "",

@@ -20,19 +20,19 @@ public class RoomBookingController {
 
     private final RoomBookingService roomBookingService;
 
-    @PreAuthorize("hasAnyRole('MANAGER','CUSTOMER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','MANAGER','CUSTOMER')")
     @PostMapping
     public RoomBookingResponse create(@Valid @RequestBody RoomBookingRequest request) {
         return roomBookingService.create(request);
     }
 
-    @PreAuthorize("hasAnyRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','MANAGER')")
     @PutMapping("/{id}")
     public RoomBookingResponse update(@PathVariable Long id, @Valid @RequestBody RoomBookingRequest request) {
         return roomBookingService.update(id, request);
     }
 
-    @PreAuthorize("hasAnyRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','MANAGER')")
     @GetMapping
     public List<RoomBookingResponse> getAll() {
         return roomBookingService.getAll();
@@ -54,7 +54,7 @@ public class RoomBookingController {
         return roomBookingService.checkAvailability(roomNumber, checkInDate, checkOutDate);
     }
 
-    @PreAuthorize("hasAnyRole('MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','MANAGER')")
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         roomBookingService.delete(id);
