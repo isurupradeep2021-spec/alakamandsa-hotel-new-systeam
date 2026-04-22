@@ -13,11 +13,20 @@ const cuisineTypes = [
 
 const amenities = ['Fully Air-Conditioned Dining Hall', 'Dedicated Parking Area', 'Wheelchair Accessibility', 'Panoramic Ocean Views'];
 
+const galleryImages = [
+  '/gallery/1.png',
+  '/gallery/2.png',
+  '/gallery/3.png',
+  '/gallery/4.png',
+  '/gallery/5.png',
+];
+
 function DiningPage() {
   const { user } = useAuth();
   const [activeCuisine, setActiveCuisine] = useState(cuisineTypes[0]);
   const [menuItems, setMenuItems] = useState([]);
   const [error, setError] = useState('');
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
     getMenuItems()
@@ -30,7 +39,9 @@ function DiningPage() {
     [activeCuisine, menuItems]
   );
   const canCreateReservation = (user?.permissions || []).includes('CREATE_RESERVATIONS');
-  const isRestaurantOpsView = ['SUPER_ADMIN', 'MANAGER', 'RESTAURANT_MANAGER'].includes(user?.role);
+
+  const nextSlide = () => setCurrentSlide((p) => (p === galleryImages.length - 1 ? 0 : p + 1));
+  const prevSlide = () => setCurrentSlide((p) => (p === 0 ? galleryImages.length - 1 : p - 1));
 
   return (
     <div className="dining-page">
@@ -71,6 +82,28 @@ function DiningPage() {
         <div className="rd-quote">
           <span className="quote-mark">“</span>
           <h2>Dine in<br/>Elegance<br/>at Alakamanda</h2>
+        </div>
+      </section>
+
+      <section className="photo-gallery-wrapper">
+        <div className="social-sidebar">
+          <a href="#" className="social-icon">W</a>
+          <a href="#" className="social-icon">I</a>
+          <a href="#" className="social-icon">F</a>
+          <a href="#" className="social-icon">E</a>
+        </div>
+        
+        <div className="gallery-carousel">
+          <button className="gallery-nav left" onClick={prevSlide}>&lt;</button>
+          
+          <div className="gallery-slide-container">
+            <img src={galleryImages[currentSlide]} alt={`Gallery image ${currentSlide + 1}`} className="gallery-image" />
+            <div className="gallery-counter">
+              <strong>{currentSlide + 1}</strong> / {galleryImages.length}
+            </div>
+          </div>
+
+          <button className="gallery-nav right" onClick={nextSlide}>&gt;</button>
         </div>
       </section>
 
