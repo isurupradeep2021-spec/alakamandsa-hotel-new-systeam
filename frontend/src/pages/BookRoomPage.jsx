@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { createRoomBooking, getMyRoomBookings, checkRoomAvailability } from "../api/service";
+import { createRoomBooking, getMyRoomBookings, getRooms } from "../api/service";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
@@ -18,7 +18,7 @@ function BookRoomPage() {
     const [bookingsLoading, setBookingsLoading] = useState(true);
     const [availabilityLoading, setAvailabilityLoading] = useState(false);
     const [availabilityError, setAvailabilityError] = useState("");
-    const [availabilityStatus, setAvailabilityStatus] = useState(null);
+    const [availabilityData, setAvailabilityData] = useState(null);
     const [bookingForm, setBookingForm] = useState({
         bookingCustomer: "",
         customerEmail: "",
@@ -49,7 +49,7 @@ function BookRoomPage() {
         const { checkInDate, checkOutDate } = bookingForm;
 
         if (!roomNumber || !checkInDate || !checkOutDate) {
-            setAvailabilityStatus(null);
+            setAvailabilityData(null);
             setAvailabilityError("");
             return;
         }
@@ -57,16 +57,27 @@ function BookRoomPage() {
         setAvailabilityLoading(true);
         setAvailabilityError("");
 
-        checkRoomAvailability(roomNumber, checkInDate, checkOutDate)
+        getRooms({ checkInDate, checkOutDate })
             .then((res) => {
-                const data = res.data;
-                setAvailabilityStatus(data);
-                if (!data.available) {
-                    setAvailabilityError(`${data.message}`);
+                const rooms = res.data || [];
+                const matchedRoom = rooms.find((room) => String(room.roomNumber).toLowerCase() === roomNumber.toLowerCase());
+
+                if (!matchedRoom) {
+                    setAvailabilityData(null);
+                    setAvailabilityError("Room not found for selected dates.");
+                    return;
+                }
+
+                setAvailabilityData(matchedRoom);
+
+                if (Number(matchedRoom.remainingRooms ?? 0) <= 0) {
+                    setAvailabilityError(`Room ${matchedRoom.roomNumber} is not available for the selected dates.`);
+                } else {
+                    setAvailabilityError("");
                 }
             })
             .catch((err) => {
-                setAvailabilityStatus(null);
+                setAvailabilityData(null);
                 const apiMessage = err?.response?.data?.message;
                 setAvailabilityError(apiMessage || "Unable to check room availability right now.");
             })
@@ -85,7 +96,7 @@ function BookRoomPage() {
         const checkInDate = bookingForm.checkInDate;
         const checkOutDate = bookingForm.checkOutDate;
         const bookedRooms = 1;
-        const remainingRooms = getRemainingRoomsCount(availabilityStatus);
+        const remainingRooms = getRemainingRoomsCount(availabilityData);
 
         if (!bookingCustomer || !customerEmail || !roomNumber || !checkInDate || !checkOutDate || !bookingForm.guestCount) {
             setBookingError("Please complete all booking fields.");
@@ -97,12 +108,12 @@ function BookRoomPage() {
             return;
         }
 
-        if (!availabilityStatus) {
+        if (!availabilityData) {
             setBookingError("Please check room availability before booking.");
             return;
         }
 
-        if (!availabilityStatus.available) {
+        if (Number(availabilityData.remainingRooms ?? 0) <= 0) {
             setBookingError(`Room ${roomNumber} is not available for the selected dates.`);
             return;
         }
@@ -113,7 +124,7 @@ function BookRoomPage() {
         }
 
         if (bookedRooms > remainingRooms) {
-            setBookingError(`Only ${remainingRooms} room(s) remaining for Room ${availabilityStatus.roomNumber}.`);
+            setBookingError(`Only ${remainingRooms} room(s) remaining for Room ${availabilityData.roomNumber}.`);
             return;
         }
 
@@ -184,7 +195,7 @@ function BookRoomPage() {
     };
 
     const stayDuration = getStayDuration();
-    const remainingRooms = getRemainingRoomsCount(availabilityStatus);
+    const remainingRooms = getRemainingRoomsCount(availabilityData);
     const guestCount = Number(bookingForm.guestCount);
 
     return (
@@ -228,20 +239,22 @@ function BookRoomPage() {
                         <div className="span-full">
                             {availabilityLoading && <p>Checking live availability...</p>}
                             {!availabilityLoading && availabilityError && <p className="error">{availabilityError}</p>}
-                            {!availabilityLoading && !availabilityError && availabilityStatus && (
+                            {!availabilityLoading && !availabilityError && availabilityData && (
                                 <div className="booking-preview">
-                                    {availabilityStatus.available ? (
+                                    {remainingRooms === null ? (
+                                        <p className="error">Room availability data is unavailable for the selected dates.</p>
+                                    ) : (
                                         <>
                                             <p className="success">
-                                                ✓ Available: {remainingRooms} room{remainingRooms === 1 ? "" : "s"} remaining
+                                                Room {availabilityData.roomNumber}: {remainingRooms} room{remainingRooms === 1 ? "" : "s"} remaining
                                             </p>
+                                            <p>Room Availability: {remainingRooms} room{remainingRooms === 1 ? "" : "s"} remaining</p>
                                             <p>
                                                 Stay Duration: {stayDuration} night{stayDuration === 1 ? "" : "s"}
                                             </p>
                                         </>
-                                    ) : (
-                                        <p className="error">✗ Not Available for selected dates</p>
                                     )}
+                                    <p>Total: LKR {Number(availabilityData.normalPrice || 0).toLocaleString()}</p>
                                 </div>
                             )}
                         </div>
