@@ -10,15 +10,12 @@ function ViewRoomsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [roomType, setRoomType] = useState("ALL");
-    const [availabilityDates, setAvailabilityDates] = useState({ checkInDate: "", checkOutDate: "" });
 
     const loadRooms = () => {
         setLoading(true);
         setError("");
 
-        const params = availabilityDates.checkInDate && availabilityDates.checkOutDate ? { checkInDate: availabilityDates.checkInDate, checkOutDate: availabilityDates.checkOutDate } : undefined;
-
-        getRooms(params)
+        getRooms()
             .then((res) => setRooms(res.data || []))
             .catch((err) => {
                 const statusCode = err?.response?.status;
@@ -35,7 +32,7 @@ function ViewRoomsPage() {
 
     useEffect(() => {
         loadRooms();
-    }, [availabilityDates.checkInDate, availabilityDates.checkOutDate]);
+    }, []);
 
     const filteredRooms = useMemo(() => {
         return rooms.filter((room) => {
@@ -43,21 +40,6 @@ function ViewRoomsPage() {
             return matchesType;
         });
     }, [rooms, roomType]);
-
-    const remainingByType = useMemo(() => {
-        return rooms.reduce(
-            (acc, room) => {
-                const type = String(room.roomType || "").toUpperCase();
-                if (!acc[type]) {
-                    acc[type] = 0;
-                }
-
-                acc[type] += Number(room.remainingRooms || 0);
-                return acc;
-            },
-            { DELUXE: 0, SUITE: 0, FAMILY: 0, STANDARD: 0 }
-        );
-    }, [rooms]);
 
     const formatType = (roomTypeValue) => roomTypeValue?.charAt(0) + roomTypeValue?.slice(1).toLowerCase();
 
@@ -81,23 +63,6 @@ function ViewRoomsPage() {
                         ))}
                     </div>
                 </div>
-                <div className="customer-booking-controls">
-                    <div>
-                        <label>Check-In Date</label>
-                        <input type="date" value={availabilityDates.checkInDate} onChange={(e) => setAvailabilityDates({ ...availabilityDates, checkInDate: e.target.value })} />
-                    </div>
-                    <div>
-                        <label>Check-Out Date</label>
-                        <input type="date" value={availabilityDates.checkOutDate} onChange={(e) => setAvailabilityDates({ ...availabilityDates, checkOutDate: e.target.value })} />
-                    </div>
-                </div>
-            </div>
-
-            <div className="room-type-availability-summary">
-                <p>Family rooms: {remainingByType.FAMILY}</p>
-                <p>Suite rooms: {remainingByType.SUITE}</p>
-                <p>Deluxe rooms: {remainingByType.DELUXE}</p>
-                <p>Standard rooms: {remainingByType.STANDARD}</p>
             </div>
 
             {loading && <p>Loading rooms...</p>}
@@ -136,7 +101,6 @@ function ViewRoomsPage() {
                                 <p className="room-stock-note">
                                     {room.remainingRooms} room{room.remainingRooms === 1 ? "" : "s"} remaining
                                 </p>
-                                <p className="room-meta">Status: {room.roomStatus}</p>
 
                                 <div className="room-extra-prices">
                                     <p>Weekend: LKR {Number(room.weekendPrice || 0).toLocaleString()}</p>
