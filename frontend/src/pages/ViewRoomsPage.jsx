@@ -98,9 +98,6 @@ function ViewRoomsPage() {
                                     <span>{room.capacity} Guests</span>
                                     <span>LKR {Number(room.normalPrice || 0).toLocaleString()} / night</span>
                                 </div>
-                                <p className="room-stock-note">
-                                    {room.remainingRooms} room{room.remainingRooms === 1 ? "" : "s"} remaining
-                                </p>
 
                                 <div className="room-extra-prices">
                                     <p>Weekend: LKR {Number(room.weekendPrice || 0).toLocaleString()}</p>

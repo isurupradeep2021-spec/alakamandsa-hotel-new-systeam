@@ -28,5 +28,9 @@ export const updateRoomRecord = (id, payload) => http.put(`/rooms/${id}`, payloa
 export const deleteRoomRecord = (id) => http.delete(`/rooms/${id}`);
 export const getRoomBookings = () => http.get("/room-bookings");
 export const getMyRoomBookings = () => http.get("/room-bookings/my");
+export const checkRoomAvailability = (roomNumber, checkInDate, checkOutDate) =>
+    http.get("/room-bookings/check-availability", {
+        params: { roomNumber, checkInDate, checkOutDate }
+    });
 export const updateRoomBooking = (id, payload) => http.put(`/room-bookings/${id}`, payload);
 export const deleteRoomBooking = (id) => http.delete(`/room-bookings/${id}`);

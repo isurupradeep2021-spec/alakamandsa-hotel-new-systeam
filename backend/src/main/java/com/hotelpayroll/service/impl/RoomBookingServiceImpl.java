@@ -1,5 +1,6 @@
 package com.hotelpayroll.service.impl;
 
+import com.hotelpayroll.dto.RoomAvailabilityResponse;
 import com.hotelpayroll.dto.RoomBookingRequest;
 import com.hotelpayroll.dto.RoomBookingResponse;
 import com.hotelpayroll.entity.RoomBooking;
@@ -79,6 +80,44 @@ public class RoomBookingServiceImpl implements RoomBookingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Room booking not found"));
         roomBookingRepository.delete(booking);
         auditService.log("DELETE", "RoomBooking", id.toString(), getCurrentUsername(), "Deleted room booking");
+    }
+
+    @Override
+    public RoomAvailabilityResponse checkAvailability(String roomNumber, LocalDate checkInDate, LocalDate checkOutDate) {
+        // Validate input dates
+        if (checkOutDate.isBefore(checkInDate) || checkOutDate.isEqual(checkInDate)) {
+            throw new BadRequestException("Check-out date must be after check-in date");
+        }
+
+        // Get room
+        Room room = getRoom(roomNumber);
+
+        // Calculate remaining rooms for the requested date range
+        int totalRooms = room.getTotalRooms() == null ? 1 : room.getTotalRooms();
+        Integer bookedRooms = roomBookingRepository.sumBookedRoomsByRoomNumber(
+                room.getRoomNumber(),
+                ACTIVE_BOOKING_STATUSES,
+                checkInDate,
+                checkOutDate,
+                null
+        );
+        int remainingRooms = Math.max(0, totalRooms - (bookedRooms == null ? 0 : bookedRooms));
+
+        // Determine availability status
+        boolean isAvailable = remainingRooms > 0;
+        String message = isAvailable
+                ? String.format("Room %s is available with %d room(s) remaining", roomNumber, remainingRooms)
+                : String.format("Room %s is not available for the selected dates", roomNumber);
+
+        return RoomAvailabilityResponse.builder()
+                .roomNumber(room.getRoomNumber())
+                .checkInDate(checkInDate)
+                .checkOutDate(checkOutDate)
+                .available(isAvailable)
+                .remainingRooms(remainingRooms)
+                .totalRooms(totalRooms)
+                .message(message)
+                .build();
     }
 
     private Room getRoom(String roomNumber) {

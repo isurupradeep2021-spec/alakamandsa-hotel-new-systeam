@@ -1,8 +1,10 @@
 package com.hotelpayroll.service;
 
+import com.hotelpayroll.dto.RoomAvailabilityResponse;
 import com.hotelpayroll.dto.RoomBookingRequest;
 import com.hotelpayroll.dto.RoomBookingResponse;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface RoomBookingService {
@@ -11,4 +13,5 @@ public interface RoomBookingService {
     List<RoomBookingResponse> getAll();
     List<RoomBookingResponse> getMyBookings();
     void delete(Long id);
+    RoomAvailabilityResponse checkAvailability(String roomNumber, LocalDate checkInDate, LocalDate checkOutDate);
 }
