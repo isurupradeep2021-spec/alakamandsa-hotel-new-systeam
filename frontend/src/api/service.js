@@ -22,3 +22,26 @@ export const exportPayrollPdf = (params) =>
 export const getMyProfile = () => http.get('/users/me');
 export const updateMyProfile = (payload) => http.put('/users/me', payload);
 export const changeMyPassword = (payload) => http.post('/users/me/change-password', payload);
+
+export const createReservation = (payload) => http.post('/reservations', payload);
+export const getReservations = () => http.get('/reservations');
+export const getMyReservations = () => http.get('/reservations/my');
+export const updateReservationStatus = (id, status) =>
+  http.patch(`/reservations/${id}/status`, { status });
+export const assignReservationTable = (id, assignedTable) =>
+  http.patch(`/reservations/${id}/assign-table`, { assignedTable });
+export const cancelReservation = (id) => http.post(`/reservations/${id}/cancel`);
+
+export const getMenuItems = (params) => http.get('/menu-items', { params });
+export const createMenuItem = (payload) => http.post('/menu-items', payload);
+export const updateMenuItem = (id, payload) => http.put(`/menu-items/${id}`, payload);
+export const toggleMenuItemAvailability = (id, available) =>
+  http.patch(`/menu-items/${id}/availability`, null, { params: { available } });
+export const uploadMenuItemImage = (id, file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return http.post(`/menu-items/${id}/image`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
+};
+export const deleteMenuItem = (id) => http.delete(`/menu-items/${id}`);

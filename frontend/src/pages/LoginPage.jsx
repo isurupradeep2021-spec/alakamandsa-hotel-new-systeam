@@ -14,6 +14,8 @@ function LoginPage() {
     try {
       const user = await login(form);
       if (user.role === 'STAFF_MEMBER') navigate('/my-payroll');
+      else if (user.role === 'CUSTOMER') navigate('/dining');
+      else if (user.role === 'RESTAURANT_MANAGER') navigate('/table-reservations');
       else navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
