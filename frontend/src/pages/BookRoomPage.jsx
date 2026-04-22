@@ -71,7 +71,7 @@ function BookRoomPage() {
 
                 setAvailabilityData(matchedRoom);
 
-                if (matchedRoom.roomStatus === "RESERVED") {
+                if (matchedRoom.roomStatus !== "AVAILABLE") {
                     setAvailabilityError(`Room ${matchedRoom.roomNumber} is not available for the selected dates.`);
                 } else {
                     setAvailabilityError("");

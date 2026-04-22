@@ -104,8 +104,13 @@ function ViewRoomsPage() {
                                     <p>Seasonal: {room.seasonalPrice ? `LKR ${Number(room.seasonalPrice).toLocaleString()}` : "N/A"}</p>
                                 </div>
 
-                                <button className="btn" type="button" onClick={() => openBookingPage(room)} disabled={room.remainingRooms <= 0}>
-                                    Book This Room
+                                <button
+                                    className="btn"
+                                    type="button"
+                                    onClick={() => openBookingPage(room)}
+                                    disabled={room.remainingRooms <= 0 || room.roomStatus !== "AVAILABLE"}
+                                >
+                                    {room.remainingRooms <= 0 || room.roomStatus !== "AVAILABLE" ? "Not Available" : "Book This Room"}
                                 </button>
                             </div>
                         </article>

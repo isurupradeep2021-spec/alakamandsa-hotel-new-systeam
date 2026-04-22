@@ -6,6 +6,8 @@ import com.hotelpayroll.dto.RoomBookingResponse;
 import com.hotelpayroll.entity.RoomBooking;
 import com.hotelpayroll.entity.RoomBookingStatus;
 import com.hotelpayroll.entity.Room;
+import com.hotelpayroll.entity.RoomStatus;
+import com.hotelpayroll.entity.RoomType;
 import com.hotelpayroll.exception.BadRequestException;
 import com.hotelpayroll.exception.ResourceNotFoundException;
 import com.hotelpayroll.repository.RoomBookingRepository;
@@ -104,10 +106,11 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         int remainingRooms = Math.max(0, totalRooms - (bookedRooms == null ? 0 : bookedRooms));
 
         // Determine availability status
-        boolean isAvailable = remainingRooms > 0;
+        RoomStatus roomStatus = room.getRoomStatus() == null ? RoomStatus.AVAILABLE : room.getRoomStatus();
+        boolean isAvailable = roomStatus == RoomStatus.AVAILABLE && remainingRooms > 0;
         String message = isAvailable
                 ? String.format("Room %s is available with %d room(s) remaining", roomNumber, remainingRooms)
-                : String.format("Room %s is not available for the selected dates", roomNumber);
+            : String.format("Room %s is not available for the selected dates", roomNumber);
 
         return RoomAvailabilityResponse.builder()
                 .roomNumber(room.getRoomNumber())
@@ -154,6 +157,11 @@ public class RoomBookingServiceImpl implements RoomBookingService {
     }
 
     private void validateAvailability(Room room, Integer requestedRooms, Long excludeBookingId, LocalDate checkInDate, LocalDate checkOutDate) {
+        RoomStatus roomStatus = room.getRoomStatus() == null ? RoomStatus.AVAILABLE : room.getRoomStatus();
+        if (roomStatus != RoomStatus.AVAILABLE) {
+            throw new BadRequestException("Room " + room.getRoomNumber() + " is currently " + roomStatus + " and cannot be booked");
+        }
+
         int totalRooms = room.getTotalRooms() == null ? 1 : room.getTotalRooms();
         int roomsRequested = requestedRooms == null ? 1 : requestedRooms;
         Integer activeBooked = roomBookingRepository.sumBookedRoomsByRoomNumber(
@@ -171,7 +179,7 @@ public class RoomBookingServiceImpl implements RoomBookingService {
     }
 
     private RoomBookingResponse toResponse(RoomBooking booking) {
-        Room room = getRoom(booking.getRoomNumber());
+        Room room = roomRepository.findByRoomNumberIgnoreCase(booking.getRoomNumber()).orElse(null);
         return RoomBookingResponse.builder()
                 .id(booking.getId())
                 .bookingCustomer(booking.getBookingCustomer())
@@ -179,8 +187,8 @@ public class RoomBookingServiceImpl implements RoomBookingService {
                 .roomNumber(booking.getRoomNumber())
                 .bookedRooms(booking.getBookedRooms() == null ? 1 : booking.getBookedRooms())
                 .guestCount(booking.getGuestCount() == null ? 1 : booking.getGuestCount())
-                .roomType(room.getRoomType())
-                .guests(room.getCapacity())
+            .roomType(room == null ? RoomType.STANDARD : room.getRoomType())
+            .guests(room == null ? null : room.getCapacity())
                 .bookingStatus(booking.getBookingStatus())
                 .amount(booking.getAmount())
                 .checkInDate(booking.getCheckInDate())
