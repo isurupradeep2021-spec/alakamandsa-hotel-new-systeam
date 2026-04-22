@@ -9,6 +9,8 @@ import DiningPage from './pages/DiningPage';
 import ReserveTablePage from './pages/ReserveTablePage';
 import MenuManagementPage from './pages/MenuManagementPage';
 import TableReservationsPage from './pages/TableReservationsPage';
+import RoomManagementPage from './pages/RoomManagementPage';
+import ViewRoomsPage from './pages/ViewRoomsPage';
 import StaffPage from './pages/StaffPage';
 
 function App() {
@@ -24,6 +26,24 @@ function App() {
         }
       >
         <Route path="/dashboard" element={<DashboardPage />} />
+
+        <Route
+          path="/rooms"
+          element={
+            <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'MANAGER']}>
+              <RoomManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/view-rooms"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']}>
+              <ViewRoomsPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/staff"
           element={
@@ -48,11 +68,11 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/profile" element={<ProfilePage />} />
+
         <Route
           path="/dining"
           element={
-            <ProtectedRoute allowedRoles={['CUSTOMER', 'RESTAURANT_MANAGER']}>
+            <ProtectedRoute allowedRoles={['CUSTOMER', 'RESTAURANT_MANAGER', 'SUPER_ADMIN', 'MANAGER']}>
               <DiningPage />
             </ProtectedRoute>
           }
@@ -68,7 +88,7 @@ function App() {
         <Route
           path="/menu-management"
           element={
-            <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'MANAGER']}>
+            <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'MANAGER', 'RESTAURANT_MANAGER']}>
               <MenuManagementPage />
             </ProtectedRoute>
           }
@@ -81,10 +101,9 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/reservations"
-          element={<Navigate to="/table-reservations" replace />}
-        />
+        <Route path="/reservations" element={<Navigate to="/table-reservations" replace />} />
+
+        <Route path="/profile" element={<ProfilePage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />
