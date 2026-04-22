@@ -42,6 +42,7 @@ function ViewRoomsPage() {
     }, [rooms, roomType]);
 
     const formatType = (roomTypeValue) => roomTypeValue?.charAt(0) + roomTypeValue?.slice(1).toLowerCase();
+    const statusClass = (status) => `room-status-${String(status || "").toLowerCase()}`;
 
     const openBookingPage = (room) => {
         navigate("/book-room", { state: { roomNumber: room.roomNumber } });
@@ -87,7 +88,7 @@ function ViewRoomsPage() {
                                 }}
                             />
                             <div className="room-card-body">
-                                <h4>
+                                <h4 className={`room-status-badge ${statusClass(room.roomStatus)}`}>
                                     {formatType(room.roomType)} - {room.roomStatus}
                                 </h4>
 
@@ -105,7 +106,7 @@ function ViewRoomsPage() {
                                 </div>
 
                                 <button
-                                    className="btn"
+                                    className={`btn ${room.remainingRooms <= 0 || room.roomStatus !== "AVAILABLE" ? "btn-unavailable" : ""}`}
                                     type="button"
                                     onClick={() => openBookingPage(room)}
                                     disabled={room.remainingRooms <= 0 || room.roomStatus !== "AVAILABLE"}
