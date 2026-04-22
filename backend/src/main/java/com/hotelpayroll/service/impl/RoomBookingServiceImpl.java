@@ -13,9 +13,11 @@ import com.hotelpayroll.service.AuditService;
 import com.hotelpayroll.service.RoomBookingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -27,12 +29,19 @@ public class RoomBookingServiceImpl implements RoomBookingService {
     private final RoomRepository roomRepository;
     private final AuditService auditService;
 
+    private static final List<RoomBookingStatus> ACTIVE_BOOKING_STATUSES = List.of(
+            RoomBookingStatus.BOOKED,
+            RoomBookingStatus.CHECKED_IN
+    );
+
     @Override
     public RoomBookingResponse create(RoomBookingRequest request) {
         Room room = getRoom(request.getRoomNumber());
+        validateAvailability(room, request.getBookedRooms(), null, request.getCheckInDate(), request.getCheckOutDate());
         RoomBooking booking = mapToEntity(new RoomBooking(), request, room);
+        booking.setCreatedByUsername(getCurrentUsername());
         RoomBooking saved = roomBookingRepository.save(booking);
-        auditService.log("CREATE", "RoomBooking", saved.getId().toString(), "system", "Created room booking");
+        auditService.log("CREATE", "RoomBooking", saved.getId().toString(), getCurrentUsername(), "Created room booking");
         return toResponse(saved);
     }
 
@@ -41,9 +50,10 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         RoomBooking booking = roomBookingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Room booking not found"));
         Room room = getRoom(request.getRoomNumber());
+        validateAvailability(room, request.getBookedRooms(), id, request.getCheckInDate(), request.getCheckOutDate());
         booking = mapToEntity(booking, request, room);
         RoomBooking saved = roomBookingRepository.save(booking);
-        auditService.log("UPDATE", "RoomBooking", saved.getId().toString(), "system", "Updated room booking");
+        auditService.log("UPDATE", "RoomBooking", saved.getId().toString(), getCurrentUsername(), "Updated room booking");
         return toResponse(saved);
     }
 
@@ -56,11 +66,19 @@ public class RoomBookingServiceImpl implements RoomBookingService {
     }
 
     @Override
+    public List<RoomBookingResponse> getMyBookings() {
+        return roomBookingRepository.findByCreatedByUsernameOrderByIdDesc(getCurrentUsername())
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
     public void delete(Long id) {
         RoomBooking booking = roomBookingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Room booking not found"));
         roomBookingRepository.delete(booking);
-        auditService.log("DELETE", "RoomBooking", id.toString(), "system", "Deleted room booking");
+        auditService.log("DELETE", "RoomBooking", id.toString(), getCurrentUsername(), "Deleted room booking");
     }
 
     private Room getRoom(String roomNumber) {
@@ -79,11 +97,16 @@ public class RoomBookingServiceImpl implements RoomBookingService {
             throw new BadRequestException("Booking duration must be at least 1 day");
         }
 
-        BigDecimal amount = room.getNormalPrice().multiply(BigDecimal.valueOf(nights));
+        int bookedRooms = request.getBookedRooms() == null ? 1 : request.getBookedRooms();
+        BigDecimal amount = room.getNormalPrice()
+                .multiply(BigDecimal.valueOf(nights))
+                .multiply(BigDecimal.valueOf(bookedRooms));
 
         booking.setBookingCustomer(request.getBookingCustomer().trim());
         booking.setCustomerEmail(request.getCustomerEmail().trim());
         booking.setRoomNumber(room.getRoomNumber());
+        booking.setBookedRooms(bookedRooms);
+        booking.setGuestCount(request.getGuestCount());
         booking.setBookingStatus(RoomBookingStatus.BOOKED);
         booking.setAmount(amount);
         booking.setCheckInDate(request.getCheckInDate());
@@ -91,17 +114,43 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         return booking;
     }
 
+    private void validateAvailability(Room room, Integer requestedRooms, Long excludeBookingId, LocalDate checkInDate, LocalDate checkOutDate) {
+        int totalRooms = room.getTotalRooms() == null ? 1 : room.getTotalRooms();
+        int roomsRequested = requestedRooms == null ? 1 : requestedRooms;
+        Integer activeBooked = roomBookingRepository.sumBookedRoomsByRoomNumber(
+                room.getRoomNumber(),
+                ACTIVE_BOOKING_STATUSES,
+                checkInDate,
+                checkOutDate,
+                excludeBookingId
+        );
+        int remainingRooms = Math.max(0, totalRooms - (activeBooked == null ? 0 : activeBooked));
+
+        if (roomsRequested > remainingRooms) {
+            throw new BadRequestException("Only " + remainingRooms + " room(s) remaining for room number " + room.getRoomNumber());
+        }
+    }
+
     private RoomBookingResponse toResponse(RoomBooking booking) {
+        Room room = getRoom(booking.getRoomNumber());
         return RoomBookingResponse.builder()
                 .id(booking.getId())
                 .bookingCustomer(booking.getBookingCustomer())
                 .customerEmail(booking.getCustomerEmail())
                 .roomNumber(booking.getRoomNumber())
+                .bookedRooms(booking.getBookedRooms() == null ? 1 : booking.getBookedRooms())
+                .guestCount(booking.getGuestCount() == null ? 1 : booking.getGuestCount())
+                .roomType(room.getRoomType())
+                .guests(room.getCapacity())
                 .bookingStatus(booking.getBookingStatus())
                 .amount(booking.getAmount())
                 .checkInDate(booking.getCheckInDate())
                 .checkOutDate(booking.getCheckOutDate())
                 .createdAt(booking.getCreatedAt())
                 .build();
+    }
+
+    private String getCurrentUsername() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

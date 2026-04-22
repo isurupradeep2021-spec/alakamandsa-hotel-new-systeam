@@ -26,8 +26,19 @@ public class RoomBooking {
     @Column(nullable = false)
     private String customerEmail;
 
+    @Column
+    private String createdByUsername;
+
     @Column(nullable = false)
     private String roomNumber;
+
+    @Column
+    @Builder.Default
+    private Integer bookedRooms = 1;
+
+    @Column
+    @Builder.Default
+    private Integer guestCount = 1;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

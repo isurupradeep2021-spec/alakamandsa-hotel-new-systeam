@@ -7,6 +7,7 @@ const initialRoomForm = {
     photoUrl: "",
     roomDescription: "",
     capacity: 1,
+    totalRooms: 1,
     normalPrice: "",
     weekendPrice: "",
     seasonalPrice: "",
@@ -17,6 +18,8 @@ const initialBookingForm = {
     bookingCustomer: "",
     customerEmail: "",
     roomNumber: "",
+    bookedRooms: 1,
+    guestCount: 1,
     checkInDate: "",
     checkOutDate: "",
 };
@@ -58,6 +61,7 @@ function RoomManagementPage() {
                 { label: "Photo URL", value: roomForm.photoUrl?.trim() },
                 { label: "Room Description", value: roomForm.roomDescription?.trim() },
                 { label: "Capacity", value: String(roomForm.capacity ?? "").trim() },
+                { label: "Total Rooms", value: String(roomForm.totalRooms ?? "").trim() },
                 { label: "Normal Price", value: String(roomForm.normalPrice ?? "").trim() },
                 { label: "Weekend Price", value: String(roomForm.weekendPrice ?? "").trim() },
                 { label: "Room Status", value: roomForm.roomStatus },
@@ -75,6 +79,7 @@ function RoomManagementPage() {
                 photoUrl: roomForm.photoUrl.trim(),
                 roomDescription: roomForm.roomDescription.trim(),
                 capacity: Number(roomForm.capacity),
+                totalRooms: Number(roomForm.totalRooms),
                 normalPrice: Number(roomForm.normalPrice),
                 weekendPrice: Number(roomForm.weekendPrice),
                 roomStatus: roomForm.roomStatus,
@@ -111,6 +116,8 @@ function RoomManagementPage() {
                 bookingCustomer: bookingForm.bookingCustomer.trim(),
                 customerEmail: bookingForm.customerEmail.trim(),
                 roomNumber: bookingForm.roomNumber.trim(),
+                bookedRooms: Number(bookingForm.bookedRooms),
+                guestCount: Number(bookingForm.guestCount),
                 checkInDate: bookingForm.checkInDate,
                 checkOutDate: bookingForm.checkOutDate,
             };
@@ -140,6 +147,7 @@ function RoomManagementPage() {
             photoUrl: room.photoUrl ?? "",
             roomDescription: room.roomDescription ?? "",
             capacity: room.capacity ?? 1,
+            totalRooms: room.totalRooms ?? 1,
             normalPrice: room.normalPrice ?? "",
             weekendPrice: room.weekendPrice ?? "",
             seasonalPrice: room.seasonalPrice ?? "",
@@ -155,6 +163,8 @@ function RoomManagementPage() {
             bookingCustomer: booking.bookingCustomer ?? "",
             customerEmail: booking.customerEmail ?? "",
             roomNumber: booking.roomNumber ?? "",
+            bookedRooms: booking.bookedRooms ?? 1,
+            guestCount: booking.guestCount ?? 1,
             checkInDate: booking.checkInDate ?? "",
             checkOutDate: booking.checkOutDate ?? "",
         });
@@ -200,6 +210,10 @@ function RoomManagementPage() {
                         <div>
                             <label>Capacity</label>
                             <input type="number" min="1" value={roomForm.capacity} onChange={(e) => setRoomForm({ ...roomForm, capacity: e.target.value })} required />
+                        </div>
+                        <div>
+                            <label>Total Rooms</label>
+                            <input type="number" min="1" value={roomForm.totalRooms} onChange={(e) => setRoomForm({ ...roomForm, totalRooms: e.target.value })} placeholder="Ex: 4" required />
                         </div>
                         <div>
                             <label>Normal Price</label>
@@ -304,6 +318,28 @@ function RoomManagementPage() {
                         <div>
                             <label>Room Number</label>
                             <input value={bookingForm.roomNumber} onChange={(e) => setBookingForm({ ...bookingForm, roomNumber: e.target.value })} placeholder="204" required />
+                        </div>
+                        <div>
+                            <label>Rooms to Book</label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={bookingForm.bookedRooms}
+                                onChange={(e) => setBookingForm({ ...bookingForm, bookedRooms: e.target.value })}
+                                placeholder="1"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label>Guest Count</label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={bookingForm.guestCount}
+                                onChange={(e) => setBookingForm({ ...bookingForm, guestCount: e.target.value })}
+                                placeholder="2"
+                                required
+                            />
                         </div>
                         <div>
                             <label>Check-In Date (mm/dd/yyyy)</label>

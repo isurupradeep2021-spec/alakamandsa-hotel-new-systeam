@@ -9,5 +9,6 @@ public interface RoomBookingService {
     RoomBookingResponse create(RoomBookingRequest request);
     RoomBookingResponse update(Long id, RoomBookingRequest request);
     List<RoomBookingResponse> getAll();
+    List<RoomBookingResponse> getMyBookings();
     void delete(Long id);
 }

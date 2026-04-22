@@ -35,6 +35,12 @@ public class RoomBookingController {
         return roomBookingService.getAll();
     }
 
+    @PreAuthorize("hasAnyRole('CUSTOMER')")
+    @GetMapping("/my")
+    public List<RoomBookingResponse> getMyBookings() {
+        return roomBookingService.getMyBookings();
+    }
+
     @PreAuthorize("hasAnyRole('MANAGER')")
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {

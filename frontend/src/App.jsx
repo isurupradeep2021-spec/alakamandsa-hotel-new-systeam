@@ -7,6 +7,7 @@ import PayrollPage from "./pages/PayrollPage";
 import ProfilePage from "./pages/ProfilePage";
 import RoomManagementPage from "./pages/RoomManagementPage";
 import StaffPage from "./pages/StaffPage";
+import BookRoomPage from "./pages/BookRoomPage";
 import ViewRoomsPage from "./pages/ViewRoomsPage";
 
 function App() {
@@ -66,6 +67,14 @@ function App() {
                     element={
                         <ProtectedRoute allowedRoles={["CUSTOMER"]}>
                             <ViewRoomsPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/book-room"
+                    element={
+                        <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+                            <BookRoomPage />
                         </ProtectedRoute>
                     }
                 />

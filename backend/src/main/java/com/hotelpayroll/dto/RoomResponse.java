@@ -16,6 +16,8 @@ public class RoomResponse {
     private String photoUrl;
     private String roomDescription;
     private Integer capacity;
+    private Integer totalRooms;
+    private Integer remainingRooms;
     private BigDecimal normalPrice;
     private BigDecimal weekendPrice;
     private BigDecimal seasonalPrice;
