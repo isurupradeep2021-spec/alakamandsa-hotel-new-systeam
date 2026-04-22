@@ -22,3 +22,8 @@ export const exportPayrollPdf = (params) =>
 export const getMyProfile = () => http.get('/users/me');
 export const updateMyProfile = (payload) => http.put('/users/me', payload);
 export const changeMyPassword = (payload) => http.post('/users/me/change-password', payload);
+export const getEventBookings = () => http.get('/event-bookings');
+export const createEventBooking = (payload) => http.post('/event-bookings', payload);
+export const updateEventBooking = (id, payload) => http.put(`/event-bookings/${id}`, payload);
+export const deleteEventBooking = (id) => http.delete(`/event-bookings/${id}`);
+export const eventAnalytics = () => http.get('/event-bookings/analytics');

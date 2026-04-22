@@ -6,18 +6,25 @@ const menuByRole = {
     { to: '/dashboard', label: 'Dashboard' },
     { to: '/staff', label: 'User Management' },
     { to: '/payroll', label: 'Payroll System' },
+    { to: '/event-management', label: 'Event Management' },
     { to: '/profile', label: 'My Profile' }
   ],
   MANAGER: [
     { to: '/dashboard', label: 'Dashboard' },
     { to: '/staff', label: 'Staff Management' },
     { to: '/payroll', label: 'Payroll System' },
+    { to: '/event-management', label: 'Event Management' },
     { to: '/profile', label: 'My Profile' }
   ],
   STAFF_MEMBER: [{ to: '/my-payroll', label: 'My Salary' }, { to: '/profile', label: 'My Profile' }],
-  CUSTOMER: [{ to: '/dashboard', label: 'Customer Dashboard' }, { to: '/profile', label: 'My Profile' }],
+  CUSTOMER: [{ to: '/dashboard', label: 'Customer Dashboard' }, { to: '/event-booking', label: 'Book Event' }, { to: '/profile', label: 'My Profile' }],
   RESTAURANT_MANAGER: [{ to: '/dashboard', label: 'Restaurant Dashboard' }, { to: '/profile', label: 'My Profile' }],
-  EVENT_MANAGER: [{ to: '/dashboard', label: 'Event Dashboard' }, { to: '/profile', label: 'My Profile' }]
+  EVENT_MANAGER: [
+    { to: '/dashboard', label: 'Event Dashboard' },
+    { to: '/event-booking-manager', label: 'Event Booking' },
+    { to: '/event-management', label: 'Event Management' },
+    { to: '/profile', label: 'My Profile' }
+  ]
 };
 
 function Layout() {

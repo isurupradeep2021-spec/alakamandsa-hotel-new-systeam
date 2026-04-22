@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+﻿import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardPage from './pages/DashboardPage';
@@ -6,6 +6,8 @@ import LoginPage from './pages/LoginPage';
 import PayrollPage from './pages/PayrollPage';
 import ProfilePage from './pages/ProfilePage';
 import StaffPage from './pages/StaffPage';
+import EventManagerBookingPage from './pages/EventManagerBookingPage';
+import EventManagementPage from './pages/EventManagementPage';
 
 function App() {
   return (
@@ -45,6 +47,30 @@ function App() {
           }
         />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route
+          path="/event-booking-manager"
+          element={
+            <ProtectedRoute allowedRoles={['EVENT_MANAGER']}>
+              <EventManagerBookingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/event-management"
+          element={
+            <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'MANAGER', 'EVENT_MANAGER']}>
+              <EventManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/event-booking"
+          element={
+            <ProtectedRoute allowedRoles={['CUSTOMER']}>
+              <EventManagementPage view="booking" />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />
