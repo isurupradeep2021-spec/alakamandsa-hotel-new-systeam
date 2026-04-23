@@ -212,6 +212,14 @@ function BookRoomPage() {
         return bookingStatus === "BOOKED" || bookingStatus === "CHECKED_IN";
     };
 
+    const isApprovedCancellation = (bookingStatus) => {
+        return bookingStatus === "CANCELLED";
+    };
+
+    const isPendingCancellationApproval = (bookingStatus) => {
+        return bookingStatus === "CANCELLATION_REQUESTED";
+    };
+
     const handleRequestCancellation = async (bookingId) => {
         setBookingMessage("");
         setBookingError("");
@@ -386,6 +394,16 @@ function BookRoomPage() {
                                             {canRequestCancellation(booking.bookingStatus) && (
                                                 <button className="btn danger small" type="button" onClick={() => handleRequestCancellation(booking.id)}>
                                                     Request Cancel
+                                                </button>
+                                            )}
+                                            {isApprovedCancellation(booking.bookingStatus) && (
+                                                <button className="btn ghost small" type="button" disabled>
+                                                    Approved Cancel Request
+                                                </button>
+                                            )}
+                                            {isPendingCancellationApproval(booking.bookingStatus) && (
+                                                <button className="btn ghost small" type="button" disabled>
+                                                    Pending Approval
                                                 </button>
                                             )}
                                         </td>
