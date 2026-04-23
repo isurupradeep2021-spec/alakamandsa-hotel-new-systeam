@@ -15,7 +15,7 @@ public class DashboardController {
 
     private final DashboardService dashboardService;
 
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','MANAGER')")
+    @PreAuthorize("hasAuthority('VIEW_REPORTS')")
     @GetMapping("/summary")
     public DashboardResponse getSummary() {
         return dashboardService.getSummary();

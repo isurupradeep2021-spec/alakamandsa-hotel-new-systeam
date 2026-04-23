@@ -9,6 +9,7 @@ import com.hotelpayroll.exception.BadRequestException;
 import com.hotelpayroll.repository.UserRepository;
 import com.hotelpayroll.security.CustomUserDetailsService;
 import com.hotelpayroll.security.JwtService;
+import com.hotelpayroll.security.RolePermissions;
 import com.hotelpayroll.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,6 +17,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +43,7 @@ public class AuthServiceImpl implements AuthService {
                 .username(user.getUsername())
                 .fullName(user.getFullName())
                 .role(user.getRole())
+                .permissions(RolePermissions.forRole(user.getRole()).stream().map(Enum::name).collect(Collectors.toSet()))
                 .build();
     }
 
@@ -67,6 +71,7 @@ public class AuthServiceImpl implements AuthService {
                 .username(saved.getUsername())
                 .fullName(saved.getFullName())
                 .role(saved.getRole())
+                .permissions(RolePermissions.forRole(saved.getRole()).stream().map(Enum::name).collect(Collectors.toSet()))
                 .build();
     }
 }

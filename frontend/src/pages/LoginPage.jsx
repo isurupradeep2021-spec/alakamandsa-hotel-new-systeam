@@ -1,22 +1,34 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: '', password: '' });
-  const [error, setError] = useState('');
+  const [form, setForm] = useState({ username: "", password: "" });
+  const [error, setError] = useState("");
 
   const submit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     try {
-      const user = await login(form);
-      if (user.role === 'STAFF_MEMBER') navigate('/my-payroll');
-      else navigate('/dashboard');
+      const user = await login({
+        username: form.username.trim().toLowerCase(),
+        password: form.password,
+      });
+
+      if (user.role === "STAFF_MEMBER") navigate("/my-payroll");
+      else if (user.role === "CUSTOMER") navigate("/view-rooms");
+      else if (user.role === "RESTAURANT_MANAGER") navigate("/table-reservations");
+      else if (user.role === "EVENT_MANAGER") navigate("/event-booking-manager");
+      else if (user.role === "SUPER_ADMIN" || user.role === "MANAGER") navigate("/dashboard");
+      else navigate("/profile");
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      if (!err.response) {
+        setError("Cannot reach backend server. Please start backend and try again.");
+      } else {
+        setError(err.response?.data?.message || "Login failed");
+      }
     }
   };
 
@@ -40,7 +52,9 @@ function LoginPage() {
             required
           />
           {error && <div className="error">{error}</div>}
-          <button className="btn" type="submit">Login</button>
+          <button className="btn" type="submit">
+            Login
+          </button>
         </form>
         <small>Demo password for seeded users: Password@123</small>
       </div>
