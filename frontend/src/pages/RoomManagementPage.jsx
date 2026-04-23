@@ -34,6 +34,8 @@ const initialBookingForm = {
     checkOutDate: "",
 };
 
+const ACTIVE_BOOKING_STATUSES = new Set(["BOOKED", "CHECKED_IN", "CANCELLATION_REQUESTED"]);
+
 function RoomManagementPage() {
     const [roomForm, setRoomForm] = useState(initialRoomForm);
     const [bookingForm, setBookingForm] = useState(initialBookingForm);
@@ -47,25 +49,45 @@ function RoomManagementPage() {
     const [editingBookingId, setEditingBookingId] = useState(null);
 
     const roomOverview = useMemo(() => {
-        const totalRooms = rooms.reduce((sum, room) => sum + Math.max(1, Number(room.totalRooms || 1)), 0);
+        const totalRooms = rooms.reduce((sum, room) => {
+            const totalForRoom = Math.max(1, Number(room.totalRooms || 1));
+            return sum + totalForRoom;
+        }, 0);
+
         const availableRooms = rooms.reduce((sum, room) => {
             const totalForRoom = Math.max(1, Number(room.totalRooms || 1));
-            const remainingRooms = Number(room.remainingRooms);
+            const normalizedRemaining = Number.isFinite(Number(room.remainingRooms)) ? Number(room.remainingRooms) : totalForRoom;
+            const availableForRoom = Math.min(totalForRoom, Math.max(0, normalizedRemaining));
+            return sum + availableForRoom;
+        }, 0);
 
-            if (Number.isFinite(remainingRooms)) {
-                return sum + Math.max(0, Math.min(totalForRoom, remainingRooms));
+        const bookedByRoomNumber = new Map();
+
+        bookings.forEach((booking) => {
+            const status = String(booking.bookingStatus || "").toUpperCase();
+            if (!ACTIVE_BOOKING_STATUSES.has(status)) {
+                return;
             }
 
-            return sum + (room.roomStatus === "AVAILABLE" ? totalForRoom : 0);
-        }, 0);
-        const bookedRooms = Math.max(0, totalRooms - availableRooms);
+            const roomKey = String(booking.roomNumber || "")
+                .trim()
+                .toLowerCase();
+            if (!roomKey) {
+                return;
+            }
+
+            const bookedCount = Math.max(1, Number(booking.bookedRooms || 1));
+            bookedByRoomNumber.set(roomKey, (bookedByRoomNumber.get(roomKey) || 0) + bookedCount);
+        });
+
+        const bookedRooms = Array.from(bookedByRoomNumber.values()).reduce((sum, count) => sum + count, 0);
 
         return {
             totalRooms,
             bookedRooms,
             availableRooms,
         };
-    }, [rooms]);
+    }, [rooms, bookings]);
 
     const loadLatestRecords = async () => {
         const [roomRes, bookingRes] = await Promise.allSettled([getRooms(), getRoomBookings()]);
@@ -246,8 +268,6 @@ function RoomManagementPage() {
                 <h3>Room Overview</h3>
                 <p>Live room status based on current customer bookings.</p>
                 <div className="manager-overview-grid">
-
-                    
                     <article>
                         <span>Total Rooms</span>
                         <strong>{roomOverview.totalRooms}</strong>
