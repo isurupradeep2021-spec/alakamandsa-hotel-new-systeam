@@ -147,7 +147,9 @@ function DashboardPage() {
                                             <li key={`most-room-${item.roomNumber}-${index}`}>
                                                 <div className="insight-room-line">
                                                     <strong>Room {item.roomNumber}</strong>
-                                                    <small>{item.bookings} booking{item.bookings === 1 ? "" : "s"}</small>
+                                                    <small>
+                                                        {item.bookings} booking{item.bookings === 1 ? "" : "s"}
+                                                    </small>
                                                 </div>
                                                 <div className="insight-meter">
                                                     <span style={{ width: `${Math.max(8, (Number(item.bookings || 0) / maxMostBookedCount) * 100)}%` }} />
@@ -171,7 +173,9 @@ function DashboardPage() {
                                             <li key={`least-room-${item.roomNumber}-${index}`}>
                                                 <div className="insight-room-line">
                                                     <strong>Room {item.roomNumber}</strong>
-                                                    <small>{item.bookings} booking{item.bookings === 1 ? "" : "s"}</small>
+                                                    <small>
+                                                        {item.bookings} booking{item.bookings === 1 ? "" : "s"}
+                                                    </small>
                                                 </div>
                                                 <div className="insight-meter">
                                                     <span style={{ width: `${Math.max(8, (Number(item.bookings || 0) / maxLeastBookedCount) * 100)}%` }} />
