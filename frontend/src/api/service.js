@@ -28,9 +28,30 @@ export const updateRoomRecord = (id, payload) => http.put(`/rooms/${id}`, payloa
 export const deleteRoomRecord = (id) => http.delete(`/rooms/${id}`);
 export const getRoomBookings = () => http.get("/room-bookings");
 export const getMyRoomBookings = () => http.get("/room-bookings/my");
-export const checkRoomAvailability = (roomNumber, checkInDate, checkOutDate) =>
-    http.get("/room-bookings/check-availability", {
-        params: { roomNumber, checkInDate, checkOutDate }
-    });
 export const updateRoomBooking = (id, payload) => http.put(`/room-bookings/${id}`, payload);
 export const deleteRoomBooking = (id) => http.delete(`/room-bookings/${id}`);
+export const requestRoomBookingCancellation = (id) => http.patch(`/room-bookings/${id}/request-cancellation`);
+export const approveRoomBookingCancellation = (id) => http.patch(`/room-bookings/${id}/approve-cancellation`);
+export const checkRoomAvailability = (roomNumber, checkInDate, checkOutDate) =>
+    http.get("/room-bookings/check-availability", {
+        params: { roomNumber, checkInDate, checkOutDate },
+    });
+export const createReservation = (payload) => http.post("/reservations", payload);
+export const getReservations = () => http.get("/reservations");
+export const getMyReservations = () => http.get("/reservations/my");
+export const updateReservationStatus = (id, status) => http.patch(`/reservations/${id}/status`, { status });
+export const assignReservationTable = (id, assignedTable) => http.patch(`/reservations/${id}/assign-table`, { assignedTable });
+export const cancelReservation = (id) => http.post(`/reservations/${id}/cancel`);
+
+export const getMenuItems = (params) => http.get("/menu-items", { params });
+export const createMenuItem = (payload) => http.post("/menu-items", payload);
+export const updateMenuItem = (id, payload) => http.put(`/menu-items/${id}`, payload);
+export const toggleMenuItemAvailability = (id, available) => http.patch(`/menu-items/${id}/availability`, null, { params: { available } });
+export const uploadMenuItemImage = (id, file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return http.post(`/menu-items/${id}/image`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
+};
+export const deleteMenuItem = (id) => http.delete(`/menu-items/${id}`);

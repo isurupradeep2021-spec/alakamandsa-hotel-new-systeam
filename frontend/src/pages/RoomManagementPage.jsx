@@ -246,6 +246,8 @@ function RoomManagementPage() {
                 <h3>Room Overview</h3>
                 <p>Live room status based on current customer bookings.</p>
                 <div className="manager-overview-grid">
+
+                    
                     <article>
                         <span>Total Rooms</span>
                         <strong>{roomOverview.totalRooms}</strong>
