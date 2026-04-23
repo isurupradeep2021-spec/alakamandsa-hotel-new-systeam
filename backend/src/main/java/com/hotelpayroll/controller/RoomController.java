@@ -5,9 +5,11 @@ import com.hotelpayroll.dto.RoomResponse;
 import com.hotelpayroll.service.RoomService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -31,8 +33,11 @@ public class RoomController {
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','MANAGER','CUSTOMER')")
     @GetMapping
-    public List<RoomResponse> getAll() {
-        return roomService.getAll();
+    public List<RoomResponse> getAll(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkInDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOutDate
+    ) {
+        return roomService.getAll(checkInDate, checkOutDate);
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','MANAGER')")

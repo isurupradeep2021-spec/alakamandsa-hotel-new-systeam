@@ -2,6 +2,36 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const menuByRole = {
+    SUPER_ADMIN: [
+        { to: "/dashboard", label: "Dashboard" },
+        { to: "/staff", label: "User Management" },
+        { to: "/payroll", label: "Payroll System" },
+        { to: "/profile", label: "My Profile" },
+    ],
+    MANAGER: [
+        { to: "/dashboard", label: "Dashboard" },
+        { to: "/rooms", label: "Room Management" },
+        { to: "/staff", label: "Staff Management" },
+        { to: "/payroll", label: "Payroll System" },
+        { to: "/profile", label: "My Profile" },
+    ],
+    STAFF_MEMBER: [
+        { to: "/my-payroll", label: "My Salary" },
+        { to: "/profile", label: "My Profile" },
+    ],
+    CUSTOMER: [
+        { to: "/view-rooms", label: "View Rooms" },
+        { to: "/book-room", label: "Book Room" },
+        { to: "/profile", label: "My Profile" },
+    ],
+    RESTAURANT_MANAGER: [
+        { to: "/dashboard", label: "Restaurant Dashboard" },
+        { to: "/profile", label: "My Profile" },
+    ],
+    EVENT_MANAGER: [
+        { to: "/dashboard", label: "Event Dashboard" },
+        { to: "/profile", label: "My Profile" },
+    ],
   SUPER_ADMIN: [
     { to: '/dashboard', label: 'Dashboard' },
     { to: '/rooms', label: 'Room Management' },

@@ -34,6 +34,10 @@ public class Room {
     @Column(nullable = false)
     private Integer capacity;
 
+    @Column
+    @Builder.Default
+    private Integer totalRooms = 1;
+
     @Column(nullable = false)
     private BigDecimal normalPrice;
 
