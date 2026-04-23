@@ -273,12 +273,68 @@ function BookRoomPage() {
         return nights > 0 ? nights : 0;
     };
 
+    const isWeekendDate = (dateValue) => {
+        const date = new Date(`${dateValue}T00:00:00`);
+        const day = date.getDay();
+        return day === 0 || day === 5 || day === 6;
+    };
+
+    const isSeasonalDate = (dateValue) => {
+        const date = new Date(`${dateValue}T00:00:00`);
+        const month = date.getMonth();
+        return month === 11 || month === 0 || month === 5 || month === 6;
+    };
+
+    const getRateForDate = (dateValue) => {
+        if (!availabilityData) {
+            return 0;
+        }
+
+        if (isSeasonalDate(dateValue) && availabilityData.seasonalPrice) {
+            return Number(availabilityData.seasonalPrice);
+        }
+
+        if (isWeekendDate(dateValue)) {
+            return Number(availabilityData.weekendPrice || availabilityData.normalPrice || 0);
+        }
+
+        return Number(availabilityData.normalPrice || 0);
+    };
+
+    const getEstimatedTotal = () => {
+        if (!bookingForm.checkInDate || !bookingForm.checkOutDate || !availabilityData) {
+            return 0;
+        }
+
+        const checkIn = new Date(bookingForm.checkInDate);
+        const checkOut = new Date(bookingForm.checkOutDate);
+
+        if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime()) || checkOut <= checkIn) {
+            return 0;
+        }
+
+        let total = 0;
+        const current = new Date(checkIn);
+
+        while (current < checkOut) {
+            const year = current.getFullYear();
+            const month = String(current.getMonth() + 1).padStart(2, "0");
+            const day = String(current.getDate()).padStart(2, "0");
+            const isoDate = `${year}-${month}-${day}`;
+            total += getRateForDate(isoDate);
+            current.setDate(current.getDate() + 1);
+        }
+
+        return total;
+    };
+
     const stayDuration = getStayDuration();
     const guestCount = Number(bookingForm.guestCount);
     const roomTypeLimit = availabilityData?.roomType ? ROOM_TYPE_GUEST_LIMITS[availabilityData.roomType] : null;
     const roomCapacity = Number.isFinite(Number(availabilityData?.capacity)) ? Number(availabilityData.capacity) : null;
     const maxGuestsAllowed = roomTypeLimit && roomCapacity ? Math.min(roomTypeLimit, roomCapacity) : roomTypeLimit || roomCapacity;
     const hasGuestLimitViolation = Number.isInteger(guestCount) && guestCount > 0 && maxGuestsAllowed !== null && guestCount > maxGuestsAllowed;
+    const previewTotal = getEstimatedTotal();
 
     return (
         <div className="card">
@@ -337,7 +393,7 @@ function BookRoomPage() {
                                     <p>
                                         Stay Duration: {stayDuration} night{stayDuration === 1 ? "" : "s"}
                                     </p>
-                                    <p>Total: LKR {Number(availabilityData.normalPrice || 0).toLocaleString()}</p>
+                                    <p>Total: LKR {previewTotal.toLocaleString()}</p>
                                 </div>
                             )}
                         </div>

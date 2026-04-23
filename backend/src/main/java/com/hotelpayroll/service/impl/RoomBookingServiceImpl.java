@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -180,9 +181,7 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         }
 
         int bookedRooms = request.getBookedRooms() == null ? 1 : request.getBookedRooms();
-        BigDecimal amount = room.getNormalPrice()
-                .multiply(BigDecimal.valueOf(nights))
-                .multiply(BigDecimal.valueOf(bookedRooms));
+        BigDecimal amount = calculateAmountForStay(room, request.getCheckInDate(), request.getCheckOutDate(), bookedRooms);
 
         booking.setBookingCustomer(request.getBookingCustomer().trim());
         booking.setCustomerEmail(request.getCustomerEmail().trim());
@@ -195,6 +194,39 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         booking.setCheckInDate(request.getCheckInDate());
         booking.setCheckOutDate(request.getCheckOutDate());
         return booking;
+    }
+
+    private BigDecimal calculateAmountForStay(Room room, LocalDate checkInDate, LocalDate checkOutDate, int bookedRooms) {
+        BigDecimal total = BigDecimal.ZERO;
+        LocalDate currentDate = checkInDate;
+
+        while (currentDate.isBefore(checkOutDate)) {
+            total = total.add(resolveRatePerNight(room, currentDate));
+            currentDate = currentDate.plusDays(1);
+        }
+
+        return total.multiply(BigDecimal.valueOf(bookedRooms));
+    }
+
+    private BigDecimal resolveRatePerNight(Room room, LocalDate stayDate) {
+        if (isSeasonalDate(stayDate) && room.getSeasonalPrice() != null) {
+            return room.getSeasonalPrice();
+        }
+
+        if (isWeekendDate(stayDate)) {
+            return room.getWeekendPrice() != null ? room.getWeekendPrice() : room.getNormalPrice();
+        }
+
+        return room.getNormalPrice();
+    }
+
+    private boolean isWeekendDate(LocalDate stayDate) {
+        return stayDate.getDayOfWeek().getValue() >= 5;
+    }
+
+    private boolean isSeasonalDate(LocalDate stayDate) {
+        Month month = stayDate.getMonth();
+        return month == Month.DECEMBER || month == Month.JANUARY || month == Month.JUNE || month == Month.JULY;
     }
 
     private void validateAvailability(Room room, Integer requestedRooms, Long excludeBookingId, LocalDate checkInDate, LocalDate checkOutDate) {
