@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 import { useLocation } from "react-router-dom";
 import { createRoomBooking, getMyRoomBookings, getRooms, requestRoomBookingCancellation } from "../api/service";
 
@@ -156,6 +157,7 @@ function BookRoomPage() {
             const savedBooking = res?.data;
             if (savedBooking?.id) {
                 setMyBookings((prev) => [savedBooking, ...prev.filter((item) => item.id !== savedBooking.id)]);
+                await downloadBookingQrPng(savedBooking);
             }
             setBookingMessage(`Booking created successfully for Room ${roomNumber}.`);
             setBookingForm({
@@ -170,6 +172,39 @@ function BookRoomPage() {
         } catch (err) {
             const apiMessage = err?.response?.data?.message;
             setBookingError(apiMessage || "Failed to create booking.");
+        }
+    };
+
+    const buildBookingQrPayload = (booking) => {
+        return [
+            `Booking ID: ${booking?.id ?? "-"}`,
+            `Customer: ${booking?.bookingCustomer ?? "-"}`,
+            `Email: ${booking?.customerEmail ?? "-"}`,
+            `Room Number: ${booking?.roomNumber ?? "-"}`,
+            `Check-In: ${booking?.checkInDate ?? "-"}`,
+            `Check-Out: ${booking?.checkOutDate ?? "-"}`,
+            `Guests: ${booking?.guestCount ?? booking?.guests ?? "-"}`,
+            `Status: ${booking?.bookingStatus ?? "-"}`,
+            `Amount (LKR): ${booking?.amount ?? 0}`,
+        ].join("\n");
+    };
+
+    const downloadBookingQrPng = async (booking) => {
+        try {
+            const qrPayload = buildBookingQrPayload(booking);
+            const dataUrl = await QRCode.toDataURL(qrPayload, {
+                width: 320,
+                margin: 2,
+            });
+
+            const link = document.createElement("a");
+            link.href = dataUrl;
+            link.download = `room-booking-${booking?.id ?? "details"}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch {
+            setBookingError("Booking saved, but failed to generate QR code.");
         }
     };
 
@@ -345,12 +380,13 @@ function BookRoomPage() {
                                         <td>{toTitleCase(booking.bookingStatus)}</td>
                                         <td>LKR {Number(booking.amount || 0).toLocaleString()}</td>
                                         <td>
-                                            {canRequestCancellation(booking.bookingStatus) ? (
+                                            <button className="btn small" type="button" onClick={() => downloadBookingQrPng(booking)}>
+                                                Download QR
+                                            </button>
+                                            {canRequestCancellation(booking.bookingStatus) && (
                                                 <button className="btn danger small" type="button" onClick={() => handleRequestCancellation(booking.id)}>
                                                     Request Cancel
                                                 </button>
-                                            ) : (
-                                                "-"
                                             )}
                                         </td>
                                     </tr>

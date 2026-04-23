@@ -1,5 +1,15 @@
 import { useEffect, useState } from "react";
-import { approveRoomBookingCancellation, createRoomBooking, createRoomRecord, deleteRoomBooking, deleteRoomRecord, getRoomBookings, getRooms, updateRoomBooking, updateRoomRecord } from "../api/service";
+import {
+    approveRoomBookingCancellation,
+    createRoomBooking,
+    createRoomRecord,
+    deleteRoomBooking,
+    deleteRoomRecord,
+    getRoomBookings,
+    getRooms,
+    updateRoomBooking,
+    updateRoomRecord,
+} from "../api/service";
 
 const initialRoomForm = {
     roomNumber: "",
