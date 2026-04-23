@@ -19,7 +19,8 @@ export function AuthProvider({ children }) {
     const next = {
       username: data.username,
       fullName: data.fullName,
-      role: data.role
+      role: data.role,
+      permissions: data.permissions || []
     };
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(next));
