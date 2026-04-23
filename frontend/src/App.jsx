@@ -13,6 +13,8 @@ import DiningPage from "./pages/DiningPage";
 import ReserveTablePage from "./pages/ReserveTablePage";
 import MenuManagementPage from "./pages/MenuManagementPage";
 import TableReservationsPage from "./pages/TableReservationsPage";
+import EventManagerBookingPage from "./pages/EventManagerBookingPage";
+import EventManagementPage from "./pages/EventManagementPage";
 
 function App() {
   return (
@@ -36,6 +38,8 @@ function App() {
                 "RESTAURANT_MANAGER",
                 "CUSTOMER",
                 "EVENT_MANAGER"
+                "EVENT_MANAGER",
+                "CUSTOMER"
               ]}
             >
               <DashboardPage />
@@ -128,6 +132,31 @@ function App() {
           }
         />
         <Route path="/reservations" element={<Navigate to="/table-reservations" replace />} />
+
+        <Route
+          path="/event-booking-manager"
+          element={
+            <ProtectedRoute allowedRoles={["EVENT_MANAGER"]}>
+              <EventManagerBookingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/event-management"
+          element={
+            <ProtectedRoute allowedRoles={["SUPER_ADMIN", "MANAGER", "EVENT_MANAGER"]}>
+              <EventManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/event-booking"
+          element={
+            <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+              <EventManagementPage view="booking" />
+            </ProtectedRoute>
+          }
+        />
 
         <Route path="/profile" element={<ProfilePage />} />
       </Route>

@@ -57,3 +57,9 @@ export const uploadMenuItemImage = (id, file) => {
   });
 };
 export const deleteMenuItem = (id) => http.delete(`/menu-items/${id}`);
+
+export const getEventBookings = () => http.get("/event-bookings");
+export const createEventBooking = (payload) => http.post("/event-bookings", payload);
+export const updateEventBooking = (id, payload) => http.put(`/event-bookings/${id}`, payload);
+export const deleteEventBooking = (id) => http.delete(`/event-bookings/${id}`);
+export const eventAnalytics = () => http.get("/event-bookings/analytics");

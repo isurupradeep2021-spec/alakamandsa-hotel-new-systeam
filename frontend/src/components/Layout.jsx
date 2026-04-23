@@ -9,6 +9,7 @@ const menuByRole = {
     { to: '/payroll', label: 'Payroll System' },
     { to: '/menu-management', label: 'Menu Management' },
     { to: '/table-reservations', label: 'Table Reservations' },
+    { to: '/event-management', label: 'Event Management' },
     { to: '/profile', label: 'My Profile' }
   ],
   MANAGER: [
@@ -18,6 +19,7 @@ const menuByRole = {
     { to: '/payroll', label: 'Payroll System' },
     { to: '/menu-management', label: 'Menu Management' },
     { to: '/table-reservations', label: 'Table Reservations' },
+    { to: '/event-management', label: 'Event Management' },
     { to: '/profile', label: 'My Profile' }
   ],
   STAFF_MEMBER: [{ to: '/my-payroll', label: 'My Salary' }, { to: '/profile', label: 'My Profile' }],
@@ -27,6 +29,7 @@ const menuByRole = {
     { to: '/book-room', label: 'Book Room' },
     { to: '/dining', label: 'Dining' },
     { to: '/reserve-table', label: 'Reserve Table' },
+    { to: '/event-booking', label: 'Book Event' },
     { to: '/profile', label: 'My Profile' }
   ],
   RESTAURANT_MANAGER: [
@@ -36,7 +39,12 @@ const menuByRole = {
     { to: '/table-reservations', label: 'Table Reservations' },
     { to: '/profile', label: 'My Profile' }
   ],
-  EVENT_MANAGER: [{ to: '/dashboard', label: 'Event Dashboard' }, { to: '/profile', label: 'My Profile' }]
+  EVENT_MANAGER: [
+    { to: '/dashboard', label: 'Event Dashboard' },
+    { to: '/event-booking-manager', label: 'Event Booking' },
+    { to: '/event-management', label: 'Event Management' },
+    { to: '/profile', label: 'My Profile' }
+  ]
 };
 
 function Layout() {
@@ -44,11 +52,11 @@ function Layout() {
   const navigate = useNavigate();
   const menu = menuByRole[user?.role] || [];
   const roleLabel = (user?.role || '').replaceAll('_', ' ');
-  const restaurantOpsRoles = ['SUPER_ADMIN', 'MANAGER', 'RESTAURANT_MANAGER'];
-  const isRestaurantOpsRole = restaurantOpsRoles.includes(user?.role);
+  const opsRoles = ['SUPER_ADMIN', 'MANAGER', 'RESTAURANT_MANAGER', 'EVENT_MANAGER'];
+  const isOpsRole = opsRoles.includes(user?.role);
 
   return (
-    <div className={`app-shell ${isRestaurantOpsRole ? 'restaurant-ops-shell' : ''}`}>
+    <div className={`app-shell ${isOpsRole ? 'restaurant-ops-shell' : ''}`}>
       <aside className="sidebar">
         <div>
           <h1>HotelFlow</h1>
@@ -78,10 +86,10 @@ function Layout() {
               <h2>{user?.fullName}</h2>
               <p>{roleLabel}</p>
             </div>
-            {isRestaurantOpsRole && (
+            {isOpsRole && (
               <div className="topbar-tagline">
                 <strong>Operations Console</strong>
-                <span>Manage payroll, rooms, menu, and reservations from one dashboard.</span>
+                <span>Manage payroll, rooms, menu, reservations, and events from one dashboard.</span>
               </div>
             )}
           </div>
