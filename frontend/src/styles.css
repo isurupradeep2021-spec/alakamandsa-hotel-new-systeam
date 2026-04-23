@@ -331,6 +331,92 @@ textarea {
     margin: 12px 0 6px;
     font-size: 14px;
 }
+    .room-insights-subtitle {
+        margin: 0 0 12px;
+        font-size: 13px;
+        color: #4b6680;
+    }
+    .insight-creative-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(260px, 1fr));
+        gap: 12px;
+    }
+    .insight-creative-card {
+        border: 1px solid #d5e5f0;
+        border-radius: 14px;
+        padding: 12px;
+        background: linear-gradient(180deg, #f8fcff 0%, #ffffff 100%);
+    }
+    .insight-creative-card.hot {
+        border-color: #f3d7bf;
+        background: linear-gradient(180deg, #fff8f2 0%, #ffffff 100%);
+    }
+    .insight-creative-card.cool {
+        border-color: #c9d9ff;
+        background: linear-gradient(180deg, #f3f7ff 0%, #ffffff 100%);
+    }
+    .insight-creative-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+    }
+    .insight-creative-head h4 {
+        margin: 0;
+    }
+    .insight-chip {
+        font-size: 11px;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 4px 8px;
+        background: #e8eef5;
+        color: #274b68;
+    }
+    .insight-creative-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 10px;
+    }
+    .insight-room-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 4px;
+    }
+    .insight-room-line strong {
+        font-size: 13px;
+        color: #143452;
+    }
+    .insight-room-line small {
+        font-size: 12px;
+        color: #5f7892;
+    }
+    .insight-meter {
+        height: 8px;
+        border-radius: 999px;
+        background: #dfeaf4;
+        overflow: hidden;
+    }
+    .insight-meter span {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #0a9396, #005f73);
+    }
+    .insight-creative-card.hot .insight-meter span {
+        background: linear-gradient(90deg, #f59e0b, #e60721);
+    }
+    .insight-creative-card.cool .insight-meter span {
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+    }
+    .insight-empty-text {
+        margin: 0;
+        font-size: 13px;
+        color: #5f7892;
+    }
 
 .customer-availability-panel {
     grid-column: 1 / -1;
@@ -583,6 +669,50 @@ textarea {
 
 .form-grid .span-full {
     grid-column: 1 / -1;
+}
+
+.manager-overview-card {
+    margin-bottom: 16px;
+    background: linear-gradient(120deg, #f2fdff, #eef9ff 45%, #f9f6ff 100%);
+    border: 1px solid #d8e6ef;
+    border-radius: 12px;
+    padding: 14px;
+}
+
+.manager-overview-card h3 {
+    font-family: "Playfair Display", serif;
+    font-size: 28px;
+    margin: 0 0 6px;
+}
+
+.manager-overview-card p {
+    margin: 0 0 10px;
+    color: #546b82;
+}
+
+.manager-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(130px, 1fr));
+    gap: 10px;
+}
+
+.manager-overview-grid article {
+    border: 1px solid #d8e6ef;
+    border-radius: 12px;
+    padding: 10px;
+    display: grid;
+    gap: 3px;
+    background: linear-gradient(180deg, #f7fbfe 0%, #ffffff 100%);
+}
+
+.manager-overview-grid span {
+    font-size: 12px;
+    color: #5d758f;
+}
+
+.manager-overview-grid strong {
+    font-size: 24px;
+    color: #133a58;
 }
 
 .latest-records-grid {
@@ -1700,6 +1830,12 @@ td {
 
 @media (max-width: 860px) {
     .app-shell {
+        grid-template-columns: 1fr;
+    }
+    .insight-creative-grid {
+        grid-template-columns: 1fr;
+    }
+    .manager-overview-grid {
         grid-template-columns: 1fr;
     }
     .sidebar {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     approveRoomBookingCancellation,
     createRoomBooking,
@@ -46,6 +46,27 @@ function RoomManagementPage() {
     const [editingRoomId, setEditingRoomId] = useState(null);
     const [editingBookingId, setEditingBookingId] = useState(null);
 
+    const roomOverview = useMemo(() => {
+        const totalRooms = rooms.reduce((sum, room) => sum + Math.max(1, Number(room.totalRooms || 1)), 0);
+        const availableRooms = rooms.reduce((sum, room) => {
+            const totalForRoom = Math.max(1, Number(room.totalRooms || 1));
+            const remainingRooms = Number(room.remainingRooms);
+
+            if (Number.isFinite(remainingRooms)) {
+                return sum + Math.max(0, Math.min(totalForRoom, remainingRooms));
+            }
+
+            return sum + (room.roomStatus === "AVAILABLE" ? totalForRoom : 0);
+        }, 0);
+        const bookedRooms = Math.max(0, totalRooms - availableRooms);
+
+        return {
+            totalRooms,
+            bookedRooms,
+            availableRooms,
+        };
+    }, [rooms]);
+
     const loadLatestRecords = async () => {
         const [roomRes, bookingRes] = await Promise.allSettled([getRooms(), getRoomBookings()]);
 
@@ -68,6 +89,8 @@ function RoomManagementPage() {
 
     useEffect(() => {
         loadLatestRecords();
+        const intervalId = window.setInterval(loadLatestRecords, 15000);
+        return () => window.clearInterval(intervalId);
     }, []);
 
     const handleRoomSubmit = async (e) => {
@@ -219,6 +242,25 @@ function RoomManagementPage() {
 
     return (
         <>
+            <div className="card manager-overview-card">
+                <h3>Room Overview</h3>
+                <p>Live room status based on current customer bookings.</p>
+                <div className="manager-overview-grid">
+                    <article>
+                        <span>Total Rooms</span>
+                        <strong>{roomOverview.totalRooms}</strong>
+                    </article>
+                    <article>
+                        <span>Booked Rooms</span>
+                        <strong>{roomOverview.bookedRooms}</strong>
+                    </article>
+                    <article>
+                        <span>Available Rooms</span>
+                        <strong>{roomOverview.availableRooms}</strong>
+                    </article>
+                </div>
+            </div>
+
             <div className="card">
                 <h3>Room Management</h3>
                 <p>{editingRoomId ? "Edit Room Record" : "Create Record"}</p>
