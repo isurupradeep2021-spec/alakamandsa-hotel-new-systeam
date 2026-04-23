@@ -2,8 +2,39 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const menuByRole = {
+    SUPER_ADMIN: [
+        { to: "/dashboard", label: "Dashboard" },
+        { to: "/staff", label: "User Management" },
+        { to: "/payroll", label: "Payroll System" },
+        { to: "/profile", label: "My Profile" },
+    ],
+    MANAGER: [
+        { to: "/dashboard", label: "Dashboard" },
+        { to: "/rooms", label: "Room Management" },
+        { to: "/staff", label: "Staff Management" },
+        { to: "/payroll", label: "Payroll System" },
+        { to: "/profile", label: "My Profile" },
+    ],
+    STAFF_MEMBER: [
+        { to: "/my-payroll", label: "My Salary" },
+        { to: "/profile", label: "My Profile" },
+    ],
+    CUSTOMER: [
+        { to: "/view-rooms", label: "View Rooms" },
+        { to: "/book-room", label: "Book Room" },
+        { to: "/profile", label: "My Profile" },
+    ],
+    RESTAURANT_MANAGER: [
+        { to: "/dashboard", label: "Restaurant Dashboard" },
+        { to: "/profile", label: "My Profile" },
+    ],
+    EVENT_MANAGER: [
+        { to: "/dashboard", label: "Event Dashboard" },
+        { to: "/profile", label: "My Profile" },
+    ],
   SUPER_ADMIN: [
     { to: '/dashboard', label: 'Dashboard' },
+    { to: '/rooms', label: 'Room Management' },
     { to: '/staff', label: 'User Management' },
     { to: '/payroll', label: 'Payroll System' },
     { to: '/menu-management', label: 'Menu Management' },
@@ -12,6 +43,7 @@ const menuByRole = {
   ],
   MANAGER: [
     { to: '/dashboard', label: 'Dashboard' },
+    { to: '/rooms', label: 'Room Management' },
     { to: '/staff', label: 'Staff Management' },
     { to: '/payroll', label: 'Payroll System' },
     { to: '/menu-management', label: 'Menu Management' },
@@ -20,6 +52,8 @@ const menuByRole = {
   ],
   STAFF_MEMBER: [{ to: '/my-payroll', label: 'My Salary' }, { to: '/profile', label: 'My Profile' }],
   CUSTOMER: [
+    { to: '/dashboard', label: 'Customer Dashboard' },
+    { to: '/view-rooms', label: 'View Rooms' },
     { to: '/dining', label: 'Dining' },
     { to: '/reserve-table', label: 'Reserve Table' },
     { to: '/profile', label: 'My Profile' }
@@ -27,6 +61,7 @@ const menuByRole = {
   RESTAURANT_MANAGER: [
     { to: '/dashboard', label: 'Restaurant Dashboard' },
     { to: '/dining', label: 'Live Menu View' },
+    { to: '/menu-management', label: 'Menu Management' },
     { to: '/table-reservations', label: 'Table Reservations' },
     { to: '/profile', label: 'My Profile' }
   ],
@@ -74,8 +109,8 @@ function Layout() {
             </div>
             {isRestaurantOpsRole && (
               <div className="topbar-tagline">
-                <strong>Restaurant Operations Console</strong>
-                <span>Professional workflow for menu, reservations, and live dining.</span>
+                <strong>Operations Console</strong>
+                <span>Manage payroll, rooms, menu, and reservations from one dashboard.</span>
               </div>
             )}
           </div>
