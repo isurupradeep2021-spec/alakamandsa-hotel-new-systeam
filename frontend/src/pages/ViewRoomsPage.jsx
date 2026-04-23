@@ -120,6 +120,13 @@ function ViewRoomsPage() {
                     {filteredRooms.length === 0 && <p>No rooms found for selected filters.</p>}
                 </div>
             )}
+
+            <div className="card" style={{ marginTop: "16px" , textAlign: "center"}}>
+                <h4>Any Enquiries:</h4>
+                <p>+(94) 777 258 1690</p>
+                <h4>Email:</h4>
+                <p>alakamandahotel@gmail.com</p>
+            </div>
         </div>
     );
 }
