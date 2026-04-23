@@ -1,10 +1,9 @@
 package com.hotelpayroll.controller;
 
 import com.hotelpayroll.entity.EventBooking;
-import com.hotelpayroll.entity.Role;
+import com.hotelpayroll.repository.EventBookingRepository;
 import com.hotelpayroll.service.EventBookingService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,36 +23,53 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EventBookingController {
 
+    private final EventBookingRepository repository;
     private final EventBookingService eventBookingService;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER', 'EVENT_MANAGER', 'CUSTOMER')")
-    public List<EventBooking> getAll(Authentication authentication) {
-        return eventBookingService.listBookings(currentRole(authentication), authentication.getName());
+    public List<EventBooking> getAll() {
+        return repository.findAll();
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER', 'EVENT_MANAGER', 'CUSTOMER')")
-    public EventBooking create(@RequestBody EventBooking booking, Authentication authentication) {
-        return eventBookingService.createBooking(booking, authentication.getName(), currentRole(authentication));
+    public EventBooking create(@RequestBody EventBooking booking) {
+        return repository.save(eventBookingService.prepareForSave(booking, null));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER', 'EVENT_MANAGER')")
     public EventBooking update(@PathVariable Long id, @RequestBody EventBooking booking) {
-        return eventBookingService.updateBooking(id, booking);
+        EventBooking existing = repository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Event booking not found"));
+
+        existing.setCustomerName(booking.getCustomerName());
+        existing.setCustomerEmail(booking.getCustomerEmail());
+        existing.setCustomerMobile(booking.getCustomerMobile());
+        existing.setEventType(booking.getEventType());
+        existing.setHallName(booking.getHallName());
+        existing.setPackageName(booking.getPackageName());
+        existing.setEventDateTime(booking.getEventDateTime());
+        existing.setEndDateTime(booking.getEndDateTime());
+        existing.setAttendees(booking.getAttendees());
+        existing.setPricePerGuest(booking.getPricePerGuest());
+        existing.setNotes(booking.getNotes());
+        existing.setStatus(booking.getStatus());
+
+        return repository.save(eventBookingService.prepareForSave(existing, id));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER', 'EVENT_MANAGER')")
     public void delete(@PathVariable Long id) {
-        eventBookingService.deleteBooking(id);
+        repository.deleteById(id);
     }
 
     @GetMapping("/analytics")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER', 'EVENT_MANAGER')")
     public Map<String, Object> analytics() {
-        List<EventBooking> rows = eventBookingService.listBookings(Role.EVENT_MANAGER, "analytics");
+        List<EventBooking> rows = repository.findAll();
 
         Map<String, Long> byType = rows.stream()
                 .collect(Collectors.groupingBy(r -> r.getEventType() == null ? "Unknown" : r.getEventType(), Collectors.counting()));
@@ -63,13 +79,5 @@ public class EventBookingController {
                 "eventRevenue", eventBookingService.sumRevenue(rows),
                 "popularTypes", byType
         );
-    }
-
-    private Role currentRole(Authentication authentication) {
-        return authentication.getAuthorities().stream()
-                .findFirst()
-                .map(authority -> authority.getAuthority().replace("ROLE_", ""))
-                .map(Role::valueOf)
-                .orElse(Role.CUSTOMER);
     }
 }

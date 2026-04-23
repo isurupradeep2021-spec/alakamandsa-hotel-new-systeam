@@ -1,15 +1,19 @@
-# IDE files
+# backend build
+backend/target/
+
+# frontend
+frontend/node_modules/
+frontend/dist/
+
+# ignore everything in public
+frontend/public/*
+
+# BUT allow images
+!frontend/public/images/
+
+# IDE
 .idea/
 .vscode/
 
-# Backend build files
-backend/target/
-
-# Frontend dependencies
-frontend/node_modules/
-
-# Frontend build output
-frontend/dist/
-
-# Logs
+# logs
 *.log
