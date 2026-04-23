@@ -454,24 +454,26 @@ function BookRoomPage() {
                                         <td>{toTitleCase(booking.bookingStatus)}</td>
                                         <td>LKR {Number(booking.amount || 0).toLocaleString()}</td>
                                         <td>
-                                            <button className="btn small" type="button" onClick={() => downloadBookingQrPng(booking)}>
-                                                Download QR
-                                            </button>
-                                            {canRequestCancellation(booking.bookingStatus) && (
-                                                <button className="btn danger small" type="button" onClick={() => handleRequestCancellation(booking.id)}>
-                                                    Request Cancel
+                                            <div className="table-actions">
+                                                <button className="btn small" type="button" onClick={() => downloadBookingQrPng(booking)}>
+                                                    Download QR
                                                 </button>
-                                            )}
-                                            {isApprovedCancellation(booking.bookingStatus) && (
-                                                <button className="btn ghost small" type="button" disabled>
-                                                    Approved Cancel Request
-                                                </button>
-                                            )}
-                                            {isPendingCancellationApproval(booking.bookingStatus) && (
-                                                <button className="btn ghost small" type="button" disabled>
-                                                    Pending Approval
-                                                </button>
-                                            )}
+                                                {isApprovedCancellation(booking.bookingStatus) && (
+                                                    <button className="btn ghost small" type="button" disabled>
+                                                        Approved Cancel Request
+                                                    </button>
+                                                )}
+                                                {isPendingCancellationApproval(booking.bookingStatus) && (
+                                                    <button className="btn ghost small" type="button" disabled>
+                                                        Pending Approval
+                                                    </button>
+                                                )}
+                                                {canRequestCancellation(booking.bookingStatus) && (
+                                                    <button className="btn danger small" type="button" onClick={() => handleRequestCancellation(booking.id)}>
+                                                        Request Cancel
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

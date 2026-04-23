@@ -87,6 +87,17 @@ textarea {
     margin-right: 6px;
 }
 
+.table-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.table-actions .btn.small {
+    margin-right: 0;
+}
+
 .btn.inline-link {
     display: inline-block;
     text-decoration: none;
@@ -399,7 +410,6 @@ textarea {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 12px;
-    
 }
 
 .availability-card {

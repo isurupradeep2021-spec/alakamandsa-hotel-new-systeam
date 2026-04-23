@@ -459,17 +459,19 @@ function RoomManagementPage() {
                                             <td>{booking.bookingStatus}</td>
                                             <td>Rs. {Number(booking.amount || 0).toLocaleString()}</td>
                                             <td>
-                                                <button className="btn small" type="button" onClick={() => editBooking(booking)}>
-                                                    Edit
-                                                </button>
-                                                <button className="btn danger small" type="button" onClick={() => removeBooking(booking.id)}>
-                                                    Delete
-                                                </button>
-                                                {booking.bookingStatus === "CANCELLATION_REQUESTED" && (
-                                                    <button className="btn small" type="button" onClick={() => approveCancellation(booking.id)}>
-                                                        Approve Cancel
+                                                <div className="table-actions">
+                                                    <button className="btn small" type="button" onClick={() => editBooking(booking)}>
+                                                        Edit
                                                     </button>
-                                                )}
+                                                    <button className="btn danger small" type="button" onClick={() => removeBooking(booking.id)}>
+                                                        Delete
+                                                    </button>
+                                                    {booking.bookingStatus === "CANCELLATION_REQUESTED" && (
+                                                        <button className="btn small" type="button" onClick={() => approveCancellation(booking.id)}>
+                                                            Approve Cancel
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
