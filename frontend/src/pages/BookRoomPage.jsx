@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 import { useLocation } from "react-router-dom";
-import { createRoomBooking, getMyRoomBookings, checkRoomAvailability } from "../api/service";
+import { createRoomBooking, getMyRoomBookings, getRooms, requestRoomBookingCancellation } from "../api/service";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
-
-const getRemainingRoomsCount = (availabilityData) => {
-    const value = Number(availabilityData?.remainingRooms);
-    return Number.isFinite(value) && value >= 0 ? value : null;
+const ROOM_TYPE_GUEST_LIMITS = {
+    STANDARD: 2,
+    DELUXE: 3,
+    SUITE: 4,
+    FAMILY: 6,
 };
 
 function BookRoomPage() {
@@ -18,7 +20,7 @@ function BookRoomPage() {
     const [bookingsLoading, setBookingsLoading] = useState(true);
     const [availabilityLoading, setAvailabilityLoading] = useState(false);
     const [availabilityError, setAvailabilityError] = useState("");
-    const [availabilityStatus, setAvailabilityStatus] = useState(null);
+    const [availabilityData, setAvailabilityData] = useState(null);
     const [bookingForm, setBookingForm] = useState({
         bookingCustomer: "",
         customerEmail: "",
@@ -33,8 +35,19 @@ function BookRoomPage() {
         try {
             const res = await getMyRoomBookings();
             setMyBookings(res.data || []);
-        } catch {
-            setMyBookings([]);
+            setBookingError("");
+        } catch (err) {
+            // Keep existing rows when refresh fails to avoid hiding successfully saved bookings.
+            const apiMessage = err?.response?.data?.message;
+            const status = err?.response?.status;
+
+            if (apiMessage) {
+                setBookingError(apiMessage);
+            } else if (status) {
+                setBookingError(`Unable to load your bookings (HTTP ${status}).`);
+            } else {
+                setBookingError("Unable to load your bookings right now. Please refresh and try again.");
+            }
         } finally {
             setBookingsLoading(false);
         }
@@ -49,7 +62,7 @@ function BookRoomPage() {
         const { checkInDate, checkOutDate } = bookingForm;
 
         if (!roomNumber || !checkInDate || !checkOutDate) {
-            setAvailabilityStatus(null);
+            setAvailabilityData(null);
             setAvailabilityError("");
             return;
         }
@@ -57,16 +70,27 @@ function BookRoomPage() {
         setAvailabilityLoading(true);
         setAvailabilityError("");
 
-        checkRoomAvailability(roomNumber, checkInDate, checkOutDate)
+        getRooms({ checkInDate, checkOutDate })
             .then((res) => {
-                const data = res.data;
-                setAvailabilityStatus(data);
-                if (!data.available) {
-                    setAvailabilityError(`${data.message}`);
+                const rooms = res.data || [];
+                const matchedRoom = rooms.find((room) => String(room.roomNumber).toLowerCase() === roomNumber.toLowerCase());
+
+                if (!matchedRoom) {
+                    setAvailabilityData(null);
+                    setAvailabilityError("Room not found for selected dates.");
+                    return;
+                }
+
+                setAvailabilityData(matchedRoom);
+
+                if (matchedRoom.roomStatus !== "AVAILABLE") {
+                    setAvailabilityError(`Room ${matchedRoom.roomNumber} is not available for the selected dates.`);
+                } else {
+                    setAvailabilityError("");
                 }
             })
             .catch((err) => {
-                setAvailabilityStatus(null);
+                setAvailabilityData(null);
                 const apiMessage = err?.response?.data?.message;
                 setAvailabilityError(apiMessage || "Unable to check room availability right now.");
             })
@@ -85,7 +109,6 @@ function BookRoomPage() {
         const checkInDate = bookingForm.checkInDate;
         const checkOutDate = bookingForm.checkOutDate;
         const bookedRooms = 1;
-        const remainingRooms = getRemainingRoomsCount(availabilityStatus);
 
         if (!bookingCustomer || !customerEmail || !roomNumber || !checkInDate || !checkOutDate || !bookingForm.guestCount) {
             setBookingError("Please complete all booking fields.");
@@ -97,23 +120,13 @@ function BookRoomPage() {
             return;
         }
 
-        if (!availabilityStatus) {
+        if (!availabilityData) {
             setBookingError("Please check room availability before booking.");
             return;
         }
 
-        if (!availabilityStatus.available) {
-            setBookingError(`Room ${roomNumber} is not available for the selected dates.`);
-            return;
-        }
-
-        if (remainingRooms === null) {
-            setBookingError("Unable to determine room availability for the selected dates. Please try again.");
-            return;
-        }
-
-        if (bookedRooms > remainingRooms) {
-            setBookingError(`Only ${remainingRooms} room(s) remaining for Room ${availabilityStatus.roomNumber}.`);
+        if (availabilityError) {
+            setBookingError(availabilityError);
             return;
         }
 
@@ -122,8 +135,17 @@ function BookRoomPage() {
             return;
         }
 
+        const roomTypeLimit = availabilityData?.roomType ? ROOM_TYPE_GUEST_LIMITS[availabilityData.roomType] : null;
+        const roomCapacity = Number.isFinite(Number(availabilityData?.capacity)) ? Number(availabilityData.capacity) : null;
+        const maxGuestsAllowed = roomTypeLimit && roomCapacity ? Math.min(roomTypeLimit, roomCapacity) : roomTypeLimit || roomCapacity;
+
+        if (maxGuestsAllowed !== null && guestCount > maxGuestsAllowed) {
+            setBookingError(`Guest Count exceeds the maximum allowed for this room (${maxGuestsAllowed}).`);
+            return;
+        }
+
         try {
-            await createRoomBooking({
+            const res = await createRoomBooking({
                 bookingCustomer,
                 customerEmail,
                 roomNumber,
@@ -132,6 +154,11 @@ function BookRoomPage() {
                 checkInDate,
                 checkOutDate,
             });
+            const savedBooking = res?.data;
+            if (savedBooking?.id) {
+                setMyBookings((prev) => [savedBooking, ...prev.filter((item) => item.id !== savedBooking.id)]);
+                await downloadBookingQrPng(savedBooking);
+            }
             setBookingMessage(`Booking created successfully for Room ${roomNumber}.`);
             setBookingForm({
                 bookingCustomer: "",
@@ -145,6 +172,77 @@ function BookRoomPage() {
         } catch (err) {
             const apiMessage = err?.response?.data?.message;
             setBookingError(apiMessage || "Failed to create booking.");
+        }
+    };
+
+    const buildBookingQrPayload = (booking) => {
+        return [
+            `Booking ID: ${formatBookingId(booking?.bookingSequence ?? booking?.id)}`,
+            `Customer: ${booking?.bookingCustomer ?? "-"}`,
+            `Email: ${booking?.customerEmail ?? "-"}`,
+            `Room Number: ${booking?.roomNumber ?? "-"}`,
+            `Check-In: ${booking?.checkInDate ?? "-"}`,
+            `Check-Out: ${booking?.checkOutDate ?? "-"}`,
+            `Guests: ${booking?.guestCount ?? booking?.guests ?? "-"}`,
+            `Status: ${booking?.bookingStatus ?? "-"}`,
+            `Amount (LKR): ${booking?.amount ?? 0}`,
+        ].join("\n");
+    };
+
+    const downloadBookingQrPng = async (booking) => {
+        try {
+            const qrPayload = buildBookingQrPayload(booking);
+            const dataUrl = await QRCode.toDataURL(qrPayload, {
+                width: 320,
+                margin: 2,
+            });
+
+            const link = document.createElement("a");
+            link.href = dataUrl;
+            link.download = `room-booking-${formatBookingId(booking?.bookingSequence ?? booking?.id)}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch {
+            setBookingError("Booking saved, but failed to generate QR code.");
+        }
+    };
+
+    const formatBookingId = (bookingId) => {
+        if (bookingId === null || bookingId === undefined || bookingId === "") {
+            return "-";
+        }
+
+        return String(bookingId).padStart(2, "0");
+    };
+
+    const canRequestCancellation = (bookingStatus) => {
+        return bookingStatus === "BOOKED" || bookingStatus === "CHECKED_IN";
+    };
+
+    const isApprovedCancellation = (bookingStatus) => {
+        return bookingStatus === "CANCELLED";
+    };
+
+    const isPendingCancellationApproval = (bookingStatus) => {
+        return bookingStatus === "CANCELLATION_REQUESTED";
+    };
+
+    const handleRequestCancellation = async (bookingId) => {
+        setBookingMessage("");
+        setBookingError("");
+
+        try {
+            const res = await requestRoomBookingCancellation(bookingId);
+            const updated = res?.data;
+            if (updated?.id) {
+                setMyBookings((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+            }
+            setBookingMessage("Cancellation request submitted. Waiting for manager approval.");
+            await loadMyBookings();
+        } catch (err) {
+            const apiMessage = err?.response?.data?.message;
+            setBookingError(apiMessage || "Failed to request cancellation.");
         }
     };
 
@@ -183,9 +281,68 @@ function BookRoomPage() {
         return nights > 0 ? nights : 0;
     };
 
+    const isWeekendDate = (dateValue) => {
+        const date = new Date(`${dateValue}T00:00:00`);
+        const day = date.getDay();
+        return day === 0 || day === 5 || day === 6;
+    };
+
+    const isSeasonalDate = (dateValue) => {
+        const date = new Date(`${dateValue}T00:00:00`);
+        const month = date.getMonth();
+        return month === 11 || month === 0 || month === 5 || month === 6;
+    };
+
+    const getRateForDate = (dateValue) => {
+        if (!availabilityData) {
+            return 0;
+        }
+
+        if (isSeasonalDate(dateValue) && availabilityData.seasonalPrice) {
+            return Number(availabilityData.seasonalPrice);
+        }
+
+        if (isWeekendDate(dateValue)) {
+            return Number(availabilityData.weekendPrice || availabilityData.normalPrice || 0);
+        }
+
+        return Number(availabilityData.normalPrice || 0);
+    };
+
+    const getEstimatedTotal = () => {
+        if (!bookingForm.checkInDate || !bookingForm.checkOutDate || !availabilityData) {
+            return 0;
+        }
+
+        const checkIn = new Date(bookingForm.checkInDate);
+        const checkOut = new Date(bookingForm.checkOutDate);
+
+        if (Number.isNaN(checkIn.getTime()) || Number.isNaN(checkOut.getTime()) || checkOut <= checkIn) {
+            return 0;
+        }
+
+        let total = 0;
+        const current = new Date(checkIn);
+
+        while (current < checkOut) {
+            const year = current.getFullYear();
+            const month = String(current.getMonth() + 1).padStart(2, "0");
+            const day = String(current.getDate()).padStart(2, "0");
+            const isoDate = `${year}-${month}-${day}`;
+            total += getRateForDate(isoDate);
+            current.setDate(current.getDate() + 1);
+        }
+
+        return total;
+    };
+
     const stayDuration = getStayDuration();
-    const remainingRooms = getRemainingRoomsCount(availabilityStatus);
     const guestCount = Number(bookingForm.guestCount);
+    const roomTypeLimit = availabilityData?.roomType ? ROOM_TYPE_GUEST_LIMITS[availabilityData.roomType] : null;
+    const roomCapacity = Number.isFinite(Number(availabilityData?.capacity)) ? Number(availabilityData.capacity) : null;
+    const maxGuestsAllowed = roomTypeLimit && roomCapacity ? Math.min(roomTypeLimit, roomCapacity) : roomTypeLimit || roomCapacity;
+    const hasGuestLimitViolation = Number.isInteger(guestCount) && guestCount > 0 && maxGuestsAllowed !== null && guestCount > maxGuestsAllowed;
+    const previewTotal = getEstimatedTotal();
 
     return (
         <div className="card">
@@ -215,7 +372,17 @@ function BookRoomPage() {
                         </div>
                         <div>
                             <label>Guest Count</label>
-                            <input type="number" min="1" value={bookingForm.guestCount} onChange={(e) => setBookingForm({ ...bookingForm, guestCount: e.target.value })} placeholder="2" required />
+                            <input
+                                type="number"
+                                min="1"
+                                max={maxGuestsAllowed ?? undefined}
+                                value={bookingForm.guestCount}
+                                onChange={(e) => setBookingForm({ ...bookingForm, guestCount: e.target.value })}
+                                placeholder="2"
+                                required
+                            />
+                            {maxGuestsAllowed !== null && <small>Maximum guests for this room: {maxGuestsAllowed}</small>}
+                            {hasGuestLimitViolation && <p className="error">Entered Guest Count is not allowed for this room type.</p>}
                         </div>
                         <div>
                             <label>Check-In Date (mm/dd/yyyy)</label>
@@ -228,20 +395,13 @@ function BookRoomPage() {
                         <div className="span-full">
                             {availabilityLoading && <p>Checking live availability...</p>}
                             {!availabilityLoading && availabilityError && <p className="error">{availabilityError}</p>}
-                            {!availabilityLoading && !availabilityError && availabilityStatus && (
+                            {!availabilityLoading && !availabilityError && availabilityData && (
                                 <div className="booking-preview">
-                                    {availabilityStatus.available ? (
-                                        <>
-                                            <p className="success">
-                                                ✓ Available: {remainingRooms} room{remainingRooms === 1 ? "" : "s"} remaining
-                                            </p>
-                                            <p>
-                                                Stay Duration: {stayDuration} night{stayDuration === 1 ? "" : "s"}
-                                            </p>
-                                        </>
-                                    ) : (
-                                        <p className="error">✗ Not Available for selected dates</p>
-                                    )}
+                                    <p className="success">Room {availabilityData.roomNumber} is available for the selected dates.</p>
+                                    <p>
+                                        Stay Duration: {stayDuration} night{stayDuration === 1 ? "" : "s"}
+                                    </p>
+                                    <p>Total: LKR {previewTotal.toLocaleString()}</p>
                                 </div>
                             )}
                         </div>
@@ -267,6 +427,7 @@ function BookRoomPage() {
                         <table>
                             <thead>
                                 <tr>
+                                    <th>Booking ID</th>
                                     <th>Customer Name</th>
                                     <th>Customer Email</th>
                                     <th>Room Number</th>
@@ -276,11 +437,13 @@ function BookRoomPage() {
                                     <th>Guests</th>
                                     <th>Status</th>
                                     <th>Total</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {myBookings.map((booking) => (
                                     <tr key={booking.id}>
+                                        <td>{formatBookingId(booking.bookingSequence ?? booking.id)}</td>
                                         <td>{booking.bookingCustomer}</td>
                                         <td>{booking.customerEmail}</td>
                                         <td>{booking.roomNumber}</td>
@@ -290,11 +453,33 @@ function BookRoomPage() {
                                         <td>{booking.guestCount ?? booking.guests ?? "-"}</td>
                                         <td>{toTitleCase(booking.bookingStatus)}</td>
                                         <td>LKR {Number(booking.amount || 0).toLocaleString()}</td>
+                                        <td>
+                                            <div className="table-actions">
+                                                <button className="btn small" type="button" onClick={() => downloadBookingQrPng(booking)}>
+                                                    Download QR
+                                                </button>
+                                                {isApprovedCancellation(booking.bookingStatus) && (
+                                                    <button className="btn ghost small" type="button" disabled>
+                                                        Approved Cancel Request
+                                                    </button>
+                                                )}
+                                                {isPendingCancellationApproval(booking.bookingStatus) && (
+                                                    <button className="btn ghost small" type="button" disabled>
+                                                        Pending Approval
+                                                    </button>
+                                                )}
+                                                {canRequestCancellation(booking.bookingStatus) && (
+                                                    <button className="btn danger small" type="button" onClick={() => handleRequestCancellation(booking.id)}>
+                                                        Request Cancel
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
                                     </tr>
                                 ))}
                                 {myBookings.length === 0 && (
                                     <tr>
-                                        <td colSpan="9">No bookings found yet.</td>
+                                        <td colSpan="11">No bookings found yet.</td>
                                     </tr>
                                 )}
                             </tbody>
