@@ -44,6 +44,7 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         Room room = getRoom(request.getRoomNumber());
         validateAvailability(room, request.getBookedRooms(), null, request.getCheckInDate(), request.getCheckOutDate());
         RoomBooking booking = mapToEntity(new RoomBooking(), request, room);
+        booking.setBookingSequence(resolveNextBookingSequence());
         booking.setCreatedByUsername(getCurrentUsername());
         RoomBooking saved = roomBookingRepository.save(booking);
         auditService.log("CREATE", "RoomBooking", saved.getId().toString(), getCurrentUsername(), "Created room booking");
@@ -196,6 +197,12 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         return booking;
     }
 
+    private Integer resolveNextBookingSequence() {
+        Number maxSequence = roomBookingRepository.findMaxBookingSequence();
+        long currentMax = maxSequence == null ? 0L : maxSequence.longValue();
+        return (int) currentMax + 1;
+    }
+
     private BigDecimal calculateAmountForStay(Room room, LocalDate checkInDate, LocalDate checkOutDate, int bookedRooms) {
         BigDecimal total = BigDecimal.ZERO;
         LocalDate currentDate = checkInDate;
@@ -271,6 +278,7 @@ public class RoomBookingServiceImpl implements RoomBookingService {
 
         return RoomBookingResponse.builder()
                 .id(booking.getId())
+                .bookingSequence(booking.getBookingSequence())
                 .bookingCustomer(booking.getBookingCustomer())
                 .customerEmail(booking.getCustomerEmail())
                 .roomNumber(booking.getRoomNumber())
@@ -292,6 +300,7 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         } catch (Exception ex) {
             return RoomBookingResponse.builder()
                     .id(booking.getId())
+                    .bookingSequence(booking.getBookingSequence())
                     .bookingCustomer(booking.getBookingCustomer())
                     .customerEmail(booking.getCustomerEmail())
                     .roomNumber(booking.getRoomNumber())

@@ -177,7 +177,7 @@ function BookRoomPage() {
 
     const buildBookingQrPayload = (booking) => {
         return [
-            `Booking ID: ${booking?.id ?? "-"}`,
+            `Booking ID: ${formatBookingId(booking?.bookingSequence ?? booking?.id)}`,
             `Customer: ${booking?.bookingCustomer ?? "-"}`,
             `Email: ${booking?.customerEmail ?? "-"}`,
             `Room Number: ${booking?.roomNumber ?? "-"}`,
@@ -199,13 +199,21 @@ function BookRoomPage() {
 
             const link = document.createElement("a");
             link.href = dataUrl;
-            link.download = `room-booking-${booking?.id ?? "details"}.png`;
+            link.download = `room-booking-${formatBookingId(booking?.bookingSequence ?? booking?.id)}.png`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         } catch {
             setBookingError("Booking saved, but failed to generate QR code.");
         }
+    };
+
+    const formatBookingId = (bookingId) => {
+        if (bookingId === null || bookingId === undefined || bookingId === "") {
+            return "-";
+        }
+
+        return String(bookingId).padStart(2, "0");
     };
 
     const canRequestCancellation = (bookingStatus) => {
@@ -419,6 +427,7 @@ function BookRoomPage() {
                         <table>
                             <thead>
                                 <tr>
+                                    <th>Booking ID</th>
                                     <th>Customer Name</th>
                                     <th>Customer Email</th>
                                     <th>Room Number</th>
@@ -434,6 +443,7 @@ function BookRoomPage() {
                             <tbody>
                                 {myBookings.map((booking) => (
                                     <tr key={booking.id}>
+                                        <td>{formatBookingId(booking.bookingSequence ?? booking.id)}</td>
                                         <td>{booking.bookingCustomer}</td>
                                         <td>{booking.customerEmail}</td>
                                         <td>{booking.roomNumber}</td>
@@ -467,7 +477,7 @@ function BookRoomPage() {
                                 ))}
                                 {myBookings.length === 0 && (
                                     <tr>
-                                        <td colSpan="10">No bookings found yet.</td>
+                                        <td colSpan="11">No bookings found yet.</td>
                                     </tr>
                                 )}
                             </tbody>

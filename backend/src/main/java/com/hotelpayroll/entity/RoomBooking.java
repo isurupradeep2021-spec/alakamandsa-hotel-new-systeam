@@ -20,6 +20,9 @@ public class RoomBooking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column
+    private Integer bookingSequence;
+
     @Column(nullable = false)
     private String bookingCustomer;
 

@@ -12,6 +12,12 @@ import java.util.List;
 public interface RoomBookingRepository extends JpaRepository<RoomBooking, Long> {
 	List<RoomBooking> findByCreatedByUsernameOrderByIdDesc(String createdByUsername);
 
+	@Query(value = """
+			select coalesce(max(coalesce(booking_sequence, id)), 0)
+			from room_bookings
+			""", nativeQuery = true)
+	Number findMaxBookingSequence();
+
 	@Query("""
 			select rb
 			from RoomBooking rb

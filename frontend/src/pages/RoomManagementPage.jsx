@@ -444,7 +444,7 @@ function RoomManagementPage() {
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
+                                        <th>Booking ID</th>
                                         <th>Name</th>
                                         <th>Status</th>
                                         <th>Amount</th>
@@ -454,7 +454,7 @@ function RoomManagementPage() {
                                 <tbody>
                                     {bookings.map((booking) => (
                                         <tr key={booking.id}>
-                                            <td>{booking.id}</td>
+                                            <td>{String(booking.bookingSequence ?? booking.id).padStart(2, "0")}</td>
                                             <td>{booking.bookingCustomer}</td>
                                             <td>{booking.bookingStatus}</td>
                                             <td>Rs. {Number(booking.amount || 0).toLocaleString()}</td>
