@@ -112,7 +112,10 @@ public class RoomServiceImpl implements RoomService {
                 null
         );
         int remainingRooms = Math.max(0, totalRooms - (bookedRooms == null ? 0 : bookedRooms));
-        RoomStatus availabilityStatus = remainingRooms > 0 ? RoomStatus.AVAILABLE : RoomStatus.RESERVED;
+        RoomStatus currentStatus = room.getRoomStatus() == null ? RoomStatus.AVAILABLE : room.getRoomStatus();
+        RoomStatus effectiveStatus = currentStatus == RoomStatus.AVAILABLE
+            ? (remainingRooms > 0 ? RoomStatus.AVAILABLE : RoomStatus.RESERVED)
+            : currentStatus;
 
         return RoomResponse.builder()
                 .id(room.getId())
@@ -126,7 +129,7 @@ public class RoomServiceImpl implements RoomService {
                 .normalPrice(room.getNormalPrice())
                 .weekendPrice(room.getWeekendPrice())
                 .seasonalPrice(room.getSeasonalPrice())
-                .roomStatus(availabilityStatus)
+                .roomStatus(effectiveStatus)
                 .build();
     }
 }

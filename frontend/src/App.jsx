@@ -36,6 +36,8 @@ function App() {
                 "SUPER_ADMIN",
                 "MANAGER",
                 "RESTAURANT_MANAGER",
+                "CUSTOMER",
+                "EVENT_MANAGER"
                 "EVENT_MANAGER",
                 "CUSTOMER"
               ]}

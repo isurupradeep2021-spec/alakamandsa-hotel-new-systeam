@@ -15,8 +15,14 @@ function DashboardPage() {
   const [eventError, setEventError] = useState('');
 
   useEffect(() => {
-    if (['SUPER_ADMIN', 'MANAGER', 'RESTAURANT_MANAGER'].includes(user?.role)) {
-      getDashboardSummary().then((res) => setSummary(res.data)).catch(() => setSummary(null));
+    if (["SUPER_ADMIN", "MANAGER", "RESTAURANT_MANAGER"].includes(user?.role)) {
+      getDashboardSummary()
+        .then((res) => setSummary(res.data))
+        .catch(() => setSummary(null));
+    } else if (user?.role === "CUSTOMER") {
+      getRooms()
+        .then((res) => setRooms(res.data || []))
+        .catch(() => setRooms([]));
     }
 
     if (user?.role === 'CUSTOMER') {
@@ -122,7 +128,7 @@ function DashboardPage() {
     );
   }
 
-  if (user?.role === 'RESTAURANT_MANAGER') {
+  if (user?.role === "RESTAURANT_MANAGER") {
     return (
       <div className="restaurant-page">
         <section className="grid">

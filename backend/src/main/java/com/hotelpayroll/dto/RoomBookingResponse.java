@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 public class RoomBookingResponse {
     private Long id;
+    private Integer bookingSequence;
     private String bookingCustomer;
     private String customerEmail;
     private String roomNumber;

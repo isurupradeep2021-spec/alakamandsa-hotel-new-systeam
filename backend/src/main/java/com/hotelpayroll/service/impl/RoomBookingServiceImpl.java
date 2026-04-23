@@ -6,6 +6,8 @@ import com.hotelpayroll.dto.RoomBookingResponse;
 import com.hotelpayroll.entity.RoomBooking;
 import com.hotelpayroll.entity.RoomBookingStatus;
 import com.hotelpayroll.entity.Room;
+import com.hotelpayroll.entity.RoomStatus;
+import com.hotelpayroll.entity.RoomType;
 import com.hotelpayroll.exception.BadRequestException;
 import com.hotelpayroll.exception.ResourceNotFoundException;
 import com.hotelpayroll.repository.RoomBookingRepository;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -32,7 +35,8 @@ public class RoomBookingServiceImpl implements RoomBookingService {
 
     private static final List<RoomBookingStatus> ACTIVE_BOOKING_STATUSES = List.of(
             RoomBookingStatus.BOOKED,
-            RoomBookingStatus.CHECKED_IN
+            RoomBookingStatus.CHECKED_IN,
+            RoomBookingStatus.CANCELLATION_REQUESTED
     );
 
     @Override
@@ -40,6 +44,7 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         Room room = getRoom(request.getRoomNumber());
         validateAvailability(room, request.getBookedRooms(), null, request.getCheckInDate(), request.getCheckOutDate());
         RoomBooking booking = mapToEntity(new RoomBooking(), request, room);
+        booking.setBookingSequence(resolveNextBookingSequence());
         booking.setCreatedByUsername(getCurrentUsername());
         RoomBooking saved = roomBookingRepository.save(booking);
         auditService.log("CREATE", "RoomBooking", saved.getId().toString(), getCurrentUsername(), "Created room booking");
@@ -62,16 +67,55 @@ public class RoomBookingServiceImpl implements RoomBookingService {
     public List<RoomBookingResponse> getAll() {
         return roomBookingRepository.findAll(Sort.by(Sort.Direction.DESC, "id"))
                 .stream()
-                .map(this::toResponse)
+                .map(this::safeToResponse)
                 .toList();
     }
 
     @Override
     public List<RoomBookingResponse> getMyBookings() {
-        return roomBookingRepository.findByCreatedByUsernameOrderByIdDesc(getCurrentUsername())
+        String currentUsername = getCurrentUsername();
+        return roomBookingRepository.findMyBookingsByUsernameOrEmail(currentUsername)
                 .stream()
-                .map(this::toResponse)
+            .map(this::safeToResponse)
                 .toList();
+    }
+
+    @Override
+    public RoomBookingResponse requestCancellation(Long id) {
+        RoomBooking booking = roomBookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Room booking not found"));
+
+        if (!getCurrentUsername().equalsIgnoreCase(booking.getCreatedByUsername())) {
+            throw new BadRequestException("You can only request cancellation for your own bookings");
+        }
+
+        if (booking.getBookingStatus() == RoomBookingStatus.CANCELLED || booking.getBookingStatus() == RoomBookingStatus.CHECKED_OUT) {
+            throw new BadRequestException("This booking cannot be cancelled");
+        }
+
+        if (booking.getBookingStatus() == RoomBookingStatus.CANCELLATION_REQUESTED) {
+            throw new BadRequestException("Cancellation request already submitted for this booking");
+        }
+
+        booking.setBookingStatus(RoomBookingStatus.CANCELLATION_REQUESTED);
+        RoomBooking saved = roomBookingRepository.save(booking);
+        auditService.log("REQUEST_CANCELLATION", "RoomBooking", id.toString(), getCurrentUsername(), "Requested booking cancellation");
+        return toResponse(saved);
+    }
+
+    @Override
+    public RoomBookingResponse approveCancellation(Long id) {
+        RoomBooking booking = roomBookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Room booking not found"));
+
+        if (booking.getBookingStatus() != RoomBookingStatus.CANCELLATION_REQUESTED) {
+            throw new BadRequestException("Cancellation request is not pending for this booking");
+        }
+
+        booking.setBookingStatus(RoomBookingStatus.CANCELLED);
+        RoomBooking saved = roomBookingRepository.save(booking);
+        auditService.log("APPROVE_CANCELLATION", "RoomBooking", id.toString(), getCurrentUsername(), "Approved booking cancellation");
+        return toResponse(saved);
     }
 
     @Override
@@ -104,10 +148,11 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         int remainingRooms = Math.max(0, totalRooms - (bookedRooms == null ? 0 : bookedRooms));
 
         // Determine availability status
-        boolean isAvailable = remainingRooms > 0;
+        RoomStatus roomStatus = room.getRoomStatus() == null ? RoomStatus.AVAILABLE : room.getRoomStatus();
+        boolean isAvailable = roomStatus == RoomStatus.AVAILABLE && remainingRooms > 0;
         String message = isAvailable
                 ? String.format("Room %s is available with %d room(s) remaining", roomNumber, remainingRooms)
-                : String.format("Room %s is not available for the selected dates", roomNumber);
+            : String.format("Room %s is not available for the selected dates", roomNumber);
 
         return RoomAvailabilityResponse.builder()
                 .roomNumber(room.getRoomNumber())
@@ -137,13 +182,12 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         }
 
         int bookedRooms = request.getBookedRooms() == null ? 1 : request.getBookedRooms();
-        BigDecimal amount = room.getNormalPrice()
-                .multiply(BigDecimal.valueOf(nights))
-                .multiply(BigDecimal.valueOf(bookedRooms));
+        BigDecimal amount = calculateAmountForStay(room, request.getCheckInDate(), request.getCheckOutDate(), bookedRooms);
 
         booking.setBookingCustomer(request.getBookingCustomer().trim());
         booking.setCustomerEmail(request.getCustomerEmail().trim());
         booking.setRoomNumber(room.getRoomNumber());
+        booking.setRoom(room);
         booking.setBookedRooms(bookedRooms);
         booking.setGuestCount(request.getGuestCount());
         booking.setBookingStatus(RoomBookingStatus.BOOKED);
@@ -153,7 +197,51 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         return booking;
     }
 
+    private Integer resolveNextBookingSequence() {
+        Number maxSequence = roomBookingRepository.findMaxBookingSequence();
+        long currentMax = maxSequence == null ? 0L : maxSequence.longValue();
+        return (int) currentMax + 1;
+    }
+
+    private BigDecimal calculateAmountForStay(Room room, LocalDate checkInDate, LocalDate checkOutDate, int bookedRooms) {
+        BigDecimal total = BigDecimal.ZERO;
+        LocalDate currentDate = checkInDate;
+
+        while (currentDate.isBefore(checkOutDate)) {
+            total = total.add(resolveRatePerNight(room, currentDate));
+            currentDate = currentDate.plusDays(1);
+        }
+
+        return total.multiply(BigDecimal.valueOf(bookedRooms));
+    }
+
+    private BigDecimal resolveRatePerNight(Room room, LocalDate stayDate) {
+        if (isSeasonalDate(stayDate) && room.getSeasonalPrice() != null) {
+            return room.getSeasonalPrice();
+        }
+
+        if (isWeekendDate(stayDate)) {
+            return room.getWeekendPrice() != null ? room.getWeekendPrice() : room.getNormalPrice();
+        }
+
+        return room.getNormalPrice();
+    }
+
+    private boolean isWeekendDate(LocalDate stayDate) {
+        return stayDate.getDayOfWeek().getValue() >= 5;
+    }
+
+    private boolean isSeasonalDate(LocalDate stayDate) {
+        Month month = stayDate.getMonth();
+        return month == Month.DECEMBER || month == Month.JANUARY || month == Month.JUNE || month == Month.JULY;
+    }
+
     private void validateAvailability(Room room, Integer requestedRooms, Long excludeBookingId, LocalDate checkInDate, LocalDate checkOutDate) {
+        RoomStatus roomStatus = room.getRoomStatus() == null ? RoomStatus.AVAILABLE : room.getRoomStatus();
+        if (roomStatus != RoomStatus.AVAILABLE) {
+            throw new BadRequestException("Room " + room.getRoomNumber() + " is currently " + roomStatus + " and cannot be booked");
+        }
+
         int totalRooms = room.getTotalRooms() == null ? 1 : room.getTotalRooms();
         int roomsRequested = requestedRooms == null ? 1 : requestedRooms;
         Integer activeBooked = roomBookingRepository.sumBookedRoomsByRoomNumber(
@@ -165,28 +253,68 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         );
         int remainingRooms = Math.max(0, totalRooms - (activeBooked == null ? 0 : activeBooked));
 
+        boolean hasOverlap = roomBookingRepository.existsOverlappingBooking(
+                room.getRoomNumber(),
+                ACTIVE_BOOKING_STATUSES,
+                checkInDate,
+                checkOutDate,
+                excludeBookingId
+        );
+
+        if (hasOverlap && remainingRooms < roomsRequested) {
+            throw new BadRequestException("This room is already booked");
+        }
+
         if (roomsRequested > remainingRooms) {
             throw new BadRequestException("Only " + remainingRooms + " room(s) remaining for room number " + room.getRoomNumber());
         }
     }
 
     private RoomBookingResponse toResponse(RoomBooking booking) {
-        Room room = getRoom(booking.getRoomNumber());
+        Room room = null;
+        if (booking.getRoomNumber() != null) {
+            room = roomRepository.findByRoomNumberIgnoreCase(booking.getRoomNumber()).orElse(null);
+        }
+
         return RoomBookingResponse.builder()
                 .id(booking.getId())
+                .bookingSequence(booking.getBookingSequence())
                 .bookingCustomer(booking.getBookingCustomer())
                 .customerEmail(booking.getCustomerEmail())
                 .roomNumber(booking.getRoomNumber())
                 .bookedRooms(booking.getBookedRooms() == null ? 1 : booking.getBookedRooms())
                 .guestCount(booking.getGuestCount() == null ? 1 : booking.getGuestCount())
-                .roomType(room.getRoomType())
-                .guests(room.getCapacity())
+                .roomType(room == null ? RoomType.STANDARD : room.getRoomType())
+                .guests(room == null ? null : room.getCapacity())
                 .bookingStatus(booking.getBookingStatus())
                 .amount(booking.getAmount())
                 .checkInDate(booking.getCheckInDate())
                 .checkOutDate(booking.getCheckOutDate())
                 .createdAt(booking.getCreatedAt())
                 .build();
+    }
+
+    private RoomBookingResponse safeToResponse(RoomBooking booking) {
+        try {
+            return toResponse(booking);
+        } catch (Exception ex) {
+            return RoomBookingResponse.builder()
+                    .id(booking.getId())
+                    .bookingSequence(booking.getBookingSequence())
+                    .bookingCustomer(booking.getBookingCustomer())
+                    .customerEmail(booking.getCustomerEmail())
+                    .roomNumber(booking.getRoomNumber())
+                    .bookedRooms(booking.getBookedRooms() == null ? 1 : booking.getBookedRooms())
+                    .guestCount(booking.getGuestCount() == null ? 1 : booking.getGuestCount())
+                    .roomType(RoomType.STANDARD)
+                    .guests(null)
+                    .bookingStatus(booking.getBookingStatus())
+                    .amount(booking.getAmount())
+                    .checkInDate(booking.getCheckInDate())
+                    .checkOutDate(booking.getCheckOutDate())
+                    .createdAt(booking.getCreatedAt())
+                    .build();
+        }
     }
 
     private String getCurrentUsername() {
