@@ -34,7 +34,8 @@ public class RoomBookingServiceImpl implements RoomBookingService {
 
     private static final List<RoomBookingStatus> ACTIVE_BOOKING_STATUSES = List.of(
             RoomBookingStatus.BOOKED,
-            RoomBookingStatus.CHECKED_IN
+            RoomBookingStatus.CHECKED_IN,
+            RoomBookingStatus.CANCELLATION_REQUESTED
     );
 
     @Override
@@ -64,16 +65,55 @@ public class RoomBookingServiceImpl implements RoomBookingService {
     public List<RoomBookingResponse> getAll() {
         return roomBookingRepository.findAll(Sort.by(Sort.Direction.DESC, "id"))
                 .stream()
-                .map(this::toResponse)
+                .map(this::safeToResponse)
                 .toList();
     }
 
     @Override
     public List<RoomBookingResponse> getMyBookings() {
-        return roomBookingRepository.findByCreatedByUsernameOrderByIdDesc(getCurrentUsername())
+        String currentUsername = getCurrentUsername();
+        return roomBookingRepository.findMyBookingsByUsernameOrEmail(currentUsername)
                 .stream()
-                .map(this::toResponse)
+            .map(this::safeToResponse)
                 .toList();
+    }
+
+    @Override
+    public RoomBookingResponse requestCancellation(Long id) {
+        RoomBooking booking = roomBookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Room booking not found"));
+
+        if (!getCurrentUsername().equalsIgnoreCase(booking.getCreatedByUsername())) {
+            throw new BadRequestException("You can only request cancellation for your own bookings");
+        }
+
+        if (booking.getBookingStatus() == RoomBookingStatus.CANCELLED || booking.getBookingStatus() == RoomBookingStatus.CHECKED_OUT) {
+            throw new BadRequestException("This booking cannot be cancelled");
+        }
+
+        if (booking.getBookingStatus() == RoomBookingStatus.CANCELLATION_REQUESTED) {
+            throw new BadRequestException("Cancellation request already submitted for this booking");
+        }
+
+        booking.setBookingStatus(RoomBookingStatus.CANCELLATION_REQUESTED);
+        RoomBooking saved = roomBookingRepository.save(booking);
+        auditService.log("REQUEST_CANCELLATION", "RoomBooking", id.toString(), getCurrentUsername(), "Requested booking cancellation");
+        return toResponse(saved);
+    }
+
+    @Override
+    public RoomBookingResponse approveCancellation(Long id) {
+        RoomBooking booking = roomBookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Room booking not found"));
+
+        if (booking.getBookingStatus() != RoomBookingStatus.CANCELLATION_REQUESTED) {
+            throw new BadRequestException("Cancellation request is not pending for this booking");
+        }
+
+        booking.setBookingStatus(RoomBookingStatus.CANCELLED);
+        RoomBooking saved = roomBookingRepository.save(booking);
+        auditService.log("APPROVE_CANCELLATION", "RoomBooking", id.toString(), getCurrentUsername(), "Approved booking cancellation");
+        return toResponse(saved);
     }
 
     @Override
@@ -147,6 +187,7 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         booking.setBookingCustomer(request.getBookingCustomer().trim());
         booking.setCustomerEmail(request.getCustomerEmail().trim());
         booking.setRoomNumber(room.getRoomNumber());
+        booking.setRoom(room);
         booking.setBookedRooms(bookedRooms);
         booking.setGuestCount(request.getGuestCount());
         booking.setBookingStatus(RoomBookingStatus.BOOKED);
@@ -173,13 +214,29 @@ public class RoomBookingServiceImpl implements RoomBookingService {
         );
         int remainingRooms = Math.max(0, totalRooms - (activeBooked == null ? 0 : activeBooked));
 
+        boolean hasOverlap = roomBookingRepository.existsOverlappingBooking(
+                room.getRoomNumber(),
+                ACTIVE_BOOKING_STATUSES,
+                checkInDate,
+                checkOutDate,
+                excludeBookingId
+        );
+
+        if (hasOverlap && remainingRooms < roomsRequested) {
+            throw new BadRequestException("This room is already booked");
+        }
+
         if (roomsRequested > remainingRooms) {
             throw new BadRequestException("Only " + remainingRooms + " room(s) remaining for room number " + room.getRoomNumber());
         }
     }
 
     private RoomBookingResponse toResponse(RoomBooking booking) {
-        Room room = roomRepository.findByRoomNumberIgnoreCase(booking.getRoomNumber()).orElse(null);
+        Room room = null;
+        if (booking.getRoomNumber() != null) {
+            room = roomRepository.findByRoomNumberIgnoreCase(booking.getRoomNumber()).orElse(null);
+        }
+
         return RoomBookingResponse.builder()
                 .id(booking.getId())
                 .bookingCustomer(booking.getBookingCustomer())
@@ -187,14 +244,36 @@ public class RoomBookingServiceImpl implements RoomBookingService {
                 .roomNumber(booking.getRoomNumber())
                 .bookedRooms(booking.getBookedRooms() == null ? 1 : booking.getBookedRooms())
                 .guestCount(booking.getGuestCount() == null ? 1 : booking.getGuestCount())
-            .roomType(room == null ? RoomType.STANDARD : room.getRoomType())
-            .guests(room == null ? null : room.getCapacity())
+                .roomType(room == null ? RoomType.STANDARD : room.getRoomType())
+                .guests(room == null ? null : room.getCapacity())
                 .bookingStatus(booking.getBookingStatus())
                 .amount(booking.getAmount())
                 .checkInDate(booking.getCheckInDate())
                 .checkOutDate(booking.getCheckOutDate())
                 .createdAt(booking.getCreatedAt())
                 .build();
+    }
+
+    private RoomBookingResponse safeToResponse(RoomBooking booking) {
+        try {
+            return toResponse(booking);
+        } catch (Exception ex) {
+            return RoomBookingResponse.builder()
+                    .id(booking.getId())
+                    .bookingCustomer(booking.getBookingCustomer())
+                    .customerEmail(booking.getCustomerEmail())
+                    .roomNumber(booking.getRoomNumber())
+                    .bookedRooms(booking.getBookedRooms() == null ? 1 : booking.getBookedRooms())
+                    .guestCount(booking.getGuestCount() == null ? 1 : booking.getGuestCount())
+                    .roomType(RoomType.STANDARD)
+                    .guests(null)
+                    .bookingStatus(booking.getBookingStatus())
+                    .amount(booking.getAmount())
+                    .checkInDate(booking.getCheckInDate())
+                    .checkOutDate(booking.getCheckOutDate())
+                    .createdAt(booking.getCreatedAt())
+                    .build();
+        }
     }
 
     private String getCurrentUsername() {

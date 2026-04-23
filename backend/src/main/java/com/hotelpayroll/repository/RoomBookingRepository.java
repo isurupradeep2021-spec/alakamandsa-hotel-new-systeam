@@ -12,6 +12,16 @@ import java.util.List;
 public interface RoomBookingRepository extends JpaRepository<RoomBooking, Long> {
 	List<RoomBooking> findByCreatedByUsernameOrderByIdDesc(String createdByUsername);
 
+	@Query("""
+			select rb
+			from RoomBooking rb
+			where lower(coalesce(rb.createdByUsername, '')) = lower(:username)
+			   or lower(coalesce(rb.customerEmail, '')) = lower(:username)
+			   or lower(coalesce(rb.bookingCustomer, '')) = lower(:username)
+			order by rb.id desc
+			""")
+	List<RoomBooking> findMyBookingsByUsernameOrEmail(@Param("username") String username);
+
 		@Query("""
 			    select coalesce(sum(coalesce(rb.bookedRooms, 1)), 0)
 						from RoomBooking rb
@@ -22,6 +32,23 @@ public interface RoomBookingRepository extends JpaRepository<RoomBooking, Long> 
 							and (:excludeId is null or rb.id <> :excludeId)
 						""")
 		Integer sumBookedRoomsByRoomNumber(
+						@Param("roomNumber") String roomNumber,
+						@Param("activeStatuses") List<RoomBookingStatus> activeStatuses,
+			    @Param("requestedCheckIn") LocalDate requestedCheckIn,
+			    @Param("requestedCheckOut") LocalDate requestedCheckOut,
+						@Param("excludeId") Long excludeId
+		);
+
+		@Query("""
+			    select (count(rb) > 0)
+						from RoomBooking rb
+						where lower(rb.roomNumber) = lower(:roomNumber)
+							and rb.bookingStatus in :activeStatuses
+			      and rb.checkInDate < :requestedCheckOut
+			      and rb.checkOutDate > :requestedCheckIn
+							and (:excludeId is null or rb.id <> :excludeId)
+						""")
+		boolean existsOverlappingBooking(
 						@Param("roomNumber") String roomNumber,
 						@Param("activeStatuses") List<RoomBookingStatus> activeStatuses,
 			    @Param("requestedCheckIn") LocalDate requestedCheckIn,

@@ -44,6 +44,18 @@ public class RoomBookingController {
         return roomBookingService.getMyBookings();
     }
 
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @PatchMapping("/{id}/request-cancellation")
+    public RoomBookingResponse requestCancellation(@PathVariable Long id) {
+        return roomBookingService.requestCancellation(id);
+    }
+
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','MANAGER')")
+    @PatchMapping("/{id}/approve-cancellation")
+    public RoomBookingResponse approveCancellation(@PathVariable Long id) {
+        return roomBookingService.approveCancellation(id);
+    }
+
     @PreAuthorize("hasAnyRole('MANAGER','CUSTOMER')")
     @GetMapping("/check-availability")
     public RoomAvailabilityResponse checkAvailability(

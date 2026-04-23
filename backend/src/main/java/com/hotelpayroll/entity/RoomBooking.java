@@ -32,6 +32,10 @@ public class RoomBooking {
     @Column(nullable = false)
     private String roomNumber;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id")
+    private Room room;
+
     @Column
     @Builder.Default
     private Integer bookedRooms = 1;

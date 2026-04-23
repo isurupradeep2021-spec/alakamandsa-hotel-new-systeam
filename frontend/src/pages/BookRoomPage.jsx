@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { createRoomBooking, getMyRoomBookings, getRooms } from "../api/service";
+import { createRoomBooking, getMyRoomBookings, getRooms, requestRoomBookingCancellation } from "../api/service";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const ROOM_TYPE_GUEST_LIMITS = {
@@ -34,8 +34,19 @@ function BookRoomPage() {
         try {
             const res = await getMyRoomBookings();
             setMyBookings(res.data || []);
-        } catch {
+            setBookingError("");
+        } catch (err) {
             // Keep existing rows when refresh fails to avoid hiding successfully saved bookings.
+            const apiMessage = err?.response?.data?.message;
+            const status = err?.response?.status;
+
+            if (apiMessage) {
+                setBookingError(apiMessage);
+            } else if (status) {
+                setBookingError(`Unable to load your bookings (HTTP ${status}).`);
+            } else {
+                setBookingError("Unable to load your bookings right now. Please refresh and try again.");
+            }
         } finally {
             setBookingsLoading(false);
         }
@@ -159,6 +170,28 @@ function BookRoomPage() {
         } catch (err) {
             const apiMessage = err?.response?.data?.message;
             setBookingError(apiMessage || "Failed to create booking.");
+        }
+    };
+
+    const canRequestCancellation = (bookingStatus) => {
+        return bookingStatus === "BOOKED" || bookingStatus === "CHECKED_IN";
+    };
+
+    const handleRequestCancellation = async (bookingId) => {
+        setBookingMessage("");
+        setBookingError("");
+
+        try {
+            const res = await requestRoomBookingCancellation(bookingId);
+            const updated = res?.data;
+            if (updated?.id) {
+                setMyBookings((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+            }
+            setBookingMessage("Cancellation request submitted. Waiting for manager approval.");
+            await loadMyBookings();
+        } catch (err) {
+            const apiMessage = err?.response?.data?.message;
+            setBookingError(apiMessage || "Failed to request cancellation.");
         }
     };
 
@@ -296,6 +329,7 @@ function BookRoomPage() {
                                     <th>Guests</th>
                                     <th>Status</th>
                                     <th>Total</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -310,11 +344,20 @@ function BookRoomPage() {
                                         <td>{booking.guestCount ?? booking.guests ?? "-"}</td>
                                         <td>{toTitleCase(booking.bookingStatus)}</td>
                                         <td>LKR {Number(booking.amount || 0).toLocaleString()}</td>
+                                        <td>
+                                            {canRequestCancellation(booking.bookingStatus) ? (
+                                                <button className="btn danger small" type="button" onClick={() => handleRequestCancellation(booking.id)}>
+                                                    Request Cancel
+                                                </button>
+                                            ) : (
+                                                "-"
+                                            )}
+                                        </td>
                                     </tr>
                                 ))}
                                 {myBookings.length === 0 && (
                                     <tr>
-                                        <td colSpan="9">No bookings found yet.</td>
+                                        <td colSpan="10">No bookings found yet.</td>
                                     </tr>
                                 )}
                             </tbody>

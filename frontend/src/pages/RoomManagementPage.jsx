@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createRoomBooking, createRoomRecord, deleteRoomBooking, deleteRoomRecord, getRoomBookings, getRooms, updateRoomBooking, updateRoomRecord } from "../api/service";
+import { approveRoomBookingCancellation, createRoomBooking, createRoomRecord, deleteRoomBooking, deleteRoomRecord, getRoomBookings, getRooms, updateRoomBooking, updateRoomRecord } from "../api/service";
 
 const initialRoomForm = {
     roomNumber: "",
@@ -191,6 +191,20 @@ function RoomManagementPage() {
     const removeBooking = async (id) => {
         await deleteRoomBooking(id);
         await loadLatestRecords();
+    };
+
+    const approveCancellation = async (id) => {
+        setBookingMessage("");
+        setBookingError("");
+
+        try {
+            await approveRoomBookingCancellation(id);
+            setBookingMessage("Cancellation approved successfully");
+            await loadLatestRecords();
+        } catch (err) {
+            const apiMsg = err?.response?.data?.message;
+            setBookingError(apiMsg || "Failed to approve cancellation request");
+        }
     };
 
     return (
@@ -441,6 +455,11 @@ function RoomManagementPage() {
                                                 <button className="btn danger small" type="button" onClick={() => removeBooking(booking.id)}>
                                                     Delete
                                                 </button>
+                                                {booking.bookingStatus === "CANCELLATION_REQUESTED" && (
+                                                    <button className="btn small" type="button" onClick={() => approveCancellation(booking.id)}>
+                                                        Approve Cancel
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}
