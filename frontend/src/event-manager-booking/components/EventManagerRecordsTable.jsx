@@ -47,7 +47,7 @@ export default function EventManagerRecordsTable({ rows, loading }) {
                     </td>
                     <td>
                       <div className="atelier-record-primary">{formatEventDate(row.eventDateTime)}</div>
-                      <div className="atelier-record-secondary">to {formatEventDate(row.endDateTime)}</div>
+                      <div className="atelier-record-secondary">{row.endDateTime ? `to ${formatEventDate(row.endDateTime)}` : '-'}</div>
                     </td>
                     <td>{row.durationHours ? `${row.durationHours} hrs` : '-'}</td>
                     <td>{row.status || '-'}</td>

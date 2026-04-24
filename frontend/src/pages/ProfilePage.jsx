@@ -3,7 +3,7 @@ import { changeMyPassword, getMyProfile, getMyReservations, updateMyProfile } fr
 import { useAuth } from '../context/AuthContext';
 
 function ProfilePage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [profile, setProfile] = useState(null);
   const [reservations, setReservations] = useState([]);
   const [fullName, setFullName] = useState('');
@@ -48,6 +48,8 @@ function ProfilePage() {
     try {
       const res = await updateMyProfile({ fullName });
       setProfile(res.data);
+      setFullName(res.data.fullName || '');
+      updateUser({ fullName: res.data.fullName });
       setMsg('Profile updated successfully');
     } catch (error) {
       setErr(error.response?.data?.message || 'Profile update failed');
@@ -71,6 +73,7 @@ function ProfilePage() {
     <div className="grid">
       <div className="card">
         <h3>My Profile</h3>
+        <p>Name: <strong>{profile?.fullName || user?.fullName || user?.username}</strong></p>
         <p>Username: <strong>{profile?.username || user?.username}</strong></p>
         <p>Role: <strong>{profile?.role || user?.role}</strong></p>
         <form className="toolbar" onSubmit={saveProfile}>

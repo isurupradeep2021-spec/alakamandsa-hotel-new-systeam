@@ -13,7 +13,8 @@ export default function EventBookingForm({
   selectedEventHall,
   eventDurationLabel,
   eventTotalPrice,
-  canManageEventRecords
+  canManageEventRecords,
+  minEventDateTime
 }) {
   return (
     <section className="event-booking-form">
@@ -104,6 +105,7 @@ export default function EventBookingForm({
               type="datetime-local"
               value={form.eventDateTime}
               onChange={(e) => setField('eventDateTime', e.target.value)}
+              min={minEventDateTime || undefined}
               required
             />
           </div>
@@ -145,6 +147,7 @@ export default function EventBookingForm({
               step="0.01"
               value={form.pricePerGuest}
               onChange={(e) => setField('pricePerGuest', Number(e.target.value) || 0)}
+              readOnly={!canManageEventRecords}
             />
           </div>
 

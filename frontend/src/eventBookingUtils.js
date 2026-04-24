@@ -20,6 +20,13 @@ const parseLocalDateTimeString = (value) => {
   return new Date(year, month - 1, day, hour, minute, second);
 };
 
+const formatDateTimeInputFromDate = (date) => {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+
+  const pad = (num) => String(num).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
 export const formatEventDate = (value) => {
   if (!value) return '-';
   const date = parseLocalDateTimeString(value);
@@ -78,10 +85,25 @@ export const formatDurationLabel = (start, end) => {
 export const formatDateTimeInput = (dateTimeString) => {
   if (!dateTimeString) return '';
   const date = parseLocalDateTimeString(dateTimeString);
-  if (date === null || Number.isNaN(date.getTime())) return '';
+  return formatDateTimeInputFromDate(date);
+};
 
-  const pad = (num) => String(num).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+export const getCurrentDateTimeInputValue = () => formatDateTimeInputFromDate(new Date());
+
+export const isPastEventDateSelection = (start, originalStart = '') => {
+  if (!start) return false;
+
+  const startTime = parseLocalDateTimeString(start);
+  const originalTime = parseLocalDateTimeString(originalStart);
+  const now = new Date();
+  now.setSeconds(0, 0);
+
+  if (startTime === null || Number.isNaN(startTime.getTime())) return false;
+  if (originalTime !== null && !Number.isNaN(originalTime.getTime()) && startTime.getTime() === originalTime.getTime()) {
+    return false;
+  }
+
+  return startTime < now;
 };
 
 export const isActiveEvent = (row) => {
