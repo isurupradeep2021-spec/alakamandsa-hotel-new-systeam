@@ -30,6 +30,7 @@ public class EventBooking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "customer_name")
     private String customerName;
 
     @Column(name = "customer_email")
@@ -41,17 +42,20 @@ public class EventBooking {
     @Column(name = "created_by_username")
     private String createdByUsername;
 
+    @Column(name = "event_type")
     private String eventType;
 
+    @Column(name = "hall_name")
     private String hallName;
 
+    @Column(name = "package_name")
     private String packageName;
 
-    @Column(columnDefinition = "DATETIME(0)")
+    @Column(name = "event_date_time", columnDefinition = "DATETIME")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime eventDateTime;
 
-    @Column(name = "end_datetime", columnDefinition = "DATETIME(0)")
+    @Column(name = "end_date_time", columnDefinition = "DATETIME")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime endDateTime;
 
@@ -60,14 +64,18 @@ public class EventBooking {
 
     private Integer attendees;
 
+    @Column(name = "price_per_guest")
     private BigDecimal pricePerGuest;
 
     @Column(name = "total_price")
     private BigDecimal totalPrice;
 
+    @Column(name = "total_cost")
     private BigDecimal totalCost;
 
+    @Column(name = "notes", length = 2000)
     private String notes;
 
+    @Column(name = "status")
     private String status;
 }
