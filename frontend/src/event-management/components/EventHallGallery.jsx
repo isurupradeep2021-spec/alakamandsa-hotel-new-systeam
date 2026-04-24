@@ -31,7 +31,7 @@ export default function EventHallGallery({ onSelectHall }) {
               <p>Capacity: {hall.capacity}</p>
               <p className="price">{formatEventCurrency(hall.price_per_hour)} / hour</p>
               <button type="button" className="btn primary" onClick={() => onSelectHall(hall)}>
-                Use This Hall
+                Book Now
               </button>
             </div>
           </article>

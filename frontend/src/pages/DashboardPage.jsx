@@ -102,7 +102,7 @@ function DashboardPage() {
         <div className="event-dashboard-actions">
           <Link to="/event-booking-manager" className="card event-action-card">
             <div className="event-action-icon"><i className="bi bi-calendar-plus" /></div>
-            <div><h3>Event Booking</h3><p>Create and prefill new event bookings</p></div>
+            <div><h3>Event Booking</h3><p>Create new event bookings</p></div>
           </Link>
           <Link to="/event-management" className="card event-action-card">
             <div className="event-action-icon"><i className="bi bi-kanban" /></div>
@@ -110,7 +110,7 @@ function DashboardPage() {
           </Link>
           <Link to="/profile" className="card event-action-card">
             <div className="event-action-icon"><i className="bi bi-person-circle" /></div>
-            <div><h3>My Profile</h3><p>Update account details and password settings</p></div>
+            <div><h3>My Profile</h3><p>Update account details and password</p></div>
           </Link>
         </div>
 

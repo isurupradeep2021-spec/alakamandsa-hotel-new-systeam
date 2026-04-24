@@ -7,7 +7,7 @@ export default function EventAnalyticsPanel({ analytics }) {
     <section className="card event-analytics-panel">
       <div className="event-analytics-head">
         <div>
-          <p className="event-panel-eyebrow">Management Insight</p>
+          <p className="event-panel-eyebrow"></p>
           <h3>Booking Analytics</h3>
         </div>
         <span className="event-panel-chip">

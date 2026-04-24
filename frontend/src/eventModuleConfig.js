@@ -24,7 +24,7 @@ export const EVENT_FORM_DEFAULTS = {
   eventDateTime: '',
   endDateTime: '',
   durationHours: 0,
-  attendees: 1,
+  attendees: '',
   pricePerGuest: 0,
   totalPrice: 0,
   totalCost: 0,
