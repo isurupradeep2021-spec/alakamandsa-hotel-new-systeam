@@ -141,7 +141,10 @@ public class EventBookingService {
     }
 
     private String validateStatus(String status) {
-        String normalized = requireText(status, "Booking status is required").toUpperCase(Locale.ROOT);
+        if (status == null || status.isBlank()) {
+            return "INQUIRY";
+        }
+        String normalized = status.toUpperCase(Locale.ROOT);
         if (!VALID_STATUSES.contains(normalized)) {
             throw new BadRequestException("Invalid event status");
         }
