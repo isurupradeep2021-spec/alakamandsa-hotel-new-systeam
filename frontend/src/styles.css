@@ -124,7 +124,7 @@ textarea {
     padding: 26px 18px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
 }
 
 .sidebar h1 {
@@ -138,7 +138,7 @@ textarea {
 .sidebar nav {
     display: grid;
     gap: 10px;
-    margin: 24px 0;
+    margin: 20px 0 0;
 }
 .sidebar a {
     color: #d5ecff;
@@ -146,6 +146,10 @@ textarea {
     padding: 9px 12px;
     border-radius: 10px;
     transition: 0.2s;
+}
+.sidebar button {
+    margin-top: auto;
+    width: 100%;
 }
 .sidebar a:hover {
     background: rgba(255, 255, 255, 0.12);
@@ -2230,18 +2234,29 @@ td {
 .action-buttons {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 .btn-icon {
-  width: 32px;
+  min-width: 64px;
   height: 32px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  display: grid;
-  place-items: center;
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  font-size: 13px;
+  line-height: 1;
   transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-icon span {
+  display: inline-block;
+  font-weight: 600;
 }
 
 .btn-icon.edit {

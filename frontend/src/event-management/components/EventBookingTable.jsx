@@ -77,11 +77,13 @@ export default function EventBookingTable({ rows, canManageEventRecords, onEdit,
                 {canManageEventRecords && (
                   <td>
                     <div className="action-buttons">
-                      <button type="button" className="btn-icon edit" onClick={() => onEdit(row)} title="Edit">
+                      <button type="button" className="btn-icon edit" onClick={() => onEdit(row)} title="Edit" aria-label="Edit booking">
                         <i className="bi bi-pencil" />
+                        <span>Edit</span>
                       </button>
-                      <button type="button" className="btn-icon delete" onClick={() => onDelete(row)} title="Delete">
+                      <button type="button" className="btn-icon delete" onClick={() => onDelete(row)} title="Delete" aria-label="Delete booking">
                         <i className="bi bi-trash" />
+                        <span>Delete</span>
                       </button>
                     </div>
                   </td>

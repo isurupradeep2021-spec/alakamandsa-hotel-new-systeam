@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -29,6 +30,12 @@ public class EventBookingService {
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
     private static final Pattern MOBILE_PATTERN = Pattern.compile("^\\d{10}$");
     private static final BigDecimal PREMIUM_PACKAGE_FEE = new BigDecimal("10000.00");
+    private static final Map<String, Integer> HALL_CAPACITIES = Map.of(
+            "GRAND BALLROOM", 200,
+            "GARDEN PAVILION", 150,
+            "CONFERENCE ROOM", 80,
+            "MINI HALL", 60
+    );
 
     private final EventBookingRepository repository;
 
@@ -98,6 +105,7 @@ public class EventBookingService {
         if (booking.getPricePerGuest() == null || booking.getPricePerGuest().compareTo(BigDecimal.ZERO) < 0) {
             throw new BadRequestException("Price per hour must be 0 or greater");
         }
+        validateHallCapacity(booking.getHallName(), booking.getAttendees());
 
         ensureNoHallConflict(booking.getHallName(), booking.getEventDateTime(), booking.getEndDateTime(), currentId);
 
@@ -161,6 +169,16 @@ public class EventBookingService {
     private void validateDateRange(LocalDateTime start, LocalDateTime end) {
         if (!end.isAfter(start)) {
             throw new BadRequestException("End date & time must be after starting date & time");
+        }
+    }
+
+    private void validateHallCapacity(String hallName, Integer attendees) {
+        if (hallName == null || attendees == null) {
+            return;
+        }
+        Integer capacity = HALL_CAPACITIES.get(hallName.trim().toUpperCase(Locale.ROOT));
+        if (capacity != null && attendees > capacity) {
+            throw new BadRequestException(String.format("Attendees cannot exceed selected hall capacity of %d.", capacity));
         }
     }
 
