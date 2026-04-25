@@ -37,9 +37,8 @@ function App() {
                 "MANAGER",
                 "RESTAURANT_MANAGER",
                 "CUSTOMER",
-                "EVENT_MANAGER"
                 "EVENT_MANAGER",
-                "CUSTOMER"
+                "CUSTOMER",
               ]}
             >
               <DashboardPage />
