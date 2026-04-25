@@ -567,10 +567,10 @@ function BookRoomPage() {
                                     availabilityStatus === "past"
                                         ? "Past date (cannot book)"
                                         : availabilityStatus === "available"
-                                            ? "Available"
-                                            : availabilityStatus === "booked"
-                                                ? "Booked"
-                                                : "Checking...";
+                                          ? "Available"
+                                          : availabilityStatus === "booked"
+                                            ? "Booked"
+                                            : "Checking...";
 
                                 return (
                                     <div
