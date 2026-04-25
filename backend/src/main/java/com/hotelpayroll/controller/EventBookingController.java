@@ -5,6 +5,10 @@ import com.hotelpayroll.entity.Role;
 import com.hotelpayroll.repository.EventBookingRepository;
 import com.hotelpayroll.service.EventBookingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -46,6 +50,20 @@ public class EventBookingController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER', 'EVENT_MANAGER')")
     public EventBooking update(@PathVariable Long id, @RequestBody EventBooking booking) {
         return eventBookingService.updateBooking(id, booking);
+    }
+
+    @GetMapping("/{id}/pdf")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER', 'EVENT_MANAGER', 'CUSTOMER')")
+    public ResponseEntity<byte[]> downloadPdf(@PathVariable Long id, Authentication authentication) {
+        byte[] pdfBytes = eventBookingService.getBookingPdf(id, authentication.getName(), resolveRole(authentication));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename("event-booking-" + id + ".pdf")
+                        .build()
+                        .toString())
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
     }
 
     private Role resolveRole(Authentication authentication) {

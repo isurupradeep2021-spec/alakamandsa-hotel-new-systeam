@@ -71,3 +71,5 @@ export const createEventBooking = (payload) => http.post("/event-bookings", payl
 export const updateEventBooking = (id, payload) => http.put(`/event-bookings/${id}`, payload);
 export const deleteEventBooking = (id) => http.delete(`/event-bookings/${id}`);
 export const eventAnalytics = () => http.get("/event-bookings/analytics");
+export const downloadEventBookingPdf = (id) =>
+  http.get(`/event-bookings/${id}/pdf`, { responseType: "blob" });

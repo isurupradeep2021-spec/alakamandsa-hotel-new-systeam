@@ -20,6 +20,7 @@ import EventSummaryCards from '../event-management/components/EventSummaryCards'
 import {
   createEventBooking,
   deleteEventBooking,
+  downloadEventBookingPdf,
   eventAnalytics,
   getEventBookings,
   updateEventBooking
@@ -37,6 +38,9 @@ export default function EventManagementPage({ view = 'management' }) {
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState('');
   const [formError, setFormError] = useState('');
+  const [formSuccess, setFormSuccess] = useState('');
+  const [successModalBooking, setSuccessModalBooking] = useState(null);
+  const [printingBookingId, setPrintingBookingId] = useState(null);
 
   const pageMeta = EVENT_PAGE_META[view] || EVENT_PAGE_META.management;
   const canManageEventRecords = view !== 'booking';
@@ -132,6 +136,7 @@ export default function EventManagementPage({ view = 'management' }) {
     setEditId(null);
     setOriginalEventDateTime('');
     setFormError('');
+    setFormSuccess('');
     setForm(createEmptyEventForm(user));
   };
 
@@ -167,6 +172,7 @@ export default function EventManagementPage({ view = 'management' }) {
     event.preventDefault();
     setPageError('');
     setFormError('');
+    setFormSuccess('');
 
     try {
       if (!form.customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.customerEmail)) {
@@ -204,11 +210,15 @@ export default function EventManagementPage({ view = 'management' }) {
           throw new Error('Editing event records is not allowed on the event booking page');
         }
         await updateEventBooking(editId, payload);
+        resetForm();
+        setFormSuccess('Booking updated successfully.');
       } else {
-        await createEventBooking(payload);
+        const response = await createEventBooking(payload);
+        setSuccessModalBooking(response.data || null);
+        resetForm();
+        setFormSuccess('Booking created successfully. A confirmation email is being sent to the customer email address.');
       }
 
-      resetForm();
       await load();
     } catch (error) {
       setFormError(error.response?.data?.message || error.message || 'Operation failed');
@@ -254,6 +264,35 @@ export default function EventManagementPage({ view = 'management' }) {
     }
   };
 
+  const handlePrint = async (row) => {
+    setPrintingBookingId(row.id);
+    setPageError('');
+
+    try {
+      const response = await downloadEventBookingPdf(row.id);
+      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      const pdfUrl = window.URL.createObjectURL(pdfBlob);
+      const printWindow = window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+
+      if (!printWindow) {
+        const downloadLink = document.createElement('a');
+        downloadLink.href = pdfUrl;
+        downloadLink.download = `event-booking-${row.id}.pdf`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }
+
+      setTimeout(() => {
+        window.URL.revokeObjectURL(pdfUrl);
+      }, 60000);
+    } catch (error) {
+      setPageError(error.response?.data?.message || error.message || 'Failed to open booking PDF');
+    } finally {
+      setPrintingBookingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="module-page dashboard-luxe operations-luxe">
@@ -271,6 +310,7 @@ export default function EventManagementPage({ view = 'management' }) {
       canManageEventRecords={canManageEventRecords}
       onEdit={handleEdit}
       onDelete={handleDelete}
+      onPrint={handlePrint}
       loading={loading}
       statusOptions={bookingStatusOptions}
       filterStatus={bookingStatusFilter}
@@ -315,9 +355,68 @@ export default function EventManagementPage({ view = 'management' }) {
           canManageEventRecords={canManageEventRecords}
           minEventDateTime={minEventDateTime}
         />
+        {formSuccess && <div className="success">{formSuccess}</div>}
       </div>
 
       {isCustomerEventBookingPage && bookingTableSection}
+
+      {successModalBooking && (
+        <div className="modal-backdrop">
+          <div className="modal-card event-success-modal">
+            <div className="event-success-modal__header">
+              <div>
+                <p className="event-panel-eyebrow">Booking Created</p>
+                <h3>Event booking created successfully</h3>
+              </div>
+              <button
+                type="button"
+                className="btn ghost small"
+                onClick={() => setSuccessModalBooking(null)}
+              >
+                Close
+              </button>
+            </div>
+
+            <p className="event-success-modal__message">
+              Booking #{successModalBooking.id} was saved successfully. A confirmation email is being sent to{' '}
+              <strong>{successModalBooking.customerEmail}</strong>.
+            </p>
+
+            <div className="event-success-modal__summary">
+              <div>
+                <small>Customer</small>
+                <strong>{successModalBooking.customerName}</strong>
+              </div>
+              <div>
+                <small>Hall</small>
+                <strong>{successModalBooking.hallName}</strong>
+              </div>
+              <div>
+                <small>Status</small>
+                <strong>{successModalBooking.status}</strong>
+              </div>
+            </div>
+
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() => handlePrint(successModalBooking)}
+                disabled={printingBookingId === successModalBooking.id}
+              >
+                {printingBookingId === successModalBooking.id ? 'Preparing PDF...' : 'Print Booking PDF'}
+              </button>
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={() => setSuccessModalBooking(null)}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
