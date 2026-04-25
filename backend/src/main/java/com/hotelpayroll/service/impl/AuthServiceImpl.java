@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,9 +33,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+        String normalizedUsername = normalizeLoginUsername(request.getUsername());
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(normalizedUsername, request.getPassword()));
 
-        User user = userRepository.findByUsername(request.getUsername())
+        User user = userRepository.findByUsernameIgnoreCase(normalizedUsername)
                 .orElseThrow(() -> new BadRequestException("Invalid credentials"));
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
@@ -49,7 +51,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
+        String normalizedUsername = request.getUsername().trim();
+        if (userRepository.existsByUsernameIgnoreCase(normalizedUsername)) {
             throw new BadRequestException("Username already exists");
         }
 
@@ -59,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
 
         User saved = userRepository.save(User.builder()
                 .fullName(request.getFullName())
-                .username(request.getUsername())
+            .username(normalizedUsername)
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole())
                 .enabled(true)
@@ -73,5 +76,20 @@ public class AuthServiceImpl implements AuthService {
                 .role(saved.getRole())
                 .permissions(RolePermissions.forRole(saved.getRole()).stream().map(Enum::name).collect(Collectors.toSet()))
                 .build();
+    }
+
+    private String normalizeLoginUsername(String username) {
+        String normalized = username == null ? "" : username.trim().toLowerCase(Locale.ROOT);
+        String compact = normalized.replaceAll("[^a-z0-9]", "");
+
+        return switch (compact) {
+            case "superadmin" -> "superadmin";
+            case "manager" -> "manager";
+            case "staff", "staffmember" -> "staff";
+            case "customer" -> "customer";
+            case "restaurantmanager" -> "restaurant-manager";
+            case "eventmanager" -> "event-manager";
+            default -> normalized;
+        };
     }
 }

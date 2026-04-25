@@ -183,14 +183,15 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private User upsertUser(String username, String fullName, Role role) {
-        return userRepository.findByUsername(username).orElseGet(() -> userRepository.save(
-                User.builder()
-                        .username(username)
-                        .fullName(fullName)
-                        .password(passwordEncoder.encode("Password@123"))
-                        .role(role)
-                        .enabled(true)
-                        .build()
-        ));
+        User user = userRepository.findByUsernameIgnoreCase(username)
+                .orElseGet(() -> User.builder().build());
+
+        user.setUsername(username);
+        user.setFullName(fullName);
+        user.setPassword(passwordEncoder.encode("Password@123"));
+        user.setRole(role);
+        user.setEnabled(true);
+
+        return userRepository.save(user);
     }
 }

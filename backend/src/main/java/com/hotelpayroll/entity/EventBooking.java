@@ -51,11 +51,19 @@ public class EventBooking {
     @Column(name = "package_name")
     private String packageName;
 
+<<<<<<< Updated upstream
     @Column(name = "event_date_time", columnDefinition = "DATETIME")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime eventDateTime;
 
     @Column(name = "end_date_time", columnDefinition = "DATETIME")
+=======
+    @Column
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
+    private LocalDateTime eventDateTime;
+
+    @Column(name = "end_datetime")
+>>>>>>> Stashed changes
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     private LocalDateTime endDateTime;
 
