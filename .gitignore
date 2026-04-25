@@ -43,4 +43,7 @@ frontend/.vite/
 # OS / logs
 .DS_Store
 *.log
+<<<<<<< Updated upstream
 frontend/dist/ 
+=======
+>>>>>>> Stashed changes
