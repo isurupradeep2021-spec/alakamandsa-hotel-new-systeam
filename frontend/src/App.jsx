@@ -1,20 +1,20 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import BookRoomPage from "./pages/BookRoomPage";
 import DashboardPage from "./pages/DashboardPage";
+import DiningPage from "./pages/DiningPage";
+import EventManagementPage from "./pages/EventManagementPage";
+import EventManagerBookingPage from "./pages/EventManagerBookingPage";
 import LoginPage from "./pages/LoginPage";
+import MenuManagementPage from "./pages/MenuManagementPage";
 import PayrollPage from "./pages/PayrollPage";
 import ProfilePage from "./pages/ProfilePage";
+import ReserveTablePage from "./pages/ReserveTablePage";
 import RoomManagementPage from "./pages/RoomManagementPage";
 import StaffPage from "./pages/StaffPage";
-import BookRoomPage from "./pages/BookRoomPage";
-import ViewRoomsPage from "./pages/ViewRoomsPage";
-import DiningPage from "./pages/DiningPage";
-import ReserveTablePage from "./pages/ReserveTablePage";
-import MenuManagementPage from "./pages/MenuManagementPage";
 import TableReservationsPage from "./pages/TableReservationsPage";
-import EventManagerBookingPage from "./pages/EventManagerBookingPage";
-import EventManagementPage from "./pages/EventManagementPage";
+import ViewRoomsPage from "./pages/ViewRoomsPage";
 
 function App() {
   return (
@@ -55,23 +55,6 @@ function App() {
           }
         />
         <Route
-          path="/view-rooms"
-          element={
-            <ProtectedRoute allowedRoles={["CUSTOMER"]}>
-              <ViewRoomsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/book-room"
-          element={
-            <ProtectedRoute allowedRoles={["CUSTOMER"]}>
-              <BookRoomPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
           path="/staff"
           element={
             <ProtectedRoute allowedRoles={["SUPER_ADMIN", "MANAGER"]}>
@@ -95,12 +78,27 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/view-rooms"
+          element={
+            <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+              <ViewRoomsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/book-room"
+          element={
+            <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+              <BookRoomPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/dining"
           element={
             <ProtectedRoute
-              allowedRoles={["CUSTOMER", "RESTAURANT_MANAGER", "SUPER_ADMIN", "MANAGER"]}
+              allowedRoles={["CUSTOMER", "SUPER_ADMIN", "MANAGER", "RESTAURANT_MANAGER"]}
             >
               <DiningPage />
             </ProtectedRoute>

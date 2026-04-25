@@ -35,7 +35,7 @@ public class Payroll {
     @Column(nullable = false)
     private BigDecimal netSalary;
 
-    @Column
+    @Column(name = "`month`")
     private Integer month;
 
     @Column

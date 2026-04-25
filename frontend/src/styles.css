@@ -124,7 +124,7 @@ textarea {
     padding: 26px 18px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    justify-content: flex-start;
 }
 
 .sidebar h1 {
@@ -138,7 +138,7 @@ textarea {
 .sidebar nav {
     display: grid;
     gap: 10px;
-    margin: 24px 0;
+    margin: 20px 0 0;
 }
 .sidebar a {
     color: #d5ecff;
@@ -146,6 +146,10 @@ textarea {
     padding: 9px 12px;
     border-radius: 10px;
     transition: 0.2s;
+}
+.sidebar button {
+    margin-top: auto;
+    width: 100%;
 }
 .sidebar a:hover {
     background: rgba(255, 255, 255, 0.12);
@@ -2353,20 +2357,20 @@ td {
 }
 
 .action-buttons {
-    display: flex;
-    gap: 8px;
+  display: flex;
+  gap: 8px;
 }
 
 .btn-icon {
-    width: 32px;
-    height: 32px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-    font-size: 14px;
-    transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
 .btn-icon.edit {
@@ -2385,6 +2389,15 @@ td {
 
 .btn-icon.delete:hover {
     background: #fecaca;
+}
+
+.btn-icon.print {
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.btn-icon.print:hover {
+  background: #bae6fd;
 }
 
 .loading-state {
@@ -2420,6 +2433,51 @@ td {
     border-radius: 8px;
     margin-bottom: 16px;
     border: 1px solid #fecaca;
+}
+
+.event-success-modal {
+  width: min(620px, 100%);
+  display: grid;
+  gap: 18px;
+}
+
+.event-success-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.event-success-modal__header h3 {
+  margin: 4px 0 0;
+}
+
+.event-success-modal__message {
+  margin: 0;
+  color: #365a75;
+  line-height: 1.6;
+}
+
+.event-success-modal__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
+  border: 1px solid #dbe4f0;
+}
+
+.event-success-modal__summary small {
+  display: block;
+  margin-bottom: 4px;
+  color: #5b7288;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.event-success-modal__summary strong {
+  color: #0f1f2e;
 }
 
 @media (max-width: 768px) {

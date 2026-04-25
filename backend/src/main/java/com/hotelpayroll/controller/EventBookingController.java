@@ -1,10 +1,17 @@
 package com.hotelpayroll.controller;
 
 import com.hotelpayroll.entity.EventBooking;
+import com.hotelpayroll.entity.Role;
 import com.hotelpayroll.repository.EventBookingRepository;
 import com.hotelpayroll.service.EventBookingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+
 @RestController
 @RequestMapping("/api/event-bookings")
 @RequiredArgsConstructor
@@ -28,36 +36,44 @@ public class EventBookingController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER', 'EVENT_MANAGER', 'CUSTOMER')")
-    public List<EventBooking> getAll() {
-        return repository.findAll();
+    public List<EventBooking> getAll(Authentication authentication) {
+        return eventBookingService.listBookings(resolveRole(authentication), authentication.getName());
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER', 'EVENT_MANAGER', 'CUSTOMER')")
-    public EventBooking create(@RequestBody EventBooking booking) {
-        return repository.save(eventBookingService.prepareForSave(booking, null));
+    public EventBooking create(@RequestBody EventBooking booking, Authentication authentication) {
+        return eventBookingService.createBooking(booking, authentication.getName(), resolveRole(authentication));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER', 'EVENT_MANAGER')")
     public EventBooking update(@PathVariable Long id, @RequestBody EventBooking booking) {
-        EventBooking existing = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Event booking not found"));
+        return eventBookingService.updateBooking(id, booking);
+    }
 
-        existing.setCustomerName(booking.getCustomerName());
-        existing.setCustomerEmail(booking.getCustomerEmail());
-        existing.setCustomerMobile(booking.getCustomerMobile());
-        existing.setEventType(booking.getEventType());
-        existing.setHallName(booking.getHallName());
-        existing.setPackageName(booking.getPackageName());
-        existing.setEventDateTime(booking.getEventDateTime());
-        existing.setEndDateTime(booking.getEndDateTime());
-        existing.setAttendees(booking.getAttendees());
-        existing.setPricePerGuest(booking.getPricePerGuest());
-        existing.setNotes(booking.getNotes());
-        existing.setStatus(booking.getStatus());
+    @GetMapping("/{id}/pdf")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER', 'EVENT_MANAGER', 'CUSTOMER')")
+    public ResponseEntity<byte[]> downloadPdf(@PathVariable Long id, Authentication authentication) {
+        byte[] pdfBytes = eventBookingService.getBookingPdf(id, authentication.getName(), resolveRole(authentication));
 
-        return repository.save(eventBookingService.prepareForSave(existing, id));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename("event-booking-" + id + ".pdf")
+                        .build()
+                        .toString())
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+
+    private Role resolveRole(Authentication authentication) {
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .filter(authority -> authority.startsWith("ROLE_"))
+                .map(authority -> authority.substring("ROLE_".length()))
+                .map(Role::valueOf)
+                .findFirst()
+                .orElse(Role.CUSTOMER);
     }
 
     @DeleteMapping("/{id}")

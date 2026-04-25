@@ -15,6 +15,15 @@ public class BookingStatusConstraintFixer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        // Only run for SQL Server
+        try {
+            if (!jdbcTemplate.getDataSource().getConnection().getMetaData().getDatabaseProductName().equals("Microsoft SQL Server")) {
+                return;
+            }
+        } catch (Exception e) {
+            log.warn("Could not check database type: {}", e.getMessage());
+            return;
+        }
         // SQL Server keeps old enum CHECK constraints after enum changes.
         // Recreate booking_status CHECK constraint with the current enum values.
         String dropExistingConstraintSql = """

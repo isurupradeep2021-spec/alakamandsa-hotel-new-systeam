@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Backend config
+backend/src/main/resources/application.properties
+
+# Build folders
+backend/target/
+frontend/dist/
+node_modules/
+
+# builds
+target/

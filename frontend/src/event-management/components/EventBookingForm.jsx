@@ -13,16 +13,15 @@ export default function EventBookingForm({
   selectedEventHall,
   eventDurationLabel,
   eventTotalPrice,
-  canManageEventRecords
+  canManageEventRecords,
+  minEventDateTime
 }) {
   return (
     <section className="event-booking-form">
       <div className="event-section-head">
         <div>
-          <p className="event-panel-eyebrow">Booking Workspace</p>
           <h3>{isEditingRecord ? 'Edit Event Booking' : 'Create Event Booking'}</h3>
         </div>
-        <p>All event-specific fields and validation stay in this module for easier evaluator changes.</p>
       </div>
 
       <form onSubmit={onSubmit}>
@@ -31,6 +30,7 @@ export default function EventBookingForm({
             <label>Customer Name *</label>
             <input
               type="text"
+              placeholder="Customer Name"
               value={form.customerName}
               onChange={(e) => setField('customerName', e.target.value)}
               required
@@ -105,6 +105,7 @@ export default function EventBookingForm({
               type="datetime-local"
               value={form.eventDateTime}
               onChange={(e) => setField('eventDateTime', e.target.value)}
+              min={minEventDateTime || undefined}
               required
             />
           </div>
@@ -131,8 +132,9 @@ export default function EventBookingForm({
             <input
               type="number"
               min="1"
+              placeholder="Number of attendees"
               value={form.attendees}
-              onChange={(e) => setField('attendees', Number(e.target.value) || 1)}
+              onChange={(e) => setField('attendees', e.target.value === '' ? '' : Number(e.target.value))}
               required
             />
           </div>
@@ -145,6 +147,7 @@ export default function EventBookingForm({
               step="0.01"
               value={form.pricePerGuest}
               onChange={(e) => setField('pricePerGuest', Number(e.target.value) || 0)}
+              readOnly={!canManageEventRecords}
             />
           </div>
 
@@ -202,7 +205,7 @@ export default function EventBookingForm({
 
         <div className="form-actions">
           <button type="submit" className="btn primary">
-            {isEditingRecord ? 'Update Booking' : 'Create Booking'}
+            {isEditingRecord ? 'Update Booking' : 'Book Now'}
           </button>
           <button type="button" className="btn secondary" onClick={onReset}>
             {isEditingRecord ? 'Cancel Edit' : 'Clear Form'}

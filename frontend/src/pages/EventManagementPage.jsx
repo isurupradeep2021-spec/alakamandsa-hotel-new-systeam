@@ -6,7 +6,9 @@ import {
   buildEventSummary,
   createEmptyEventForm,
   formatDurationLabel,
-  formatDateTimeInput
+  formatDateTimeInput,
+  getCurrentDateTimeInputValue,
+  isPastEventDateSelection
 } from '../eventBookingUtils';
 import { eventHalls } from '../eventHallsData';
 import { EVENT_PAGE_META } from '../eventModuleConfig';
@@ -18,6 +20,7 @@ import EventSummaryCards from '../event-management/components/EventSummaryCards'
 import {
   createEventBooking,
   deleteEventBooking,
+  downloadEventBookingPdf,
   eventAnalytics,
   getEventBookings,
   updateEventBooking
@@ -31,14 +34,19 @@ export default function EventManagementPage({ view = 'management' }) {
   const [analytics, setAnalytics] = useState({});
   const [form, setForm] = useState(() => createEmptyEventForm(user));
   const [editId, setEditId] = useState(null);
+  const [originalEventDateTime, setOriginalEventDateTime] = useState('');
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState('');
   const [formError, setFormError] = useState('');
+  const [formSuccess, setFormSuccess] = useState('');
+  const [successModalBooking, setSuccessModalBooking] = useState(null);
+  const [printingBookingId, setPrintingBookingId] = useState(null);
 
   const pageMeta = EVENT_PAGE_META[view] || EVENT_PAGE_META.management;
   const canManageEventRecords = view !== 'booking';
   const isCustomerEventBookingPage = view === 'booking' && user?.role === 'CUSTOMER';
   const statusOptions = buildEventStatusOptions(isCustomerEventBookingPage, canManageEventRecords);
+  const [bookingStatusFilter, setBookingStatusFilter] = useState('ALL');
   const selectedEventHall = useMemo(
     () => eventHalls.find((hall) => hall.name === form.hallName) || null,
     [form.hallName]
@@ -60,8 +68,30 @@ export default function EventManagementPage({ view = 'management' }) {
     [rows, canManageEventRecords]
   );
 
+  const filteredRows = useMemo(() => {
+    if (!canManageEventRecords || bookingStatusFilter === 'ALL') {
+      return rows;
+    }
+
+    return rows.filter((row) => (row.status || '').toUpperCase() === bookingStatusFilter);
+  }, [rows, bookingStatusFilter, canManageEventRecords]);
+
+  const displayRows = isCustomerEventBookingPage
+    ? rows.slice(0, 20)
+    : canManageEventRecords
+    ? filteredRows.slice(0, 20)
+    : rows;
+  const minEventDateTime = editId && isPastEventDateSelection(form.eventDateTime, originalEventDateTime)
+    ? ''
+    : getCurrentDateTimeInputValue();
+
+  const hasBookingRecords = rows.length > 0;
+  const isStatusFilterActive = bookingStatusFilter !== 'ALL';
+  const bookingStatusOptions = ['ALL', ...statusOptions];
+
   useEffect(() => {
     setEditId(null);
+    setOriginalEventDateTime('');
     setForm(createEmptyEventForm(user));
   }, [user]);
 
@@ -104,7 +134,9 @@ export default function EventManagementPage({ view = 'management' }) {
 
   const resetForm = () => {
     setEditId(null);
+    setOriginalEventDateTime('');
     setFormError('');
+    setFormSuccess('');
     setForm(createEmptyEventForm(user));
   };
 
@@ -140,6 +172,7 @@ export default function EventManagementPage({ view = 'management' }) {
     event.preventDefault();
     setPageError('');
     setFormError('');
+    setFormSuccess('');
 
     try {
       if (!form.customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.customerEmail)) {
@@ -151,8 +184,18 @@ export default function EventManagementPage({ view = 'management' }) {
       if (!form.eventDateTime || !form.endDateTime) {
         throw new Error('Starting date & time and end date & time are required');
       }
+      if (isPastEventDateSelection(form.eventDateTime, originalEventDateTime)) {
+        throw new Error('Starting date & time cannot be in the past');
+      }
       if (new Date(form.endDateTime) <= new Date(form.eventDateTime)) {
         throw new Error('End date & time must be after starting date & time');
+      }
+      const attendeesValue = Number(form.attendees);
+      if (!form.attendees || !Number.isFinite(attendeesValue) || attendeesValue <= 0) {
+        throw new Error('Attendees is required and must be a number greater than 0.');
+      }
+      if (selectedEventHall && attendeesValue > selectedEventHall.capacity) {
+        throw new Error(`Attendees cannot exceed selected hall capacity of ${selectedEventHall.capacity}.`);
       }
 
       const payload = {
@@ -167,11 +210,15 @@ export default function EventManagementPage({ view = 'management' }) {
           throw new Error('Editing event records is not allowed on the event booking page');
         }
         await updateEventBooking(editId, payload);
+        resetForm();
+        setFormSuccess('Booking updated successfully.');
       } else {
-        await createEventBooking(payload);
+        const response = await createEventBooking(payload);
+        setSuccessModalBooking(response.data || null);
+        resetForm();
+        setFormSuccess('Booking created successfully. A confirmation email is being sent to the customer email address.');
       }
 
-      resetForm();
       await load();
     } catch (error) {
       setFormError(error.response?.data?.message || error.message || 'Operation failed');
@@ -180,6 +227,7 @@ export default function EventManagementPage({ view = 'management' }) {
 
   const handleEdit = (row) => {
     setEditId(row.id);
+    setOriginalEventDateTime(formatDateTimeInput(row.eventDateTime));
     setFormError('');
     setForm({
       ...createEmptyEventForm(user),
@@ -199,13 +247,49 @@ export default function EventManagementPage({ view = 'management' }) {
     bookingFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleDelete = async (row) => {
+  const handleDelete = async (event, row) => {
+    event.preventDefault();
+
     try {
       setPageError('');
       await deleteEventBooking(row.id);
-      await load();
+      setRows((current) => current.filter((booking) => booking.id !== row.id));
+
+      if (canManageEventRecords) {
+        const analyticsResponse = await eventAnalytics();
+        setAnalytics(analyticsResponse.data || {});
+      }
     } catch (error) {
       setPageError(error.response?.data?.message || error.message || 'Delete failed');
+    }
+  };
+
+  const handlePrint = async (row) => {
+    setPrintingBookingId(row.id);
+    setPageError('');
+
+    try {
+      const response = await downloadEventBookingPdf(row.id);
+      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      const pdfUrl = window.URL.createObjectURL(pdfBlob);
+      const printWindow = window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+
+      if (!printWindow) {
+        const downloadLink = document.createElement('a');
+        downloadLink.href = pdfUrl;
+        downloadLink.download = `event-booking-${row.id}.pdf`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }
+
+      setTimeout(() => {
+        window.URL.revokeObjectURL(pdfUrl);
+      }, 60000);
+    } catch (error) {
+      setPageError(error.response?.data?.message || error.message || 'Failed to open booking PDF');
+    } finally {
+      setPrintingBookingId(null);
     }
   };
 
@@ -220,17 +304,28 @@ export default function EventManagementPage({ view = 'management' }) {
     );
   }
 
+  const bookingTableSection = (
+    <EventBookingTable
+      rows={displayRows}
+      canManageEventRecords={canManageEventRecords}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+      onPrint={handlePrint}
+      loading={loading}
+      statusOptions={bookingStatusOptions}
+      filterStatus={bookingStatusFilter}
+      onFilterStatusChange={setBookingStatusFilter}
+      hasBookingRecords={hasBookingRecords}
+      isStatusFilterActive={isStatusFilterActive}
+    />
+  );
+
   return (
     <div className="module-page dashboard-luxe operations-luxe">
       <div className="dash-hero luxe-hero">
         <div className="module-head">
-          <p className="eyebrow">{pageMeta.code}</p>
           <h2>{pageMeta.title}</h2>
           <p>{pageMeta.subtitle}</p>
-        </div>
-        <div className="hero-chip">
-          <i className={`bi ${pageMeta.icon}`} />
-          Live Module
         </div>
       </div>
 
@@ -239,6 +334,8 @@ export default function EventManagementPage({ view = 'management' }) {
       <EventSummaryCards canManageEventRecords={canManageEventRecords} summary={summary} />
 
       {canManageEventRecords && <EventAnalyticsPanel analytics={analytics} />}
+
+      {!isCustomerEventBookingPage && bookingTableSection}
 
       <EventHallGallery onSelectHall={handleSelectEventHall} />
 
@@ -256,16 +353,70 @@ export default function EventManagementPage({ view = 'management' }) {
           eventDurationLabel={eventDurationLabel}
           eventTotalPrice={eventTotalPrice}
           canManageEventRecords={canManageEventRecords}
+          minEventDateTime={minEventDateTime}
         />
+        {formSuccess && <div className="success">{formSuccess}</div>}
       </div>
 
-      <EventBookingTable
-        rows={rows}
-        canManageEventRecords={canManageEventRecords}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        loading={loading}
-      />
+      {isCustomerEventBookingPage && bookingTableSection}
+
+      {successModalBooking && (
+        <div className="modal-backdrop">
+          <div className="modal-card event-success-modal">
+            <div className="event-success-modal__header">
+              <div>
+                <p className="event-panel-eyebrow">Booking Created</p>
+                <h3>Event booking created successfully</h3>
+              </div>
+              <button
+                type="button"
+                className="btn ghost small"
+                onClick={() => setSuccessModalBooking(null)}
+              >
+                Close
+              </button>
+            </div>
+
+            <p className="event-success-modal__message">
+              Booking #{successModalBooking.id} was saved successfully. A confirmation email is being sent to{' '}
+              <strong>{successModalBooking.customerEmail}</strong>.
+            </p>
+
+            <div className="event-success-modal__summary">
+              <div>
+                <small>Customer</small>
+                <strong>{successModalBooking.customerName}</strong>
+              </div>
+              <div>
+                <small>Hall</small>
+                <strong>{successModalBooking.hallName}</strong>
+              </div>
+              <div>
+                <small>Status</small>
+                <strong>{successModalBooking.status}</strong>
+              </div>
+            </div>
+
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() => handlePrint(successModalBooking)}
+                disabled={printingBookingId === successModalBooking.id}
+              >
+                {printingBookingId === successModalBooking.id ? 'Preparing PDF...' : 'Print Booking PDF'}
+              </button>
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={() => setSuccessModalBooking(null)}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

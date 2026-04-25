@@ -6,6 +6,8 @@ import com.hotelpayroll.exception.BadRequestException;
 import com.hotelpayroll.exception.ResourceNotFoundException;
 import com.hotelpayroll.repository.EventBookingRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -15,12 +17,15 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 public class EventBookingService {
+
+    private static final Logger logger = LoggerFactory.getLogger(EventBookingService.class);
 
     private static final Set<String> VALID_STATUSES = Set.of(
             "INQUIRY", "CONFIRMED", "COMPLETED", "CANCELLED"
@@ -29,8 +34,16 @@ public class EventBookingService {
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
     private static final Pattern MOBILE_PATTERN = Pattern.compile("^\\d{10}$");
     private static final BigDecimal PREMIUM_PACKAGE_FEE = new BigDecimal("10000.00");
+    private static final Map<String, Integer> HALL_CAPACITIES = Map.of(
+            "GRAND BALLROOM", 200,
+            "GARDEN PAVILION", 150,
+            "CONFERENCE ROOM", 80,
+            "MINI HALL", 60
+    );
 
     private final EventBookingRepository repository;
+    private final EventPdfService eventPdfService;
+    private final EventEmailService eventEmailService;
 
     public List<EventBooking> listBookings(Role role, String username) {
         if (role == Role.CUSTOMER) {
@@ -47,12 +60,16 @@ public class EventBookingService {
             booking.setCreatedByUsername(username);
         }
 
-        return repository.save(prepareForSave(booking, null));
+        EventBooking savedBooking = repository.save(prepareForSave(booking, null, null));
+        sendConfirmationNotification(savedBooking);
+        return savedBooking;
     }
 
     public EventBooking updateBooking(Long id, EventBooking booking) {
         EventBooking existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Event booking not found"));
+        LocalDateTime originalEventDateTime = truncateToMinute(existing.getEventDateTime());
+        String originalStatus = existing.getStatus();
 
         existing.setCustomerName(booking.getCustomerName());
         existing.setCustomerEmail(booking.getCustomerEmail());
@@ -67,7 +84,28 @@ public class EventBookingService {
         existing.setNotes(booking.getNotes());
         existing.setStatus(booking.getStatus());
 
-        return repository.save(prepareForSave(existing, id));
+        EventBooking savedBooking = repository.save(prepareForSave(existing, id, originalEventDateTime));
+        if (hasStatusChanged(originalStatus, savedBooking.getStatus())) {
+            sendStatusNotification(savedBooking);
+        }
+        return savedBooking;
+    }
+
+    public byte[] getBookingPdf(Long id) {
+        EventBooking booking = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event booking not found"));
+        return eventPdfService.generatePdf(booking);
+    }
+
+    public byte[] getBookingPdf(Long id, String username, Role role) {
+        EventBooking booking = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event booking not found"));
+
+        if (role == Role.CUSTOMER && !username.equalsIgnoreCase(booking.getCreatedByUsername())) {
+            throw new BadRequestException("You are not allowed to access this booking PDF");
+        }
+
+        return eventPdfService.generatePdf(booking);
     }
 
     public void deleteBooking(Long id) {
@@ -76,7 +114,7 @@ public class EventBookingService {
         repository.delete(existing);
     }
 
-    public EventBooking prepareForSave(EventBooking booking, Long currentId) {
+    public EventBooking prepareForSave(EventBooking booking, Long currentId, LocalDateTime originalEventDateTime) {
         if (booking == null) {
             throw new BadRequestException("Event booking payload is required");
         }
@@ -90,6 +128,7 @@ public class EventBookingService {
         booking.setStatus(validateStatus(booking.getStatus()));
         booking.setEventDateTime(truncateToMinute(requireDateTime(booking.getEventDateTime(), "Starting date & time is required")));
         booking.setEndDateTime(truncateToMinute(requireDateTime(booking.getEndDateTime(), "End date & time is required")));
+        validateEventStartNotInPast(booking.getEventDateTime(), originalEventDateTime);
         validateDateRange(booking.getEventDateTime(), booking.getEndDateTime());
 
         if (booking.getAttendees() == null || booking.getAttendees() <= 0) {
@@ -98,6 +137,7 @@ public class EventBookingService {
         if (booking.getPricePerGuest() == null || booking.getPricePerGuest().compareTo(BigDecimal.ZERO) < 0) {
             throw new BadRequestException("Price per hour must be 0 or greater");
         }
+        validateHallCapacity(booking.getHallName(), booking.getAttendees());
 
         ensureNoHallConflict(booking.getHallName(), booking.getEventDateTime(), booking.getEndDateTime(), currentId);
 
@@ -141,7 +181,10 @@ public class EventBookingService {
     }
 
     private String validateStatus(String status) {
-        String normalized = requireText(status, "Booking status is required").toUpperCase(Locale.ROOT);
+        if (status == null || status.isBlank()) {
+            return "INQUIRY";
+        }
+        String normalized = status.toUpperCase(Locale.ROOT);
         if (!VALID_STATUSES.contains(normalized)) {
             throw new BadRequestException("Invalid event status");
         }
@@ -158,6 +201,26 @@ public class EventBookingService {
     private void validateDateRange(LocalDateTime start, LocalDateTime end) {
         if (!end.isAfter(start)) {
             throw new BadRequestException("End date & time must be after starting date & time");
+        }
+    }
+
+    private void validateEventStartNotInPast(LocalDateTime start, LocalDateTime originalEventDateTime) {
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        boolean isUnchangedExistingPastEvent = originalEventDateTime != null
+                && originalEventDateTime.equals(start);
+
+        if (start.isBefore(now) && !isUnchangedExistingPastEvent) {
+            throw new BadRequestException("Starting date & time cannot be in the past");
+        }
+    }
+
+    private void validateHallCapacity(String hallName, Integer attendees) {
+        if (hallName == null || attendees == null) {
+            return;
+        }
+        Integer capacity = HALL_CAPACITIES.get(hallName.trim().toUpperCase(Locale.ROOT));
+        if (capacity != null && attendees > capacity) {
+            throw new BadRequestException(String.format("Attendees cannot exceed selected hall capacity of %d.", capacity));
         }
     }
 
@@ -209,5 +272,29 @@ public class EventBookingService {
 
     private LocalDateTime truncateToMinute(LocalDateTime value) {
         return value == null ? null : value.truncatedTo(ChronoUnit.MINUTES);
+    }
+
+    private void sendConfirmationNotification(EventBooking booking) {
+        try {
+            byte[] pdfBytes = eventPdfService.generatePdf(booking);
+            eventEmailService.sendBookingConfirmation(booking, pdfBytes);
+        } catch (RuntimeException exception) {
+            logger.warn("Booking {} was saved but confirmation email delivery failed", booking.getId(), exception);
+        }
+    }
+
+    private void sendStatusNotification(EventBooking booking) {
+        try {
+            eventEmailService.sendStatusUpdate(booking);
+        } catch (RuntimeException exception) {
+            logger.warn("Booking {} status was updated but notification email delivery failed", booking.getId(), exception);
+        }
+    }
+
+    private boolean hasStatusChanged(String originalStatus, String updatedStatus) {
+        if (originalStatus == null) {
+            return updatedStatus != null;
+        }
+        return !originalStatus.equalsIgnoreCase(updatedStatus);
     }
 }
