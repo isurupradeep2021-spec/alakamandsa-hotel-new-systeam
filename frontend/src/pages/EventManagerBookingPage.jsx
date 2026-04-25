@@ -3,7 +3,9 @@ import {
   buildEventSummary,
   calculateDurationHours,
   createEmptyEventForm,
-  formatDurationLabel
+  formatDurationLabel,
+  getCurrentDateTimeInputValue,
+  isPastEventDateSelection
 } from '../eventBookingUtils';
 import {
   createEventBooking,
@@ -106,6 +108,9 @@ function EventManagerBookingPage() {
       if (!form.eventDateTime || !form.endDateTime) {
         throw new Error('Starting date & time and end date & time are required');
       }
+      if (isPastEventDateSelection(form.eventDateTime)) {
+        throw new Error('Starting date & time cannot be in the past');
+      }
       if (new Date(form.endDateTime) <= new Date(form.eventDateTime)) {
         throw new Error('End date & time must be after starting date & time');
       }
@@ -157,6 +162,7 @@ function EventManagerBookingPage() {
           eventDurationLabel={durationLabel}
           eventTotalPrice={totalPrice}
           canManageEventRecords
+          minEventDateTime={getCurrentDateTimeInputValue()}
         />
         {formSuccess && <div className="success">{formSuccess}</div>}
       </div>

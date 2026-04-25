@@ -22,7 +22,7 @@ export default function EventSummaryCards({ canManageEventRecords, summary }) {
         icon="bi-calendar-event"
         label="Total Bookings"
         value={summary.totalEvents}
-        caption="All event records currently visible in this module"
+        caption="All event records created in the system by you"
       />
       <SummaryCard
         icon="bi-calendar-check"
@@ -40,7 +40,7 @@ export default function EventSummaryCards({ canManageEventRecords, summary }) {
         icon={canManageEventRecords ? 'bi-cash-stack' : 'bi-building-check'}
         label={canManageEventRecords ? 'Revenue This Month' : 'Popular Hall'}
         value={canManageEventRecords ? formatEventCurrency(summary.currentMonthEventRevenue) : summary.mostPopularHall}
-        caption={canManageEventRecords ? 'Confirmed and completed revenue this month' : 'Most booked venue in current records'}
+        caption={canManageEventRecords ? 'Confirmed and completed revenue this month' : 'Most booked venue'}
       />
     </div>
   );

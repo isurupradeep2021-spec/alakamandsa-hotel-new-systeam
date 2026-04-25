@@ -6,7 +6,9 @@ import {
   buildEventSummary,
   createEmptyEventForm,
   formatDurationLabel,
-  formatDateTimeInput
+  formatDateTimeInput,
+  getCurrentDateTimeInputValue,
+  isPastEventDateSelection
 } from '../eventBookingUtils';
 import { eventHalls } from '../eventHallsData';
 import { EVENT_PAGE_META } from '../eventModuleConfig';
@@ -31,6 +33,7 @@ export default function EventManagementPage({ view = 'management' }) {
   const [analytics, setAnalytics] = useState({});
   const [form, setForm] = useState(() => createEmptyEventForm(user));
   const [editId, setEditId] = useState(null);
+  const [originalEventDateTime, setOriginalEventDateTime] = useState('');
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState('');
   const [formError, setFormError] = useState('');
@@ -39,6 +42,7 @@ export default function EventManagementPage({ view = 'management' }) {
   const canManageEventRecords = view !== 'booking';
   const isCustomerEventBookingPage = view === 'booking' && user?.role === 'CUSTOMER';
   const statusOptions = buildEventStatusOptions(isCustomerEventBookingPage, canManageEventRecords);
+  const [bookingStatusFilter, setBookingStatusFilter] = useState('ALL');
   const selectedEventHall = useMemo(
     () => eventHalls.find((hall) => hall.name === form.hallName) || null,
     [form.hallName]
@@ -60,8 +64,30 @@ export default function EventManagementPage({ view = 'management' }) {
     [rows, canManageEventRecords]
   );
 
+  const filteredRows = useMemo(() => {
+    if (!canManageEventRecords || bookingStatusFilter === 'ALL') {
+      return rows;
+    }
+
+    return rows.filter((row) => (row.status || '').toUpperCase() === bookingStatusFilter);
+  }, [rows, bookingStatusFilter, canManageEventRecords]);
+
+  const displayRows = isCustomerEventBookingPage
+    ? rows.slice(0, 20)
+    : canManageEventRecords
+    ? filteredRows.slice(0, 20)
+    : rows;
+  const minEventDateTime = editId && isPastEventDateSelection(form.eventDateTime, originalEventDateTime)
+    ? ''
+    : getCurrentDateTimeInputValue();
+
+  const hasBookingRecords = rows.length > 0;
+  const isStatusFilterActive = bookingStatusFilter !== 'ALL';
+  const bookingStatusOptions = ['ALL', ...statusOptions];
+
   useEffect(() => {
     setEditId(null);
+    setOriginalEventDateTime('');
     setForm(createEmptyEventForm(user));
   }, [user]);
 
@@ -104,6 +130,7 @@ export default function EventManagementPage({ view = 'management' }) {
 
   const resetForm = () => {
     setEditId(null);
+    setOriginalEventDateTime('');
     setFormError('');
     setForm(createEmptyEventForm(user));
   };
@@ -151,6 +178,9 @@ export default function EventManagementPage({ view = 'management' }) {
       if (!form.eventDateTime || !form.endDateTime) {
         throw new Error('Starting date & time and end date & time are required');
       }
+      if (isPastEventDateSelection(form.eventDateTime, originalEventDateTime)) {
+        throw new Error('Starting date & time cannot be in the past');
+      }
       if (new Date(form.endDateTime) <= new Date(form.eventDateTime)) {
         throw new Error('End date & time must be after starting date & time');
       }
@@ -187,6 +217,7 @@ export default function EventManagementPage({ view = 'management' }) {
 
   const handleEdit = (row) => {
     setEditId(row.id);
+    setOriginalEventDateTime(formatDateTimeInput(row.eventDateTime));
     setFormError('');
     setForm({
       ...createEmptyEventForm(user),
@@ -206,11 +237,18 @@ export default function EventManagementPage({ view = 'management' }) {
     bookingFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleDelete = async (row) => {
+  const handleDelete = async (event, row) => {
+    event.preventDefault();
+
     try {
       setPageError('');
       await deleteEventBooking(row.id);
-      await load();
+      setRows((current) => current.filter((booking) => booking.id !== row.id));
+
+      if (canManageEventRecords) {
+        const analyticsResponse = await eventAnalytics();
+        setAnalytics(analyticsResponse.data || {});
+      }
     } catch (error) {
       setPageError(error.response?.data?.message || error.message || 'Delete failed');
     }
@@ -227,11 +265,25 @@ export default function EventManagementPage({ view = 'management' }) {
     );
   }
 
+  const bookingTableSection = (
+    <EventBookingTable
+      rows={displayRows}
+      canManageEventRecords={canManageEventRecords}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+      loading={loading}
+      statusOptions={bookingStatusOptions}
+      filterStatus={bookingStatusFilter}
+      onFilterStatusChange={setBookingStatusFilter}
+      hasBookingRecords={hasBookingRecords}
+      isStatusFilterActive={isStatusFilterActive}
+    />
+  );
+
   return (
     <div className="module-page dashboard-luxe operations-luxe">
       <div className="dash-hero luxe-hero">
         <div className="module-head">
-          <p className="eyebrow">{pageMeta.code}</p>
           <h2>{pageMeta.title}</h2>
           <p>{pageMeta.subtitle}</p>
         </div>
@@ -242,6 +294,8 @@ export default function EventManagementPage({ view = 'management' }) {
       <EventSummaryCards canManageEventRecords={canManageEventRecords} summary={summary} />
 
       {canManageEventRecords && <EventAnalyticsPanel analytics={analytics} />}
+
+      {!isCustomerEventBookingPage && bookingTableSection}
 
       <EventHallGallery onSelectHall={handleSelectEventHall} />
 
@@ -259,16 +313,11 @@ export default function EventManagementPage({ view = 'management' }) {
           eventDurationLabel={eventDurationLabel}
           eventTotalPrice={eventTotalPrice}
           canManageEventRecords={canManageEventRecords}
+          minEventDateTime={minEventDateTime}
         />
       </div>
 
-      <EventBookingTable
-        rows={rows}
-        canManageEventRecords={canManageEventRecords}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        loading={loading}
-      />
+      {isCustomerEventBookingPage && bookingTableSection}
     </div>
   );
 }

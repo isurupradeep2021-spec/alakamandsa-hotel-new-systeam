@@ -54,12 +54,13 @@ public class EventBookingService {
             booking.setCreatedByUsername(username);
         }
 
-        return repository.save(prepareForSave(booking, null));
+        return repository.save(prepareForSave(booking, null, null));
     }
 
     public EventBooking updateBooking(Long id, EventBooking booking) {
         EventBooking existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Event booking not found"));
+        LocalDateTime originalEventDateTime = truncateToMinute(existing.getEventDateTime());
 
         existing.setCustomerName(booking.getCustomerName());
         existing.setCustomerEmail(booking.getCustomerEmail());
@@ -74,7 +75,7 @@ public class EventBookingService {
         existing.setNotes(booking.getNotes());
         existing.setStatus(booking.getStatus());
 
-        return repository.save(prepareForSave(existing, id));
+        return repository.save(prepareForSave(existing, id, originalEventDateTime));
     }
 
     public void deleteBooking(Long id) {
@@ -83,7 +84,7 @@ public class EventBookingService {
         repository.delete(existing);
     }
 
-    public EventBooking prepareForSave(EventBooking booking, Long currentId) {
+    public EventBooking prepareForSave(EventBooking booking, Long currentId, LocalDateTime originalEventDateTime) {
         if (booking == null) {
             throw new BadRequestException("Event booking payload is required");
         }
@@ -97,6 +98,7 @@ public class EventBookingService {
         booking.setStatus(validateStatus(booking.getStatus()));
         booking.setEventDateTime(truncateToMinute(requireDateTime(booking.getEventDateTime(), "Starting date & time is required")));
         booking.setEndDateTime(truncateToMinute(requireDateTime(booking.getEndDateTime(), "End date & time is required")));
+        validateEventStartNotInPast(booking.getEventDateTime(), originalEventDateTime);
         validateDateRange(booking.getEventDateTime(), booking.getEndDateTime());
 
         if (booking.getAttendees() == null || booking.getAttendees() <= 0) {
@@ -169,6 +171,16 @@ public class EventBookingService {
     private void validateDateRange(LocalDateTime start, LocalDateTime end) {
         if (!end.isAfter(start)) {
             throw new BadRequestException("End date & time must be after starting date & time");
+        }
+    }
+
+    private void validateEventStartNotInPast(LocalDateTime start, LocalDateTime originalEventDateTime) {
+        LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        boolean isUnchangedExistingPastEvent = originalEventDateTime != null
+                && originalEventDateTime.equals(start);
+
+        if (start.isBefore(now) && !isUnchangedExistingPastEvent) {
+            throw new BadRequestException("Starting date & time cannot be in the past");
         }
     }
 
