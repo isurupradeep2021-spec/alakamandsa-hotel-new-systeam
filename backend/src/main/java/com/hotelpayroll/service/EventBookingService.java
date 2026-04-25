@@ -6,6 +6,8 @@ import com.hotelpayroll.exception.BadRequestException;
 import com.hotelpayroll.exception.ResourceNotFoundException;
 import com.hotelpayroll.repository.EventBookingRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -23,6 +25,8 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class EventBookingService {
 
+    private static final Logger logger = LoggerFactory.getLogger(EventBookingService.class);
+
     private static final Set<String> VALID_STATUSES = Set.of(
             "INQUIRY", "CONFIRMED", "COMPLETED", "CANCELLED"
     );
@@ -38,6 +42,8 @@ public class EventBookingService {
     );
 
     private final EventBookingRepository repository;
+    private final EventPdfService eventPdfService;
+    private final EventEmailService eventEmailService;
 
     public List<EventBooking> listBookings(Role role, String username) {
         if (role == Role.CUSTOMER) {
@@ -54,13 +60,16 @@ public class EventBookingService {
             booking.setCreatedByUsername(username);
         }
 
-        return repository.save(prepareForSave(booking, null, null));
+        EventBooking savedBooking = repository.save(prepareForSave(booking, null, null));
+        sendConfirmationNotification(savedBooking);
+        return savedBooking;
     }
 
     public EventBooking updateBooking(Long id, EventBooking booking) {
         EventBooking existing = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Event booking not found"));
         LocalDateTime originalEventDateTime = truncateToMinute(existing.getEventDateTime());
+        String originalStatus = existing.getStatus();
 
         existing.setCustomerName(booking.getCustomerName());
         existing.setCustomerEmail(booking.getCustomerEmail());
@@ -75,7 +84,28 @@ public class EventBookingService {
         existing.setNotes(booking.getNotes());
         existing.setStatus(booking.getStatus());
 
-        return repository.save(prepareForSave(existing, id, originalEventDateTime));
+        EventBooking savedBooking = repository.save(prepareForSave(existing, id, originalEventDateTime));
+        if (hasStatusChanged(originalStatus, savedBooking.getStatus())) {
+            sendStatusNotification(savedBooking);
+        }
+        return savedBooking;
+    }
+
+    public byte[] getBookingPdf(Long id) {
+        EventBooking booking = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event booking not found"));
+        return eventPdfService.generatePdf(booking);
+    }
+
+    public byte[] getBookingPdf(Long id, String username, Role role) {
+        EventBooking booking = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event booking not found"));
+
+        if (role == Role.CUSTOMER && !username.equalsIgnoreCase(booking.getCreatedByUsername())) {
+            throw new BadRequestException("You are not allowed to access this booking PDF");
+        }
+
+        return eventPdfService.generatePdf(booking);
     }
 
     public void deleteBooking(Long id) {
@@ -242,5 +272,29 @@ public class EventBookingService {
 
     private LocalDateTime truncateToMinute(LocalDateTime value) {
         return value == null ? null : value.truncatedTo(ChronoUnit.MINUTES);
+    }
+
+    private void sendConfirmationNotification(EventBooking booking) {
+        try {
+            byte[] pdfBytes = eventPdfService.generatePdf(booking);
+            eventEmailService.sendBookingConfirmation(booking, pdfBytes);
+        } catch (RuntimeException exception) {
+            logger.warn("Booking {} was saved but confirmation email delivery failed", booking.getId(), exception);
+        }
+    }
+
+    private void sendStatusNotification(EventBooking booking) {
+        try {
+            eventEmailService.sendStatusUpdate(booking);
+        } catch (RuntimeException exception) {
+            logger.warn("Booking {} status was updated but notification email delivery failed", booking.getId(), exception);
+        }
+    }
+
+    private boolean hasStatusChanged(String originalStatus, String updatedStatus) {
+        if (originalStatus == null) {
+            return updatedStatus != null;
+        }
+        return !originalStatus.equalsIgnoreCase(updatedStatus);
     }
 }

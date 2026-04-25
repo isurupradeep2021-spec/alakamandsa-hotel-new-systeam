@@ -1,6 +1,18 @@
 import { formatEventCurrency, formatEventDate } from '../../eventBookingUtils';
 
-export default function EventBookingTable({ rows, canManageEventRecords, onEdit, onDelete, loading, statusOptions, filterStatus, onFilterStatusChange, hasBookingRecords = false, isStatusFilterActive = false }) {
+export default function EventBookingTable({
+  rows,
+  canManageEventRecords,
+  onEdit,
+  onDelete,
+  onPrint,
+  loading,
+  statusOptions,
+  filterStatus,
+  onFilterStatusChange,
+  hasBookingRecords = false,
+  isStatusFilterActive = false
+}) {
   if (loading) {
     return <div className="loading-state"><p>Loading event data...</p></div>;
   }
@@ -102,6 +114,19 @@ export default function EventBookingTable({ rows, canManageEventRecords, onEdit,
                   {canManageEventRecords && (
                     <td>
                       <div className="action-buttons">
+                        <button
+                          type="button"
+                          className="btn-icon print"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            onPrint?.(row);
+                          }}
+                          title="Print PDF"
+                          aria-label="Print booking PDF"
+                        >
+                          <i className="bi bi-printer" />
+                          <span>Print</span>
+                        </button>
                         <button type="button" className="btn-icon edit" onClick={(event) => { event.preventDefault(); onEdit(row); }} title="Edit" aria-label="Edit booking">
                           <i className="bi bi-pencil" />
                           <span>Edit</span>
