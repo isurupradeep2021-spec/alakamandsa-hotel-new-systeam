@@ -10,6 +10,9 @@ const menuByRole = {
     { to: '/menu-management', label: 'Menu Management' },
     { to: '/table-reservations', label: 'Table Reservations' },
     { to: '/event-management', label: 'Event Management' },
+    { to: '/housekeeping', label: 'Housekeeping' },
+    { to: '/maintenance', label: 'Maintenance' },
+    { to: '/room-service-staff', label: 'Service Staff' },
     { to: '/profile', label: 'My Profile' }
   ],
   MANAGER: [
@@ -20,9 +23,20 @@ const menuByRole = {
     { to: '/menu-management', label: 'Menu Management' },
     { to: '/table-reservations', label: 'Table Reservations' },
     { to: '/event-management', label: 'Event Management' },
+    { to: '/housekeeping', label: 'Housekeeping' },
+    { to: '/maintenance', label: 'Maintenance' },
+    { to: '/room-service-staff', label: 'Service Staff' },
     { to: '/profile', label: 'My Profile' }
   ],
   STAFF_MEMBER: [{ to: '/my-payroll', label: 'My Salary' }, { to: '/profile', label: 'My Profile' }],
+  HOUSEKEEPER: [
+    { to: '/housekeeping', label: 'My Tasks' },
+    { to: '/profile', label: 'My Profile' }
+  ],
+  MAINTENANCE_STAFF: [
+    { to: '/maintenance', label: 'My Tickets' },
+    { to: '/profile', label: 'My Profile' }
+  ],
   CUSTOMER: [
     { to: '/dashboard', label: 'Customer Dashboard' },
     { to: '/view-rooms', label: 'View Rooms' },

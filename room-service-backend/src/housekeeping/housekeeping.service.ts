@@ -2,12 +2,12 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HousekeepingTask, HousekeepingStatus } from './housekeeping-task.entity';
-import { Staff } from '../staff/staff.entity';
+import { UserAccount } from '../staff/staff.entity';
 import { CreateHousekeepingTaskDto } from './dto/create-housekeeping-task.dto';
 import { UpdateHousekeepingTaskDto } from './dto/update-housekeeping-task.dto';
 
 interface RequestUser {
-  email: string;
+  username: string;
   role: string;
 }
 
@@ -22,8 +22,8 @@ export class HousekeepingService {
   constructor(
     @InjectRepository(HousekeepingTask)
     private readonly taskRepository: Repository<HousekeepingTask>,
-    @InjectRepository(Staff)
-    private readonly staffRepository: Repository<Staff>,
+    @InjectRepository(UserAccount)
+    private readonly staffRepository: Repository<UserAccount>,
   ) {}
 
   create(dto: CreateHousekeepingTaskDto): Promise<HousekeepingTask> {
@@ -33,7 +33,7 @@ export class HousekeepingService {
 
   async findAll(requestUser?: RequestUser): Promise<HousekeepingTask[]> {
     if (requestUser?.role === 'HOUSEKEEPER') {
-      const staff = await this.staffRepository.findOne({ where: { email: requestUser.email } });
+      const staff = await this.staffRepository.findOne({ where: { username: requestUser.username } });
       if (!staff) return [];
       return this.taskRepository.find({
         where: { staffId: Number(staff.id) },
@@ -65,7 +65,7 @@ export class HousekeepingService {
       throw new ForbiddenException(`Status must be one of: ${HOUSEKEEPER_ALLOWED_STATUSES.join(', ')}`);
     }
     const task = await this.findOne(id);
-    const staff = await this.staffRepository.findOne({ where: { email: requestUser.email } });
+    const staff = await this.staffRepository.findOne({ where: { username: requestUser.username } });
     if (!staff || Number(task.staffId) !== Number(staff.id)) {
       throw new ForbiddenException('You can only update tasks assigned to you.');
     }

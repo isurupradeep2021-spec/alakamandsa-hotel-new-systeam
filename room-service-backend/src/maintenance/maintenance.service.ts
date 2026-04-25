@@ -2,12 +2,12 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MaintenanceTicket, MaintenanceStatus } from './maintenance-ticket.entity';
-import { Staff } from '../staff/staff.entity';
+import { UserAccount } from '../staff/staff.entity';
 import { CreateMaintenanceTicketDto } from './dto/create-maintenance-ticket.dto';
 import { UpdateMaintenanceTicketDto } from './dto/update-maintenance-ticket.dto';
 
 interface RequestUser {
-  email: string;
+  username  : string;
   role: string;
 }
 
@@ -22,8 +22,8 @@ export class MaintenanceService {
   constructor(
     @InjectRepository(MaintenanceTicket)
     private readonly ticketRepository: Repository<MaintenanceTicket>,
-    @InjectRepository(Staff)
-    private readonly staffRepository: Repository<Staff>,
+    @InjectRepository(UserAccount)
+    private readonly staffRepository: Repository<UserAccount>,
   ) {}
 
   create(dto: CreateMaintenanceTicketDto): Promise<MaintenanceTicket> {
@@ -33,7 +33,7 @@ export class MaintenanceService {
 
   async findAll(requestUser?: RequestUser): Promise<MaintenanceTicket[]> {
     if (requestUser?.role === 'MAINTENANCE_STAFF') {
-      const staff = await this.staffRepository.findOne({ where: { email: requestUser.email } });
+      const staff = await this.staffRepository.findOne({ where: { username: requestUser.username } });
       if (!staff) return [];
       return this.ticketRepository.find({
         where: { staffId: Number(staff.id) },
@@ -65,7 +65,7 @@ export class MaintenanceService {
       throw new ForbiddenException(`Status must be one of: ${MAINTENANCE_ALLOWED_STATUSES.join(', ')}`);
     }
     const ticket = await this.findOne(id);
-    const staff = await this.staffRepository.findOne({ where: { email: requestUser.email } });
+    const staff = await this.staffRepository.findOne({ where: { username: requestUser.username } });
     if (!staff || Number(ticket.staffId) !== Number(staff.id)) {
       throw new ForbiddenException('You can only update tickets assigned to you.');
     }

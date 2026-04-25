@@ -15,6 +15,9 @@ import MenuManagementPage from "./pages/MenuManagementPage";
 import TableReservationsPage from "./pages/TableReservationsPage";
 import EventManagerBookingPage from "./pages/EventManagerBookingPage";
 import EventManagementPage from "./pages/EventManagementPage";
+import HousekeepingPage from "./pages/HousekeepingPage";
+import MaintenancePage from "./pages/MaintenancePage";
+import RoomServiceStaffPage from "./pages/RoomServiceStaffPage";
 
 function App() {
   return (
@@ -157,6 +160,31 @@ function App() {
         />
 
         <Route path="/profile" element={<ProfilePage />} />
+
+        <Route
+          path="/housekeeping"
+          element={
+            <ProtectedRoute allowedRoles={["SUPER_ADMIN", "MANAGER", "HOUSEKEEPER"]}>
+              <HousekeepingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/maintenance"
+          element={
+            <ProtectedRoute allowedRoles={["SUPER_ADMIN", "MANAGER", "MAINTENANCE_STAFF"]}>
+              <MaintenancePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/room-service-staff"
+          element={
+            <ProtectedRoute allowedRoles={["SUPER_ADMIN", "MANAGER"]}>
+              <RoomServiceStaffPage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />

@@ -1,5 +1,5 @@
-import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
-import { EmploymentStatus, StaffRole } from '../staff.entity';
+import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { StaffRole } from '../staff.entity';
 
 export class UpdateStaffDto {
   @IsOptional()
@@ -10,27 +10,24 @@ export class UpdateStaffDto {
   @IsEnum(StaffRole, { message: 'role must be HOUSEKEEPER or MAINTENANCE_STAFF' })
   role?: StaffRole;
 
+  // Staff detail (payroll) fields
   @IsOptional()
   @IsString()
-  employeeId?: string;
-
-  @IsOptional()
-  @IsString()
-  employmentRole?: string;
+  position?: string;
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
   basicSalary?: number;
 
   @IsOptional()
-  @IsString()
-  joinDate?: string;
+  @IsNumber()
+  @Min(0)
+  dailyRate?: number;
 
   @IsOptional()
-  @IsEnum(EmploymentStatus)
-  employmentStatus?: EmploymentStatus;
-
-  @IsOptional()
-  @IsString()
-  phone?: string;
+  @IsNumber()
+  @Min(0)
+  overtimeRate?: number;
 }
+

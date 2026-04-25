@@ -22,8 +22,8 @@ export class RolesGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const userRoles: string[] = request.user?.roles || [];
-    const hasRequiredRole = requiredRoles.some((role) => userRoles.includes(role));
+    const userRole: string = (request.user?.role || '').toUpperCase();
+    const hasRequiredRole = requiredRoles.includes(userRole);
 
     if (!hasRequiredRole) {
       throw new ForbiddenException('You do not have access to this room-service resource.');
@@ -32,3 +32,4 @@ export class RolesGuard implements CanActivate {
     return true;
   }
 }
+

@@ -2338,3 +2338,20 @@ td {
     padding: 8px 12px;
   }
 }
+
+/* ── Room Service Status Pills ────────────────────────────────────────── */
+.rs-status-pending        { background: #fff4d6; color: #6a4b00; }
+.rs-status-in-progress    { background: #dff3ff; color: #0b4d73; }
+.rs-status-cleaned        { background: #e6f9ee; color: #17643f; }
+.rs-status-inspected      { background: #e8ecf4; color: #334155; }
+.rs-status-open           { background: #ffe4e8; color: #8a2431; }
+.rs-status-assigned       { background: #fff4d6; color: #6a4b00; }
+.rs-status-resolved       { background: #e6f9ee; color: #17643f; }
+.rs-status-closed         { background: #e8ecf4; color: #334155; }
+.rs-status-low            { background: #e6f9ee; color: #17643f; }
+.rs-status-medium         { background: #fff4d6; color: #6a4b00; }
+.rs-status-high           { background: #ffe4e8; color: #8a2431; }
+.rs-status-housekeeper    { background: #dff3ff; color: #0b4d73; }
+.rs-status-maintenance-staff { background: #f3ecff; color: #4c2a91; }
+.rs-status-active         { background: #e6f9ee; color: #17643f; }
+.rs-status-inactive       { background: #e8ecf4; color: #334155; }

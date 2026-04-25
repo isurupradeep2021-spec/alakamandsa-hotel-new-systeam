@@ -7,7 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Staff } from '../staff/staff.entity';
+import { UserAccount } from '../staff/staff.entity';
 
 export enum RoomCondition {
   OCCUPIED = 'OCCUPIED',
@@ -61,9 +61,9 @@ export class HousekeepingTask {
   @Column({ type: 'enum', enum: Priority, default: Priority.MEDIUM })
   priority: Priority;
 
-  @ManyToOne(() => Staff, { nullable: true, eager: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => UserAccount, { nullable: true, eager: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'staffId' })
-  staff: Staff;
+  staff: UserAccount;
 
   @Column({ nullable: true })
   staffId: number;

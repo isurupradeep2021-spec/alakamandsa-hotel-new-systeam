@@ -1,0 +1,265 @@
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { In, Repository } from 'typeorm';
+import * as bcrypt from 'bcryptjs';
+import { UserAccount, StaffDetail } from './staff/staff.entity';
+import {
+  HousekeepingTask,
+  HousekeepingStatus,
+  HousekeepingTaskType,
+  Priority,
+  RoomCondition,
+} from './housekeeping/housekeeping-task.entity';
+import {
+  MaintenanceTicket,
+  FacilityType,
+  MaintenanceStatus,
+} from './maintenance/maintenance-ticket.entity';
+
+@Injectable()
+export class SeedService implements OnApplicationBootstrap {
+  private readonly logger = new Logger(SeedService.name);
+
+  constructor(
+    @InjectRepository(UserAccount)
+    private readonly userRepo: Repository<UserAccount>,
+    @InjectRepository(StaffDetail)
+    private readonly staffDetailRepo: Repository<StaffDetail>,
+    @InjectRepository(HousekeepingTask)
+    private readonly housekeepingRepo: Repository<HousekeepingTask>,
+    @InjectRepository(MaintenanceTicket)
+    private readonly maintenanceRepo: Repository<MaintenanceTicket>,
+  ) {}
+
+  async onApplicationBootstrap() {
+    const existingCount = await this.userRepo.count({
+      where: { role: In(['HOUSEKEEPER', 'MAINTENANCE_STAFF']) },
+    });
+    if (existingCount > 0) {
+      this.logger.log('Seed data already present, skipping.');
+      return;
+    }
+
+    this.logger.log('Seeding room-service staff and tickets…');
+    const password = await bcrypt.hash('Password@123', 10);
+
+    // ── Housekeepers ────────────────────────────────────────────────────────
+    const housekeeperSeed: Array<{ username: string; fullName: string; position: string; salary: number; rate: number }> = [
+      { username: 'nimalee_p', fullName: 'Nimalee Perera',     position: 'Senior Housekeeper',    salary: 48000, rate: 2000 },
+      { username: 'sanduni_w', fullName: 'Sanduni Wickrama',   position: 'Housekeeper',            salary: 42000, rate: 1750 },
+      { username: 'dilrukshi_f', fullName: 'Dilrukshi Fernando', position: 'Housekeeper',          salary: 42000, rate: 1750 },
+      { username: 'kumari_d',  fullName: 'Kumari Dissanayake', position: 'Room Attendant',         salary: 38000, rate: 1600 },
+      { username: 'chamari_j', fullName: 'Chamari Jayasinghe', position: 'Housekeeping Supervisor', salary: 55000, rate: 2300 },
+    ];
+
+    // ── Maintenance Staff ────────────────────────────────────────────────────
+    const maintenanceSeed: Array<{ username: string; fullName: string; position: string; salary: number; rate: number }> = [
+      { username: 'ruwan_s',   fullName: 'Ruwan Silva',        position: 'HVAC Technician',        salary: 60000, rate: 2500 },
+      { username: 'pradeep_k', fullName: 'Pradeep Kumara',     position: 'Electrician',            salary: 58000, rate: 2400 },
+      { username: 'asanka_r',  fullName: 'Asanka Rajapaksha',  position: 'Plumber',                salary: 54000, rate: 2250 },
+      { username: 'thilina_b', fullName: 'Thilina Bandara',    position: 'Maintenance Technician', salary: 50000, rate: 2100 },
+      { username: 'sampath_g', fullName: 'Sampath Gunasekara', position: 'General Maintenance',    salary: 46000, rate: 1900 },
+    ];
+
+    const savedHousekeepers: UserAccount[] = [];
+    const savedMaintenance: UserAccount[] = [];
+
+    for (const s of housekeeperSeed) {
+      const user = await this.userRepo.save(
+        this.userRepo.create({ username: s.username, password, fullName: s.fullName, role: 'HOUSEKEEPER', enabled: true }),
+      );
+      await this.staffDetailRepo.save(
+        this.staffDetailRepo.create({
+          name: s.fullName, position: s.position,
+          basicSalary: s.salary, dailyRate: s.rate, overtimeRate: Math.round(s.rate * 1.5),
+          attendance: 22, overtimeHours: 4, absentDays: 0, status: 'ACTIVE', userId: user.id,
+        }),
+      );
+      savedHousekeepers.push(user);
+    }
+
+    for (const s of maintenanceSeed) {
+      const user = await this.userRepo.save(
+        this.userRepo.create({ username: s.username, password, fullName: s.fullName, role: 'MAINTENANCE_STAFF', enabled: true }),
+      );
+      await this.staffDetailRepo.save(
+        this.staffDetailRepo.create({
+          name: s.fullName, position: s.position,
+          basicSalary: s.salary, dailyRate: s.rate, overtimeRate: Math.round(s.rate * 1.5),
+          attendance: 21, overtimeHours: 6, absentDays: 1, status: 'ACTIVE', userId: user.id,
+        }),
+      );
+      savedMaintenance.push(user);
+    }
+
+    // ── Housekeeping Tasks ───────────────────────────────────────────────────
+    const now = new Date();
+    const daysAgo = (d: number) => new Date(now.getTime() - d * 86_400_000);
+    const daysLater = (d: number) => new Date(now.getTime() + d * 86_400_000);
+
+    const hkTasks: Partial<HousekeepingTask>[] = [
+      {
+        roomNumber: '101', floor: 1, roomCondition: RoomCondition.CHECKOUT,
+        taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.PENDING,
+        priority: Priority.HIGH, staffId: savedHousekeepers[0].id,
+        deadline: daysLater(0),
+        notes: 'Late checkout, deep clean required. Replace all linens.',
+        cleaningNotes: undefined,
+      },
+      {
+        roomNumber: '205', floor: 2, roomCondition: RoomCondition.OCCUPIED,
+        taskType: HousekeepingTaskType.TURNDOWN, status: HousekeepingStatus.IN_PROGRESS,
+        priority: Priority.MEDIUM, staffId: savedHousekeepers[1].id,
+        deadline: daysLater(0),
+        notes: 'Guest requested extra towels and toiletries.',
+        cleaningNotes: undefined,
+      },
+      {
+        roomNumber: '312', floor: 3, roomCondition: RoomCondition.PRE_CHECK_IN,
+        taskType: HousekeepingTaskType.INSPECTION, status: HousekeepingStatus.CLEANED,
+        priority: Priority.HIGH, staffId: savedHousekeepers[4].id,
+        deadline: daysLater(1),
+        notes: 'VIP guest checking in tomorrow. Full inspection required.',
+        cleaningNotes: 'Room cleaned and refreshed. Awaiting supervisor inspection.',
+      },
+      {
+        roomNumber: '418', floor: 4, roomCondition: RoomCondition.CHECKOUT,
+        taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.INSPECTED,
+        priority: Priority.LOW, staffId: savedHousekeepers[2].id,
+        deadline: daysAgo(1),
+        notes: 'Standard checkout clean.',
+        cleaningNotes: 'Completed. All items checked against inventory.',
+      },
+      {
+        roomNumber: '507', floor: 5, roomCondition: RoomCondition.OCCUPIED,
+        taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.PENDING,
+        priority: Priority.MEDIUM, staffId: savedHousekeepers[3].id,
+        deadline: daysLater(0),
+        notes: 'Daily service requested by guest.',
+        cleaningNotes: undefined,
+      },
+      {
+        roomNumber: '210', floor: 2, roomCondition: RoomCondition.CHECKOUT,
+        taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.IN_PROGRESS,
+        priority: Priority.HIGH, staffId: savedHousekeepers[1].id,
+        deadline: daysLater(0),
+        notes: 'Extended stay guest checked out. Full linen change and bathroom sanitization.',
+        cleaningNotes: undefined,
+      },
+      {
+        roomNumber: '603', floor: 6, roomCondition: RoomCondition.PRE_CHECK_IN,
+        taskType: HousekeepingTaskType.TURNDOWN, status: HousekeepingStatus.PENDING,
+        priority: Priority.MEDIUM, staffId: savedHousekeepers[0].id,
+        deadline: daysLater(1),
+        notes: 'Suite for honeymoon couple. Place rose petals and welcome note.',
+        cleaningNotes: undefined,
+      },
+      {
+        roomNumber: '115', floor: 1, roomCondition: RoomCondition.OCCUPIED,
+        taskType: HousekeepingTaskType.INSPECTION, status: HousekeepingStatus.INSPECTED,
+        priority: Priority.LOW, staffId: savedHousekeepers[4].id,
+        deadline: daysAgo(2),
+        notes: 'Routine weekly inspection.',
+        cleaningNotes: 'All items in order. Mini-bar restocked.',
+      },
+      {
+        roomNumber: '320', floor: 3, roomCondition: RoomCondition.CHECKOUT,
+        taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.PENDING,
+        priority: Priority.HIGH, staffId: savedHousekeepers[2].id,
+        deadline: daysLater(0),
+        notes: 'Express checkout before 2 PM. Next guest at 3 PM.',
+        cleaningNotes: undefined,
+      },
+      {
+        roomNumber: '412', floor: 4, roomCondition: RoomCondition.OCCUPIED,
+        taskType: HousekeepingTaskType.TURNDOWN, status: HousekeepingStatus.CLEANED,
+        priority: Priority.LOW, staffId: savedHousekeepers[3].id,
+        deadline: daysLater(0),
+        notes: 'Business guest — do not disturb until 3 PM.',
+        cleaningNotes: 'Evening turndown completed.',
+      },
+    ];
+
+    // ── Maintenance Tickets ──────────────────────────────────────────────────
+    const mTickets: Partial<MaintenanceTicket>[] = [
+      {
+        roomNumber: '104', floor: 1, facilityType: FacilityType.AC,
+        issueDescription: 'Air conditioning unit making a loud rattling noise and not cooling below 26°C.',
+        status: MaintenanceStatus.ASSIGNED, priority: Priority.HIGH,
+        staffId: savedMaintenance[0].id, deadline: daysLater(1),
+        resolutionNotes: undefined, partsUsed: undefined,
+      },
+      {
+        roomNumber: '208', floor: 2, facilityType: FacilityType.PLUMBING,
+        issueDescription: 'Bathroom tap dripping continuously. Guest reports water pooling on floor.',
+        status: MaintenanceStatus.IN_PROGRESS, priority: Priority.HIGH,
+        staffId: savedMaintenance[2].id, deadline: daysLater(0),
+        resolutionNotes: undefined, partsUsed: undefined,
+      },
+      {
+        roomNumber: '315', floor: 3, facilityType: FacilityType.ELECTRICAL,
+        issueDescription: 'Bedside lamp socket not working. Possible loose wiring in socket outlet.',
+        status: MaintenanceStatus.OPEN, priority: Priority.MEDIUM,
+        staffId: undefined, deadline: daysLater(2),
+        resolutionNotes: undefined, partsUsed: undefined,
+      },
+      {
+        roomNumber: '401', floor: 4, facilityType: FacilityType.FURNITURE,
+        issueDescription: 'Wardrobe door hinge broken. Door cannot close properly and is a safety hazard.',
+        status: MaintenanceStatus.RESOLVED, priority: Priority.MEDIUM,
+        staffId: savedMaintenance[3].id, deadline: daysAgo(1),
+        resolutionNotes: 'Replaced both hinge pins and tightened door frame. Door closes smoothly.',
+        partsUsed: '2x 3-inch hinge pins, wood screws',
+      },
+      {
+        roomNumber: '502', floor: 5, facilityType: FacilityType.AC,
+        issueDescription: 'AC thermostat unresponsive. Unit turns on but guest cannot change temperature.',
+        status: MaintenanceStatus.ASSIGNED, priority: Priority.MEDIUM,
+        staffId: savedMaintenance[0].id, deadline: daysLater(1),
+        resolutionNotes: undefined, partsUsed: undefined,
+      },
+      {
+        roomNumber: '110', floor: 1, facilityType: FacilityType.PLUMBING,
+        issueDescription: 'Shower head has low water pressure. Likely clogged filter.',
+        status: MaintenanceStatus.RESOLVED, priority: Priority.LOW,
+        staffId: savedMaintenance[2].id, deadline: daysAgo(3),
+        resolutionNotes: 'Cleaned and descaled shower head filter. Pressure restored to normal.',
+        partsUsed: 'Descaling solution, replacement filter washer',
+      },
+      {
+        roomNumber: '217', floor: 2, facilityType: FacilityType.ELECTRICAL,
+        issueDescription: 'Main room circuit breaker keeps tripping when multiple appliances are used simultaneously.',
+        status: MaintenanceStatus.IN_PROGRESS, priority: Priority.HIGH,
+        staffId: savedMaintenance[1].id, deadline: daysLater(0),
+        resolutionNotes: undefined, partsUsed: undefined,
+      },
+      {
+        roomNumber: '606', floor: 6, facilityType: FacilityType.OTHER,
+        issueDescription: 'Balcony sliding door lock faulty. Door cannot be secured from inside.',
+        status: MaintenanceStatus.OPEN, priority: Priority.HIGH,
+        staffId: undefined, deadline: daysLater(0),
+        resolutionNotes: undefined, partsUsed: undefined,
+      },
+      {
+        roomNumber: '304', floor: 3, facilityType: FacilityType.FURNITURE,
+        issueDescription: 'Desk chair wheel bracket cracked. Chair is unstable and unsafe to sit on.',
+        status: MaintenanceStatus.CLOSED, priority: Priority.LOW,
+        staffId: savedMaintenance[4].id, deadline: daysAgo(5),
+        resolutionNotes: 'Chair replaced with spare unit from storage. Damaged chair sent for repair.',
+        partsUsed: 'Replacement office chair (spare stock)',
+      },
+      {
+        roomNumber: '509', floor: 5, facilityType: FacilityType.PLUMBING,
+        issueDescription: 'Toilet flush mechanism not engaging properly. Requires two attempts to flush.',
+        status: MaintenanceStatus.ASSIGNED, priority: Priority.MEDIUM,
+        staffId: savedMaintenance[2].id, deadline: daysLater(1),
+        resolutionNotes: undefined, partsUsed: undefined,
+      },
+    ];
+
+    await this.housekeepingRepo.save(hkTasks.map((t) => this.housekeepingRepo.create(t)));
+    await this.maintenanceRepo.save(mTickets.map((t) => this.maintenanceRepo.create(t)));
+
+    this.logger.log('Seeding complete: 5 housekeepers, 5 maintenance staff, 10 housekeeping tasks, 10 maintenance tickets.');
+  }
+}
