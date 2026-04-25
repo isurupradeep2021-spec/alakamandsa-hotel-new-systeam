@@ -33,9 +33,10 @@ export const deleteRoomBooking = (id) => http.delete(`/room-bookings/${id}`);
 export const requestRoomBookingCancellation = (id) => http.patch(`/room-bookings/${id}/request-cancellation`);
 export const approveRoomBookingCancellation = (id) => http.patch(`/room-bookings/${id}/approve-cancellation`);
 export const checkRoomAvailability = (roomNumber, checkInDate, checkOutDate) =>
-    http.get("/room-bookings/check-availability", {
-        params: { roomNumber, checkInDate, checkOutDate },
-    });
+  http.get("/room-bookings/check-availability", {
+    params: { roomNumber, checkInDate, checkOutDate }
+  });
+
 export const createReservation = (payload) => http.post("/reservations", payload);
 export const getReservations = () => http.get("/reservations");
 export const getMyReservations = () => http.get("/reservations/my");
@@ -46,12 +47,19 @@ export const cancelReservation = (id) => http.post(`/reservations/${id}/cancel`)
 export const getMenuItems = (params) => http.get("/menu-items", { params });
 export const createMenuItem = (payload) => http.post("/menu-items", payload);
 export const updateMenuItem = (id, payload) => http.put(`/menu-items/${id}`, payload);
-export const toggleMenuItemAvailability = (id, available) => http.patch(`/menu-items/${id}/availability`, null, { params: { available } });
+export const toggleMenuItemAvailability = (id, available) =>
+  http.patch(`/menu-items/${id}/availability`, null, { params: { available } });
 export const uploadMenuItemImage = (id, file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    return http.post(`/menu-items/${id}/image`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-    });
+  const formData = new FormData();
+  formData.append("file", file);
+  return http.post(`/menu-items/${id}/image`, formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
 };
 export const deleteMenuItem = (id) => http.delete(`/menu-items/${id}`);
+
+export const getEventBookings = () => http.get("/event-bookings");
+export const createEventBooking = (payload) => http.post("/event-bookings", payload);
+export const updateEventBooking = (id, payload) => http.put(`/event-bookings/${id}`, payload);
+export const deleteEventBooking = (id) => http.delete(`/event-bookings/${id}`);
+export const eventAnalytics = () => http.get("/event-bookings/analytics");

@@ -1,0 +1,274 @@
+.atelier-page {
+  display: grid;
+  gap: 24px;
+}
+
+.atelier-hero {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 28px 34px;
+  box-shadow: 0 10px 24px rgba(15, 31, 46, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.atelier-hero::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--secondary), var(--primary));
+}
+
+.atelier-hero-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.atelier-eyebrow {
+  margin: 0 0 12px;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.atelier-hero h2 {
+  margin: 0 0 8px;
+  font-family: 'Playfair Display', serif;
+  font-size: 48px;
+  line-height: 1.05;
+}
+
+.atelier-hero p {
+  margin: 0;
+  color: #486581;
+}
+
+.atelier-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #f8fbff;
+  color: #35516b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.atelier-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.atelier-summary-card,
+.atelier-section,
+.atelier-records {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 10px 24px rgba(15, 31, 46, 0.06);
+}
+
+.atelier-summary-card {
+  padding: 22px;
+}
+
+.atelier-summary-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  color: #8a6b29;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.atelier-summary-card h3 {
+  margin: 0 0 10px;
+  font-family: 'Playfair Display', serif;
+  font-size: 34px;
+  line-height: 1;
+}
+
+.atelier-summary-card p {
+  margin: 0;
+  color: #486581;
+}
+
+.atelier-section {
+  padding: 26px;
+}
+
+.atelier-section-head {
+  margin-bottom: 18px;
+}
+
+.atelier-section-head h3,
+.atelier-records-head h3 {
+  margin: 0 0 8px;
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+}
+
+.atelier-section-head p:last-child {
+  margin: 0;
+  color: #486581;
+}
+
+.atelier-hall-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.atelier-hall-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  min-height: 100%;
+}
+
+.atelier-hall-image-wrap {
+  position: relative;
+  min-height: 190px;
+  background: linear-gradient(135deg, rgba(0, 95, 115, 0.14), rgba(255, 183, 3, 0.18));
+}
+
+.atelier-hall-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.atelier-hall-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #5a6774;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.atelier-hall-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 18px;
+}
+
+.atelier-card-eyebrow {
+  margin: 0 0 14px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #8a6b29;
+  font-weight: 700;
+}
+
+.atelier-hall-content h4 {
+  margin: 0 0 12px;
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  min-height: 56px;
+}
+
+.atelier-hall-description {
+  margin: 0 0 18px;
+  color: #486581;
+  line-height: 1.55;
+  flex: 1;
+}
+
+.atelier-hall-meta {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+  color: #35516b;
+  font-size: 14px;
+}
+
+.atelier-hall-meta span {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.atelier-book-btn {
+  width: 100%;
+  margin-top: auto;
+}
+
+.atelier-records {
+  padding: 0;
+}
+
+.atelier-records-head {
+  padding: 22px 24px 0;
+}
+
+.atelier-record-primary {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.atelier-record-secondary {
+  color: #6d8194;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.atelier-empty-cell {
+  text-align: center;
+  padding: 22px;
+  color: #6d8194;
+}
+
+.atelier-page .success {
+  margin-top: 12px;
+}
+
+@media (max-width: 1200px) {
+  .atelier-hall-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .atelier-hero-head {
+    flex-direction: column;
+  }
+
+  .atelier-summary-grid,
+  .atelier-hall-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .atelier-hero {
+    padding: 24px;
+  }
+
+  .atelier-hero h2 {
+    font-size: 36px;
+  }
+}

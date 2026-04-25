@@ -1,0 +1,46 @@
+HELP.md
+
+# Maven / Java
+target/
+backend/target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Optional public rules from team branch
+frontend/public/*
+!frontend/public/images/
+
+# STS
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+
+# Java
+backend/target/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+# VS Code
+.vscode/
+
+# OS / logs
+.DS_Store
+*.log
+frontend/dist/ 
