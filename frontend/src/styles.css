@@ -2355,3 +2355,42 @@ td {
 .rs-status-maintenance-staff { background: #f3ecff; color: #4c2a91; }
 .rs-status-active         { background: #e6f9ee; color: #17643f; }
 .rs-status-inactive       { background: #e8ecf4; color: #334155; }
+
+/* ── Housekeeping & Maintenance panel tab nav ─────────────────────────────── */
+.hm-tab-nav {
+  display: flex;
+  gap: 4px;
+  margin-top: 20px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0;
+}
+
+.hm-tab {
+  padding: 8px 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  text-decoration: none;
+  border-radius: 6px 6px 0 0;
+  border: 1px solid transparent;
+  border-bottom: none;
+  transition: color 0.15s, background 0.15s;
+  position: relative;
+  bottom: -2px;
+}
+
+.hm-tab:hover {
+  color: #1e3a5f;
+  background: #f1f5f9;
+}
+
+.hm-tab.active {
+  color: #1e3a5f;
+  background: #fff;
+  border-color: #e2e8f0;
+  border-bottom-color: #fff;
+}
+
+.hm-tab-content {
+  margin-top: 0;
+}

@@ -30,7 +30,7 @@ function StatusPill({ value }) {
   return <span className={`status-pill rs-status-${key}`}>{formatLabel(value)}</span>;
 }
 
-export default function RoomServiceStaffPage() {
+export default function RoomServiceStaffPage({ embedded = false }) {
   const [staff, setStaff] = useState([]);
   const [roleFilter, setRoleFilter] = useState('');
   const [search, setSearch] = useState('');
@@ -153,11 +153,12 @@ export default function RoomServiceStaffPage() {
   };
 
   return (
-    <div className="restaurant-page">
-      <section className="card restaurant-hero">
-        <p className="eyebrow">ROOM OPERATIONS</p>
-        <h3>Service Staff</h3>
-        <p>Manage the dedicated room-service team roster including housekeepers and maintenance staff.</p>
+    <div className={embedded ? undefined : 'restaurant-page'}>
+      {!embedded && (
+        <section className="card restaurant-hero">
+          <p className="eyebrow">ROOM OPERATIONS</p>
+          <h3>Staff</h3>
+          <p>Manage the dedicated room-service team roster including housekeepers and maintenance staff.</p>
         <div className="ops-stats-grid">
           <article>
             <strong>{staff.length}</strong>
@@ -173,6 +174,7 @@ export default function RoomServiceStaffPage() {
           </article>
         </div>
       </section>
+      )}
 
       <section className="card">
         <div className="section-head">

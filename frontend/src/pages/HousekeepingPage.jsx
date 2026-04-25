@@ -52,7 +52,7 @@ function StatusPill({ value }) {
   return <span className={`status-pill rs-status-${key}`}>{formatLabel(value)}</span>;
 }
 
-export default function HousekeepingPage() {
+export default function HousekeepingPage({ embedded = false }) {
   const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [staff, setStaff] = useState([]);
@@ -193,11 +193,12 @@ export default function HousekeepingPage() {
   };
 
   return (
-    <div className="restaurant-page">
-      <section className="card restaurant-hero">
-        <p className="eyebrow">ROOM OPERATIONS</p>
-        <h3>Housekeeping</h3>
-        <p>Schedule cleanups, assign staff and monitor inspection progress across all floors.</p>
+    <div className={embedded ? undefined : 'restaurant-page'}>
+      {!embedded && (
+        <section className="card restaurant-hero">
+          <p className="eyebrow">ROOM OPERATIONS</p>
+          <h3>Housekeeping Tickets</h3>
+          <p>Schedule cleanups, assign staff and monitor inspection progress across all floors.</p>
         <div className="ops-stats-grid">
           <article>
             <strong>{stats?.total ?? tasks.length}</strong>
@@ -217,6 +218,7 @@ export default function HousekeepingPage() {
           </article>
         </div>
       </section>
+      )}
 
       <section className="card">
         <div className="section-head">

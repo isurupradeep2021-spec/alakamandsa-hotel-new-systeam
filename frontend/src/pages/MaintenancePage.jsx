@@ -51,7 +51,7 @@ function StatusPill({ value }) {
   return <span className={`status-pill rs-status-${key}`}>{formatLabel(value)}</span>;
 }
 
-export default function MaintenancePage() {
+export default function MaintenancePage({ embedded = false }) {
   const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [staff, setStaff] = useState([]);
@@ -194,11 +194,12 @@ export default function MaintenancePage() {
   };
 
   return (
-    <div className="restaurant-page">
-      <section className="card restaurant-hero">
-        <p className="eyebrow">ROOM OPERATIONS</p>
-        <h3>Maintenance</h3>
-        <p>Coordinate room repairs, assign technical staff and track resolution progress.</p>
+    <div className={embedded ? undefined : 'restaurant-page'}>
+      {!embedded && (
+        <section className="card restaurant-hero">
+          <p className="eyebrow">ROOM OPERATIONS</p>
+          <h3>Maintenance Tickets</h3>
+          <p>Coordinate room repairs, assign technical staff and track resolution progress.</p>
         <div className="ops-stats-grid">
           <article>
             <strong>{stats?.total ?? tickets.length}</strong>
@@ -218,6 +219,7 @@ export default function MaintenancePage() {
           </article>
         </div>
       </section>
+      )}
 
       <section className="card">
         <div className="section-head">
