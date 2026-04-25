@@ -67,6 +67,7 @@ function BookRoomPage() {
         checkInDate: "",
         checkOutDate: "",
     });
+    const todayIso = useMemo(() => toIsoDate(new Date()), []);
 
     const loadMyBookings = async () => {
         setBookingsLoading(true);
@@ -105,6 +106,18 @@ function BookRoomPage() {
             return;
         }
 
+        if (checkInDate < todayIso || checkOutDate < todayIso) {
+            setAvailabilityData(null);
+            setAvailabilityError("Past dates cannot be selected. Please choose today or a future date.");
+            return;
+        }
+
+        if (checkOutDate <= checkInDate) {
+            setAvailabilityData(null);
+            setAvailabilityError("Check-out date must be after check-in date.");
+            return;
+        }
+
         setAvailabilityLoading(true);
         setAvailabilityError("");
 
@@ -133,7 +146,7 @@ function BookRoomPage() {
                 setAvailabilityError(apiMessage || "Unable to check room availability right now.");
             })
             .finally(() => setAvailabilityLoading(false));
-    }, [bookingForm.roomNumber, bookingForm.checkInDate, bookingForm.checkOutDate]);
+    }, [bookingForm.roomNumber, bookingForm.checkInDate, bookingForm.checkOutDate, todayIso]);
 
     useEffect(() => {
         if (!bookingForm.checkInDate) {
@@ -173,10 +186,19 @@ function BookRoomPage() {
                 const checkInDate = toIsoDate(checkIn);
                 const checkOutDate = toIsoDate(checkOut);
 
+                if (checkInDate < todayIso) {
+                    checks.push(Promise.resolve({ date: checkInDate, status: "past", failed: false }));
+                    continue;
+                }
+
                 checks.push(
                     checkRoomAvailability(roomNumber, checkInDate, checkOutDate)
-                        .then((res) => ({ date: checkInDate, available: Boolean(res?.data?.available), failed: false }))
-                        .catch(() => ({ date: checkInDate, available: false, failed: true }))
+                        .then((res) => ({
+                            date: checkInDate,
+                            status: Boolean(res?.data?.available) ? "available" : "booked",
+                            failed: false,
+                        }))
+                        .catch(() => ({ date: checkInDate, status: "unknown", failed: true })),
                 );
             }
 
@@ -193,7 +215,7 @@ function BookRoomPage() {
                     failedCount += 1;
                     return;
                 }
-                nextMap[result.date] = result.available ? "available" : "booked";
+                nextMap[result.date] = result.status;
             });
 
             setCalendarAvailabilityMap(nextMap);
@@ -220,7 +242,7 @@ function BookRoomPage() {
         return () => {
             isDisposed = true;
         };
-    }, [bookingForm.roomNumber, calendarMonth]);
+    }, [bookingForm.roomNumber, calendarMonth, todayIso]);
 
     const handleCreateBooking = async (event) => {
         event.preventDefault();
@@ -237,6 +259,16 @@ function BookRoomPage() {
 
         if (!bookingCustomer || !customerEmail || !roomNumber || !checkInDate || !checkOutDate || !bookingForm.guestCount) {
             setBookingError("Please complete all booking fields.");
+            return;
+        }
+
+        if (checkInDate < todayIso || checkOutDate < todayIso) {
+            setBookingError("Past dates are not allowed. Please choose today or a future date.");
+            return;
+        }
+
+        if (checkOutDate <= checkInDate) {
+            setBookingError("Check-out date must be after check-in date.");
             return;
         }
 
@@ -493,27 +525,11 @@ function BookRoomPage() {
                                 <p>Selected room: {bookingForm.roomNumber?.trim() || "Please enter a room number"}</p>
                             </div>
                             <div className="room-calendar-nav">
-                                <button
-                                    className="btn ghost small"
-                                    type="button"
-                                    onClick={() =>
-                                        setCalendarMonth(
-                                            new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1)
-                                        )
-                                    }
-                                >
+                                <button className="btn ghost small" type="button" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}>
                                     Prev
                                 </button>
                                 <strong>{calendarMonthLabel}</strong>
-                                <button
-                                    className="btn ghost small"
-                                    type="button"
-                                    onClick={() =>
-                                        setCalendarMonth(
-                                            new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1)
-                                        )
-                                    }
-                                >
+                                <button className="btn ghost small" type="button" onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}>
                                     Next
                                 </button>
                             </div>
@@ -524,6 +540,8 @@ function BookRoomPage() {
                             <small>Available</small>
                             <span className="legend-dot booked" />
                             <small>Booked</small>
+                            <span className="legend-dot past" />
+                            <small>Past (not bookable)</small>
                         </div>
 
                         {calendarLoading && <p>Loading room calendar...</p>}
@@ -542,16 +560,23 @@ function BookRoomPage() {
                                 }
 
                                 const isoDate = toIsoDate(cell);
-                                const availabilityStatus = calendarAvailabilityMap[isoDate];
+                                const isPastDate = isoDate < todayIso;
+                                const availabilityStatus = isPastDate ? "past" : calendarAvailabilityMap[isoDate];
                                 const inSelectedStay = isDateInsideSelectedStay(isoDate);
+                                const statusLabel =
+                                    availabilityStatus === "past"
+                                        ? "Past date (cannot book)"
+                                        : availabilityStatus === "available"
+                                            ? "Available"
+                                            : availabilityStatus === "booked"
+                                                ? "Booked"
+                                                : "Checking...";
 
                                 return (
                                     <div
                                         key={isoDate}
-                                        className={`room-calendar-cell ${availabilityStatus || "unknown"} ${
-                                            inSelectedStay ? "selected-stay" : ""
-                                        }`}
-                                        title={`${isoDate} - ${availabilityStatus || "Checking..."}`}
+                                        className={`room-calendar-cell ${availabilityStatus || "unknown"} ${inSelectedStay ? "selected-stay" : ""}`}
+                                        title={`${isoDate} - ${statusLabel}`}
                                     >
                                         {cell.getDate()}
                                     </div>
@@ -595,11 +620,11 @@ function BookRoomPage() {
                         </div>
                         <div>
                             <label>Check-In Date (mm/dd/yyyy)</label>
-                            <input type="date" value={bookingForm.checkInDate} onChange={(e) => setBookingForm({ ...bookingForm, checkInDate: e.target.value })} required />
+                            <input type="date" min={todayIso} value={bookingForm.checkInDate} onChange={(e) => setBookingForm({ ...bookingForm, checkInDate: e.target.value })} required />
                         </div>
                         <div>
                             <label>Check-Out Date (mm/dd/yyyy)</label>
-                            <input type="date" value={bookingForm.checkOutDate} onChange={(e) => setBookingForm({ ...bookingForm, checkOutDate: e.target.value })} required />
+                            <input type="date" min={todayIso} value={bookingForm.checkOutDate} onChange={(e) => setBookingForm({ ...bookingForm, checkOutDate: e.target.value })} required />
                         </div>
                         <div className="span-full">
                             {availabilityLoading && <p>Checking live availability...</p>}
