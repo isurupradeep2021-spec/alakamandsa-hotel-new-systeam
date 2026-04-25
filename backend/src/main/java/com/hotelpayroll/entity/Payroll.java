@@ -35,10 +35,10 @@ public class Payroll {
     @Column(nullable = false)
     private BigDecimal netSalary;
 
-    @Column(nullable = false)
+    @Column(name = "`month`")
     private Integer month;
 
-    @Column(nullable = false)
+    @Column
     private Integer year;
 
     @Builder.Default

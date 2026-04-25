@@ -12,6 +12,8 @@ public interface RoomBookingService {
     RoomBookingResponse update(Long id, RoomBookingRequest request);
     List<RoomBookingResponse> getAll();
     List<RoomBookingResponse> getMyBookings();
+    RoomBookingResponse requestCancellation(Long id);
+    RoomBookingResponse approveCancellation(Long id);
     void delete(Long id);
     RoomAvailabilityResponse checkAvailability(String roomNumber, LocalDate checkInDate, LocalDate checkOutDate);
 }

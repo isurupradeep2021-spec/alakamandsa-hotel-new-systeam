@@ -18,15 +18,12 @@ function LoginPage() {
         password: form.password,
       });
 
-      if (user.role === "STAFF_MEMBER") {
-        navigate("/my-payroll");
-      } else if (user.role === "CUSTOMER") {
-        navigate("/view-rooms");
-      } else if (user.role === "RESTAURANT_MANAGER") {
-        navigate("/table-reservations");
-      } else {
-        navigate("/dashboard");
-      }
+      if (user.role === "STAFF_MEMBER") navigate("/my-payroll");
+      else if (user.role === "CUSTOMER") navigate("/view-rooms");
+      else if (user.role === "RESTAURANT_MANAGER") navigate("/table-reservations");
+      else if (user.role === "EVENT_MANAGER") navigate("/dashboard");
+      else if (user.role === "SUPER_ADMIN" || user.role === "MANAGER") navigate("/dashboard");
+      else navigate("/profile");
     } catch (err) {
       if (!err.response) {
         setError("Cannot reach backend server. Please start backend and try again.");

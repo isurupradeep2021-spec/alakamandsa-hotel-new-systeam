@@ -1,5 +1,15 @@
-import { useEffect, useState } from "react";
-import { createRoomBooking, createRoomRecord, deleteRoomBooking, deleteRoomRecord, getRoomBookings, getRooms, updateRoomBooking, updateRoomRecord } from "../api/service";
+import { useEffect, useMemo, useState } from "react";
+import {
+    approveRoomBookingCancellation,
+    createRoomBooking,
+    createRoomRecord,
+    deleteRoomBooking,
+    deleteRoomRecord,
+    getRoomBookings,
+    getRooms,
+    updateRoomBooking,
+    updateRoomRecord,
+} from "../api/service";
 
 const initialRoomForm = {
     roomNumber: "",
@@ -24,6 +34,8 @@ const initialBookingForm = {
     checkOutDate: "",
 };
 
+const ACTIVE_BOOKING_STATUSES = new Set(["BOOKED", "CHECKED_IN", "CANCELLATION_REQUESTED"]);
+
 function RoomManagementPage() {
     const [roomForm, setRoomForm] = useState(initialRoomForm);
     const [bookingForm, setBookingForm] = useState(initialBookingForm);
@@ -36,17 +48,71 @@ function RoomManagementPage() {
     const [editingRoomId, setEditingRoomId] = useState(null);
     const [editingBookingId, setEditingBookingId] = useState(null);
 
+    const roomOverview = useMemo(() => {
+        const totalRooms = rooms.reduce((sum, room) => {
+            const totalForRoom = Math.max(1, Number(room.totalRooms || 1));
+            return sum + totalForRoom;
+        }, 0);
+
+        const availableRooms = rooms.reduce((sum, room) => {
+            const totalForRoom = Math.max(1, Number(room.totalRooms || 1));
+            const normalizedRemaining = Number.isFinite(Number(room.remainingRooms)) ? Number(room.remainingRooms) : totalForRoom;
+            const availableForRoom = Math.min(totalForRoom, Math.max(0, normalizedRemaining));
+            return sum + availableForRoom;
+        }, 0);
+
+        const bookedByRoomNumber = new Map();
+
+        bookings.forEach((booking) => {
+            const status = String(booking.bookingStatus || "").toUpperCase();
+            if (!ACTIVE_BOOKING_STATUSES.has(status)) {
+                return;
+            }
+
+            const roomKey = String(booking.roomNumber || "")
+                .trim()
+                .toLowerCase();
+            if (!roomKey) {
+                return;
+            }
+
+            const bookedCount = Math.max(1, Number(booking.bookedRooms || 1));
+            bookedByRoomNumber.set(roomKey, (bookedByRoomNumber.get(roomKey) || 0) + bookedCount);
+        });
+
+        const bookedRooms = Array.from(bookedByRoomNumber.values()).reduce((sum, count) => sum + count, 0);
+
+        return {
+            totalRooms,
+            bookedRooms,
+            availableRooms,
+        };
+    }, [rooms, bookings]);
+
     const loadLatestRecords = async () => {
-        const [roomRes, bookingRes] = await Promise.all([getRooms(), getRoomBookings()]);
-        setRooms(roomRes.data || []);
-        setBookings(bookingRes.data || []);
+        const [roomRes, bookingRes] = await Promise.allSettled([getRooms(), getRoomBookings()]);
+
+        if (roomRes.status === "fulfilled") {
+            setRooms(roomRes.value.data || []);
+            setRoomError("");
+        } else {
+            const apiMessage = roomRes.reason?.response?.data?.message;
+            setRoomError(apiMessage || "Unable to refresh room records right now.");
+        }
+
+        if (bookingRes.status === "fulfilled") {
+            setBookings(bookingRes.value.data || []);
+            setBookingError("");
+        } else {
+            const apiMessage = bookingRes.reason?.response?.data?.message;
+            setBookingError(apiMessage || "Unable to refresh booking records right now.");
+        }
     };
 
     useEffect(() => {
-        loadLatestRecords().catch(() => {
-            setRooms([]);
-            setBookings([]);
-        });
+        loadLatestRecords();
+        const intervalId = window.setInterval(loadLatestRecords, 15000);
+        return () => window.clearInterval(intervalId);
     }, []);
 
     const handleRoomSubmit = async (e) => {
@@ -182,8 +248,41 @@ function RoomManagementPage() {
         await loadLatestRecords();
     };
 
+    const approveCancellation = async (id) => {
+        setBookingMessage("");
+        setBookingError("");
+
+        try {
+            await approveRoomBookingCancellation(id);
+            setBookingMessage("Cancellation approved successfully");
+            await loadLatestRecords();
+        } catch (err) {
+            const apiMsg = err?.response?.data?.message;
+            setBookingError(apiMsg || "Failed to approve cancellation request");
+        }
+    };
+
     return (
         <>
+            <div className="card manager-overview-card">
+                <h3>Room Overview</h3>
+                <p>Live room status based on current customer bookings.</p>
+                <div className="manager-overview-grid">
+                    <article>
+                        <span>Total Rooms</span>
+                        <strong>{roomOverview.totalRooms}</strong>
+                    </article>
+                    <article>
+                        <span>Booked Rooms</span>
+                        <strong>{roomOverview.bookedRooms}</strong>
+                    </article>
+                    <article>
+                        <span>Available Rooms</span>
+                        <strong>{roomOverview.availableRooms}</strong>
+                    </article>
+                </div>
+            </div>
+
             <div className="card">
                 <h3>Room Management</h3>
                 <p>{editingRoomId ? "Edit Room Record" : "Create Record"}</p>
@@ -409,7 +508,7 @@ function RoomManagementPage() {
                             <table>
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
+                                        <th>Booking ID</th>
                                         <th>Name</th>
                                         <th>Status</th>
                                         <th>Amount</th>
@@ -419,17 +518,24 @@ function RoomManagementPage() {
                                 <tbody>
                                     {bookings.map((booking) => (
                                         <tr key={booking.id}>
-                                            <td>{booking.id}</td>
+                                            <td>{String(booking.bookingSequence ?? booking.id).padStart(2, "0")}</td>
                                             <td>{booking.bookingCustomer}</td>
                                             <td>{booking.bookingStatus}</td>
                                             <td>Rs. {Number(booking.amount || 0).toLocaleString()}</td>
                                             <td>
-                                                <button className="btn small" type="button" onClick={() => editBooking(booking)}>
-                                                    Edit
-                                                </button>
-                                                <button className="btn danger small" type="button" onClick={() => removeBooking(booking.id)}>
-                                                    Delete
-                                                </button>
+                                                <div className="table-actions">
+                                                    <button className="btn small" type="button" onClick={() => editBooking(booking)}>
+                                                        Edit
+                                                    </button>
+                                                    <button className="btn danger small" type="button" onClick={() => removeBooking(booking.id)}>
+                                                        Delete
+                                                    </button>
+                                                    {booking.bookingStatus === "CANCELLATION_REQUESTED" && (
+                                                        <button className="btn small" type="button" onClick={() => approveCancellation(booking.id)}>
+                                                            Approve Cancel
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}

@@ -20,6 +20,9 @@ public class RoomBooking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column
+    private Integer bookingSequence;
+
     @Column(nullable = false)
     private String bookingCustomer;
 
@@ -31,6 +34,10 @@ public class RoomBooking {
 
     @Column(nullable = false)
     private String roomNumber;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_id")
+    private Room room;
 
     @Column
     @Builder.Default

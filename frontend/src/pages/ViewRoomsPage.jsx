@@ -42,6 +42,7 @@ function ViewRoomsPage() {
     }, [rooms, roomType]);
 
     const formatType = (roomTypeValue) => roomTypeValue?.charAt(0) + roomTypeValue?.slice(1).toLowerCase();
+    const statusClass = (status) => `room-status-${String(status || "").toLowerCase()}`;
 
     const openBookingPage = (room) => {
         navigate("/book-room", { state: { roomNumber: room.roomNumber } });
@@ -87,7 +88,7 @@ function ViewRoomsPage() {
                                 }}
                             />
                             <div className="room-card-body">
-                                <h4>
+                                <h4 className={`room-status-badge ${statusClass(room.roomStatus)}`}>
                                     {formatType(room.roomType)} - {room.roomStatus}
                                 </h4>
 
@@ -104,8 +105,13 @@ function ViewRoomsPage() {
                                     <p>Seasonal: {room.seasonalPrice ? `LKR ${Number(room.seasonalPrice).toLocaleString()}` : "N/A"}</p>
                                 </div>
 
-                                <button className="btn" type="button" onClick={() => openBookingPage(room)} disabled={room.remainingRooms <= 0}>
-                                    Book This Room
+                                <button
+                                    className={`btn ${room.remainingRooms <= 0 || room.roomStatus !== "AVAILABLE" ? "btn-unavailable" : ""}`}
+                                    type="button"
+                                    onClick={() => openBookingPage(room)}
+                                    disabled={room.remainingRooms <= 0 || room.roomStatus !== "AVAILABLE"}
+                                >
+                                    {room.remainingRooms <= 0 || room.roomStatus !== "AVAILABLE" ? "Not Available" : "Book This Room"}
                                 </button>
                             </div>
                         </article>
@@ -114,6 +120,13 @@ function ViewRoomsPage() {
                     {filteredRooms.length === 0 && <p>No rooms found for selected filters.</p>}
                 </div>
             )}
+
+            <div className="card enquiry-card">
+                <h4>Any Enquiries:</h4>
+                <p>+(94) 777 258 1690</p>
+                <h4>Email:</h4>
+                <p>alakamandahotel@gmail.com</p>
+            </div>
         </div>
     );
 }

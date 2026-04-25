@@ -4,6 +4,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import BookRoomPage from "./pages/BookRoomPage";
 import DashboardPage from "./pages/DashboardPage";
 import DiningPage from "./pages/DiningPage";
+import EventManagementPage from "./pages/EventManagementPage";
+import EventManagerBookingPage from "./pages/EventManagerBookingPage";
 import LoginPage from "./pages/LoginPage";
 import MenuManagementPage from "./pages/MenuManagementPage";
 import PayrollPage from "./pages/PayrollPage";
@@ -26,7 +28,22 @@ function App() {
           </ProtectedRoute>
         }
       >
-        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute
+              allowedRoles={[
+                "SUPER_ADMIN",
+                "MANAGER",
+                "RESTAURANT_MANAGER",
+                "CUSTOMER",
+                "EVENT_MANAGER",
+              ]}
+            >
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/rooms"
@@ -111,6 +128,32 @@ function App() {
           }
         />
         <Route path="/reservations" element={<Navigate to="/table-reservations" replace />} />
+
+        <Route
+          path="/event-booking-manager"
+          element={
+            <ProtectedRoute allowedRoles={["EVENT_MANAGER"]}>
+              <EventManagerBookingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/event-management"
+          element={
+            <ProtectedRoute allowedRoles={["SUPER_ADMIN", "MANAGER", "EVENT_MANAGER"]}>
+              <EventManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/event-booking"
+          element={
+            <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+              <EventManagementPage view="booking" />
+            </ProtectedRoute>
+          }
+        />
+
         <Route path="/profile" element={<ProfilePage />} />
       </Route>
 

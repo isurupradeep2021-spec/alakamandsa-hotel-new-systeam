@@ -1,0 +1,15 @@
+# Backend build files
+backend/target/
+
+# Java build outputs
+*.jar
+*.war
+
+# Node modules (frontend)
+node_modules/
+
+# Logs
+*.log
+
+# Environment files
+.env

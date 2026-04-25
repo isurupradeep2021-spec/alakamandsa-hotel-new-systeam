@@ -33,6 +33,10 @@ export const getRoomBookings = () => http.get("/room-bookings");
 export const getMyRoomBookings = () => http.get("/room-bookings/my");
 export const updateRoomBooking = (id, payload) => http.put(`/room-bookings/${id}`, payload);
 export const deleteRoomBooking = (id) => http.delete(`/room-bookings/${id}`);
+export const requestRoomBookingCancellation = (id) =>
+  http.patch(`/room-bookings/${id}/request-cancellation`);
+export const approveRoomBookingCancellation = (id) =>
+  http.patch(`/room-bookings/${id}/approve-cancellation`);
 export const checkRoomAvailability = (roomNumber, checkInDate, checkOutDate) =>
   http.get("/room-bookings/check-availability", {
     params: { roomNumber, checkInDate, checkOutDate },
@@ -61,3 +65,9 @@ export const uploadMenuItemImage = (id, file) => {
   });
 };
 export const deleteMenuItem = (id) => http.delete(`/menu-items/${id}`);
+
+export const getEventBookings = () => http.get("/event-bookings");
+export const createEventBooking = (payload) => http.post("/event-bookings", payload);
+export const updateEventBooking = (id, payload) => http.put(`/event-bookings/${id}`, payload);
+export const deleteEventBooking = (id) => http.delete(`/event-bookings/${id}`);
+export const eventAnalytics = () => http.get("/event-bookings/analytics");
