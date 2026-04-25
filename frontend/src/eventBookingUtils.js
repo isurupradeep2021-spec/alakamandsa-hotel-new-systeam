@@ -3,10 +3,27 @@ import { EVENT_FORM_DEFAULTS } from './eventModuleConfig';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+const parseLocalDateTimeString = (value) => {
+  if (!value) return null;
+  const normalized = value.trim().replace(' ', 'T');
+  const withoutZone = normalized.replace(/(Z|[+-]\d{2}:?\d{2})$/, '');
+  const trimmed = withoutZone.length > 19 ? withoutZone.slice(0, 19) : withoutZone;
+  const [datePart, timePart] = trimmed.split('T');
+  if (!datePart || !timePart) return null;
+
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hour, minute, second = 0] = timePart.split(':').map(Number);
+  if ([year, month, day, hour, minute, second].some((value) => Number.isNaN(value))) {
+    return null;
+  }
+
+  return new Date(year, month - 1, day, hour, minute, second);
+};
+
 export const formatEventDate = (value) => {
   if (!value) return '-';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  const date = parseLocalDateTimeString(value);
+  return date === null ? value : date.toLocaleString();
 };
 
 export const formatEventCurrency = (value) => {
@@ -33,16 +50,18 @@ export const createEmptyEventForm = (user) => {
 
 export const calculateDurationHours = (start, end) => {
   if (!start || !end) return 0;
-  const startTime = new Date(start);
-  const endTime = new Date(end);
+  const startTime = parseLocalDateTimeString(start);
+  const endTime = parseLocalDateTimeString(end);
+  if (startTime === null || endTime === null) return 0;
   const diffMs = endTime - startTime;
   return Math.max(0, diffMs / (1000 * 60 * 60));
 };
 
 export const formatDurationLabel = (start, end) => {
   if (!start || !end) return '';
-  const startTime = new Date(start);
-  const endTime = new Date(end);
+  const startTime = parseLocalDateTimeString(start);
+  const endTime = parseLocalDateTimeString(end);
+  if (startTime === null || endTime === null) return '';
   if (Number.isNaN(startTime.getTime()) || Number.isNaN(endTime.getTime())) return '';
   const diffMs = endTime - startTime;
   if (diffMs <= 0) return '';
@@ -58,23 +77,22 @@ export const formatDurationLabel = (start, end) => {
 
 export const formatDateTimeInput = (dateTimeString) => {
   if (!dateTimeString) return '';
-  const date = new Date(dateTimeString);
-  if (Number.isNaN(date.getTime())) {
-    return typeof dateTimeString === 'string' ? dateTimeString.slice(0, 16) : '';
-  }
-  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return localDate.toISOString().slice(0, 16);
+  const date = parseLocalDateTimeString(dateTimeString);
+  if (date === null || Number.isNaN(date.getTime())) return '';
+
+  const pad = (num) => String(num).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
 
 export const isActiveEvent = (row) => {
   const status = (row?.status || '').toUpperCase();
   if (['CANCELLED', 'COMPLETED'].includes(status)) return false;
 
-  const startDate = new Date(row?.eventDateTime);
-  const endDate = new Date(row?.endDateTime);
+  const startDate = parseLocalDateTimeString(row?.eventDateTime);
+  const endDate = parseLocalDateTimeString(row?.endDateTime);
   const now = new Date();
-  const hasValidStart = !Number.isNaN(startDate.getTime());
-  const hasValidEnd = !Number.isNaN(endDate.getTime());
+  const hasValidStart = startDate !== null && !Number.isNaN(startDate.getTime());
+  const hasValidEnd = endDate !== null && !Number.isNaN(endDate.getTime());
 
   if (hasValidEnd) return endDate > now;
   if (hasValidStart) return startDate >= now;
@@ -99,9 +117,9 @@ export const buildEventSummary = (rows, canManage) => {
     const status = (row.status || '').toUpperCase();
     if (!['CONFIRMED', 'COMPLETED'].includes(status)) return sum;
 
-    const eventDate = new Date(row.eventDateTime);
+    const eventDate = parseLocalDateTimeString(row.eventDateTime);
     const now = new Date();
-    if (Number.isNaN(eventDate.getTime())) return sum;
+    if (eventDate === null || Number.isNaN(eventDate.getTime())) return sum;
     if (eventDate.getFullYear() !== now.getFullYear() || eventDate.getMonth() !== now.getMonth()) return sum;
 
     return sum + (Number(row.totalPrice || row.totalCost) || 0);

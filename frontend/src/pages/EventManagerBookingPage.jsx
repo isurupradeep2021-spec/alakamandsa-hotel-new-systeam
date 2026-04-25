@@ -55,6 +55,7 @@ function EventManagerBookingPage() {
     }
   };
 
+
   useEffect(() => {
     loadRows();
   }, []);
@@ -130,13 +131,9 @@ function EventManagerBookingPage() {
       <section className="atelier-hero">
         <div className="atelier-hero-head">
           <div>
-            <p className="atelier-eyebrow">Event Atelier</p>
+            <p className="atelier-eyebrow"></p>
             <h2>Event Booking</h2>
             <p>Browse venues, create event bookings, and review the latest event records.</p>
-          </div>
-          <div className="atelier-chip">
-            <i className="bi bi-calendar2-check" />
-            Live Module
           </div>
         </div>
       </section>

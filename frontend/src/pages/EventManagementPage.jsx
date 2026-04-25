@@ -154,6 +154,13 @@ export default function EventManagementPage({ view = 'management' }) {
       if (new Date(form.endDateTime) <= new Date(form.eventDateTime)) {
         throw new Error('End date & time must be after starting date & time');
       }
+      const attendeesValue = Number(form.attendees);
+      if (!form.attendees || !Number.isFinite(attendeesValue) || attendeesValue <= 0) {
+        throw new Error('Attendees is required and must be a number greater than 0.');
+      }
+      if (selectedEventHall && attendeesValue > selectedEventHall.capacity) {
+        throw new Error(`Attendees cannot exceed selected hall capacity of ${selectedEventHall.capacity}.`);
+      }
 
       const payload = {
         ...form,
@@ -227,10 +234,6 @@ export default function EventManagementPage({ view = 'management' }) {
           <p className="eyebrow">{pageMeta.code}</p>
           <h2>{pageMeta.title}</h2>
           <p>{pageMeta.subtitle}</p>
-        </div>
-        <div className="hero-chip">
-          <i className={`bi ${pageMeta.icon}`} />
-          Live Module
         </div>
       </div>
 

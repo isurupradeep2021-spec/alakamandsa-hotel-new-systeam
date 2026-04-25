@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const menuByRole = {
@@ -50,10 +50,15 @@ const menuByRole = {
 function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const menu = menuByRole[user?.role] || [];
   const roleLabel = (user?.role || '').replaceAll('_', ' ');
   const opsRoles = ['SUPER_ADMIN', 'MANAGER', 'RESTAURANT_MANAGER', 'EVENT_MANAGER'];
   const isOpsRole = opsRoles.includes(user?.role);
+  const isEventModuleRoute = location.pathname.startsWith('/event');
+  const isEventManagerContext =
+    user?.role === 'EVENT_MANAGER' &&
+    ['/dashboard', '/profile', '/event-booking-manager', '/event-management'].includes(location.pathname);
 
   return (
     <div className={`app-shell ${isOpsRole ? 'restaurant-ops-shell' : ''}`}>
@@ -86,7 +91,7 @@ function Layout() {
               <h2>{user?.fullName}</h2>
               <p>{roleLabel}</p>
             </div>
-            {isOpsRole && (
+            {isOpsRole && !isEventModuleRoute && !isEventManagerContext && (
               <div className="topbar-tagline">
                 <strong>Operations Console</strong>
                 <span>Manage payroll, rooms, menu, reservations, and events from one dashboard.</span>
