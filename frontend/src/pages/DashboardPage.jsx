@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getDashboardSummary, getEventBookings, getRooms } from '../api/service';
 import { useAuth } from '../context/AuthContext';
+import { formatEventCurrency } from '../eventBookingUtils';
 
 function isSameMonth(date, reference) {
   return date.getFullYear() === reference.getFullYear() && date.getMonth() === reference.getMonth();
@@ -23,10 +24,6 @@ function DashboardPage() {
       getRooms()
         .then((res) => setRooms(res.data || []))
         .catch(() => setRooms([]));
-    }
-
-    if (user?.role === 'CUSTOMER') {
-      getRooms().then((res) => setRooms(res.data || [])).catch(() => setRooms([]));
     }
 
     if (user?.role === 'EVENT_MANAGER') {
@@ -122,7 +119,7 @@ function DashboardPage() {
           <div className="card stat"><h3>Pending Confirmation</h3><p>{eventDashboard.pendingConfirmation}</p><small>Events currently in inquiry status</small></div>
           <div className="card stat"><h3>Completed Events</h3><p>{eventDashboard.completedEvents}</p><small>Completed during this month</small></div>
           <div className="card stat"><h3>Cancelled Events</h3><p>{eventDashboard.cancelledEvents}</p><small>Cancelled during this month</small></div>
-          <div className="card stat"><h3>Total Revenue</h3><p>Rs. {eventDashboard.totalRevenue.toLocaleString()}</p><small>Monthly revenue from confirmed and completed events</small></div>
+          <div className="card stat"><h3>Total Revenue</h3><p>{formatEventCurrency(eventDashboard.totalRevenue)}</p><small>Monthly revenue from confirmed and completed events</small></div>
         </div>
       </div>
     );

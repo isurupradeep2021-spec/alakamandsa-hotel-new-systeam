@@ -8,9 +8,10 @@ function LoginPage() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
 
-  const submit = async (e) => {
-    e.preventDefault();
+  const submit = async (event) => {
+    event.preventDefault();
     setError("");
+
     try {
       const user = await login({
         username: form.username.trim().toLowerCase(),
@@ -20,7 +21,7 @@ function LoginPage() {
       if (user.role === "STAFF_MEMBER") navigate("/my-payroll");
       else if (user.role === "CUSTOMER") navigate("/view-rooms");
       else if (user.role === "RESTAURANT_MANAGER") navigate("/table-reservations");
-      else if (user.role === "EVENT_MANAGER") navigate("/event-booking-manager");
+      else if (user.role === "EVENT_MANAGER") navigate("/dashboard");
       else if (user.role === "SUPER_ADMIN" || user.role === "MANAGER") navigate("/dashboard");
       else navigate("/profile");
     } catch (err) {
@@ -41,14 +42,14 @@ function LoginPage() {
           <input
             placeholder="Username"
             value={form.username}
-            onChange={(e) => setForm({ ...form, username: e.target.value })}
+            onChange={(event) => setForm({ ...form, username: event.target.value })}
             required
           />
           <input
             type="password"
             placeholder="Password"
             value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            onChange={(event) => setForm({ ...form, password: event.target.value })}
             required
           />
           {error && <div className="error">{error}</div>}
