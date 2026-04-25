@@ -480,6 +480,109 @@ textarea {
     display: grid;
     gap: 2px;
 }
+.room-calendar-panel {
+    border: 1px solid #d2e1ec;
+    border-radius: 14px;
+    padding: 14px;
+    background: linear-gradient(180deg, #fdfefe 0%, #f2f8fc 100%);
+    margin-bottom: 16px;
+}
+.room-calendar-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.room-calendar-head h4 {
+    margin: 0 0 4px;
+    font-size: 17px;
+}
+.room-calendar-head p {
+    margin: 0;
+    font-size: 12px;
+    color: #516b82;
+}
+.room-calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.room-calendar-nav strong {
+    min-width: 120px;
+    text-align: center;
+    color: #143452;
+}
+.room-calendar-legend {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+}
+.legend-dot.available {
+    background: #d8f7e6;
+    border-color: #4aa76b;
+}
+.legend-dot.booked {
+    background: #ffe0de;
+    border-color: #cc5a56;
+}
+.room-calendar-legend small {
+    font-size: 12px;
+    color: #3f5b72;
+    margin-right: 10px;
+}
+.room-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+}
+.room-calendar-day-label {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #5d748a;
+    padding: 5px 0;
+}
+.room-calendar-cell {
+    min-height: 38px;
+    border-radius: 8px;
+    border: 1px solid #cddce8;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1d3449;
+    background: #f8fbff;
+}
+.room-calendar-cell.available {
+    background: #d8f7e6;
+    border-color: #58b479;
+    color: #1f6940;
+}
+.room-calendar-cell.booked {
+    background: #ffe0de;
+    border-color: #cf6460;
+    color: #872f2c;
+}
+.room-calendar-cell.unknown {
+    background: #f3f6f9;
+    border-color: #d5e0ea;
+    color: #6b7f93;
+}
+.room-calendar-cell.empty {
+    background: transparent;
+    border: 1px dashed #e3ebf2;
+}
+.room-calendar-cell.selected-stay {
+    box-shadow: inset 0 0 0 2px #0a9396;
+}
 
 .availability-summary-strip strong {
     font-size: 24px;
@@ -607,6 +710,13 @@ textarea {
 
     .availability-actions .btn {
         width: 100%;
+    }
+    .room-calendar-nav {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .room-calendar-nav strong {
+        min-width: auto;
     }
 }
 

@@ -1,15 +1,46 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
 import { useLocation } from "react-router-dom";
-import { createRoomBooking, getMyRoomBookings, getRooms, requestRoomBookingCancellation } from "../api/service";
+import { checkRoomAvailability, createRoomBooking, getMyRoomBookings, getRooms, requestRoomBookingCancellation } from "../api/service";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
+const CALENDAR_DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const ROOM_TYPE_GUEST_LIMITS = {
     STANDARD: 2,
     DELUXE: 3,
     SUITE: 4,
     FAMILY: 6,
 };
+
+function toIsoDate(dateValue) {
+    const year = dateValue.getFullYear();
+    const month = String(dateValue.getMonth() + 1).padStart(2, "0");
+    const day = String(dateValue.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function getMonthCells(monthAnchorDate) {
+    const year = monthAnchorDate.getFullYear();
+    const month = monthAnchorDate.getMonth();
+    const firstDayOfMonth = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const leadingEmptyCells = firstDayOfMonth.getDay();
+
+    const cells = [];
+    for (let index = 0; index < leadingEmptyCells; index += 1) {
+        cells.push(null);
+    }
+
+    for (let day = 1; day <= daysInMonth; day += 1) {
+        cells.push(new Date(year, month, day));
+    }
+
+    while (cells.length % 7 !== 0) {
+        cells.push(null);
+    }
+
+    return cells;
+}
 
 function BookRoomPage() {
     const location = useLocation();
@@ -21,6 +52,13 @@ function BookRoomPage() {
     const [availabilityLoading, setAvailabilityLoading] = useState(false);
     const [availabilityError, setAvailabilityError] = useState("");
     const [availabilityData, setAvailabilityData] = useState(null);
+    const [calendarMonth, setCalendarMonth] = useState(() => {
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), 1);
+    });
+    const [calendarAvailabilityMap, setCalendarAvailabilityMap] = useState({});
+    const [calendarLoading, setCalendarLoading] = useState(false);
+    const [calendarError, setCalendarError] = useState("");
     const [bookingForm, setBookingForm] = useState({
         bookingCustomer: "",
         customerEmail: "",
@@ -96,6 +134,93 @@ function BookRoomPage() {
             })
             .finally(() => setAvailabilityLoading(false));
     }, [bookingForm.roomNumber, bookingForm.checkInDate, bookingForm.checkOutDate]);
+
+    useEffect(() => {
+        if (!bookingForm.checkInDate) {
+            return;
+        }
+
+        const parsedDate = new Date(`${bookingForm.checkInDate}T00:00:00`);
+        if (Number.isNaN(parsedDate.getTime())) {
+            return;
+        }
+
+        setCalendarMonth(new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1));
+    }, [bookingForm.checkInDate]);
+
+    useEffect(() => {
+        const roomNumber = bookingForm.roomNumber.trim();
+        if (!roomNumber) {
+            setCalendarAvailabilityMap({});
+            setCalendarError("");
+            return;
+        }
+
+        let isDisposed = false;
+
+        const loadMonthlyAvailability = async () => {
+            setCalendarLoading(true);
+            setCalendarError("");
+
+            const year = calendarMonth.getFullYear();
+            const month = calendarMonth.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            const checks = [];
+            for (let day = 1; day <= daysInMonth; day += 1) {
+                const checkIn = new Date(year, month, day);
+                const checkOut = new Date(year, month, day + 1);
+                const checkInDate = toIsoDate(checkIn);
+                const checkOutDate = toIsoDate(checkOut);
+
+                checks.push(
+                    checkRoomAvailability(roomNumber, checkInDate, checkOutDate)
+                        .then((res) => ({ date: checkInDate, available: Boolean(res?.data?.available), failed: false }))
+                        .catch(() => ({ date: checkInDate, available: false, failed: true }))
+                );
+            }
+
+            const results = await Promise.all(checks);
+            if (isDisposed) {
+                return;
+            }
+
+            const nextMap = {};
+            let failedCount = 0;
+
+            results.forEach((result) => {
+                if (result.failed) {
+                    failedCount += 1;
+                    return;
+                }
+                nextMap[result.date] = result.available ? "available" : "booked";
+            });
+
+            setCalendarAvailabilityMap(nextMap);
+
+            if (failedCount === results.length) {
+                setCalendarError("Unable to load room calendar right now.");
+            } else if (failedCount > 0) {
+                setCalendarError("Some dates could not be checked. Please retry.");
+            }
+
+            setCalendarLoading(false);
+        };
+
+        loadMonthlyAvailability().catch(() => {
+            if (isDisposed) {
+                return;
+            }
+
+            setCalendarAvailabilityMap({});
+            setCalendarError("Unable to load room calendar right now.");
+            setCalendarLoading(false);
+        });
+
+        return () => {
+            isDisposed = true;
+        };
+    }, [bookingForm.roomNumber, calendarMonth]);
 
     const handleCreateBooking = async (event) => {
         event.preventDefault();
@@ -337,12 +462,22 @@ function BookRoomPage() {
     };
 
     const stayDuration = getStayDuration();
+    const calendarMonthCells = useMemo(() => getMonthCells(calendarMonth), [calendarMonth]);
+    const calendarMonthLabel = calendarMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" });
     const guestCount = Number(bookingForm.guestCount);
     const roomTypeLimit = availabilityData?.roomType ? ROOM_TYPE_GUEST_LIMITS[availabilityData.roomType] : null;
     const roomCapacity = Number.isFinite(Number(availabilityData?.capacity)) ? Number(availabilityData.capacity) : null;
     const maxGuestsAllowed = roomTypeLimit && roomCapacity ? Math.min(roomTypeLimit, roomCapacity) : roomTypeLimit || roomCapacity;
     const hasGuestLimitViolation = Number.isInteger(guestCount) && guestCount > 0 && maxGuestsAllowed !== null && guestCount > maxGuestsAllowed;
     const previewTotal = getEstimatedTotal();
+
+    const isDateInsideSelectedStay = (isoDate) => {
+        if (!bookingForm.checkInDate || !bookingForm.checkOutDate) {
+            return false;
+        }
+
+        return isoDate >= bookingForm.checkInDate && isoDate < bookingForm.checkOutDate;
+    };
 
     return (
         <div className="card">
@@ -351,6 +486,80 @@ function BookRoomPage() {
 
             <section className="book-room-shell">
                 <div className="book-room-panel">
+                    <section className="room-calendar-panel">
+                        <div className="room-calendar-head">
+                            <div>
+                                <h4>Room Availability Calendar</h4>
+                                <p>Selected room: {bookingForm.roomNumber?.trim() || "Please enter a room number"}</p>
+                            </div>
+                            <div className="room-calendar-nav">
+                                <button
+                                    className="btn ghost small"
+                                    type="button"
+                                    onClick={() =>
+                                        setCalendarMonth(
+                                            new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1)
+                                        )
+                                    }
+                                >
+                                    Prev
+                                </button>
+                                <strong>{calendarMonthLabel}</strong>
+                                <button
+                                    className="btn ghost small"
+                                    type="button"
+                                    onClick={() =>
+                                        setCalendarMonth(
+                                            new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1)
+                                        )
+                                    }
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="room-calendar-legend">
+                            <span className="legend-dot available" />
+                            <small>Available</small>
+                            <span className="legend-dot booked" />
+                            <small>Booked</small>
+                        </div>
+
+                        {calendarLoading && <p>Loading room calendar...</p>}
+                        {!calendarLoading && calendarError && <p className="error">{calendarError}</p>}
+
+                        <div className="room-calendar-grid" aria-label="Room availability calendar">
+                            {CALENDAR_DAY_LABELS.map((label) => (
+                                <div key={label} className="room-calendar-day-label">
+                                    {label}
+                                </div>
+                            ))}
+
+                            {calendarMonthCells.map((cell, index) => {
+                                if (!cell) {
+                                    return <div key={`empty-${index}`} className="room-calendar-cell empty" />;
+                                }
+
+                                const isoDate = toIsoDate(cell);
+                                const availabilityStatus = calendarAvailabilityMap[isoDate];
+                                const inSelectedStay = isDateInsideSelectedStay(isoDate);
+
+                                return (
+                                    <div
+                                        key={isoDate}
+                                        className={`room-calendar-cell ${availabilityStatus || "unknown"} ${
+                                            inSelectedStay ? "selected-stay" : ""
+                                        }`}
+                                        title={`${isoDate} - ${availabilityStatus || "Checking..."}`}
+                                    >
+                                        {cell.getDate()}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </section>
+
                     <form className="booking-form" onSubmit={handleCreateBooking}>
                         <div>
                             <label>Booking Customer</label>
