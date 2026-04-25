@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { UserAccount, StaffDetail, StaffRole } from './staff.entity';
 import { CreateStaffDto } from './dto/create-staff.dto';
 import { UpdateStaffDto } from './dto/update-staff.dto';
@@ -15,6 +15,7 @@ export class StaffService {
     private readonly userRepo: Repository<UserAccount>,
     @InjectRepository(StaffDetail)
     private readonly staffRepo: Repository<StaffDetail>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async create(dto: CreateStaffDto): Promise<any> {
@@ -24,6 +25,7 @@ export class StaffService {
       password: hashedPassword,
       fullName: dto.fullName,
       role: dto.role,
+      enabled: true,
     });
     const savedUser = await this.userRepo.save(user);
 
@@ -104,7 +106,12 @@ export class StaffService {
     });
     if (!user) throw new NotFoundException(`Staff #${id} not found`);
 
-    await this.staffRepo.delete({ userId: id });
+    const detail = await this.staffRepo.findOne({ where: { userId: id } });
+    if (detail) {
+      // Delete payroll rows that reference this staff record before removing it
+      await this.dataSource.query('DELETE FROM payroll WHERE staff_id = ?', [detail.id]);
+      await this.staffRepo.remove(detail);
+    }
     await this.userRepo.remove(user);
   }
 }
