@@ -8,9 +8,10 @@ function LoginPage() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [error, setError] = useState("");
 
-  const submit = async (e) => {
-    e.preventDefault();
+  const submit = async (event) => {
+    event.preventDefault();
     setError("");
+
     try {
       const user = await login({
         username: form.username.trim().toLowerCase(),
@@ -41,14 +42,14 @@ function LoginPage() {
           <input
             placeholder="Username"
             value={form.username}
-            onChange={(e) => setForm({ ...form, username: e.target.value })}
+            onChange={(event) => setForm({ ...form, username: event.target.value })}
             required
           />
           <input
             type="password"
             placeholder="Password"
             value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            onChange={(event) => setForm({ ...form, password: event.target.value })}
             required
           />
           {error && <div className="error">{error}</div>}
