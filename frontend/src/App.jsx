@@ -37,10 +37,6 @@ function App() {
                 "MANAGER",
                 "RESTAURANT_MANAGER",
                 "CUSTOMER",
-<<<<<<< Updated upstream
-=======
-                "EVENT_MANAGER",
->>>>>>> Stashed changes
                 "EVENT_MANAGER",
                 "CUSTOMER",
               ]}
