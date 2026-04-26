@@ -4,7 +4,6 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
-  CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { UserAccount } from '../staff/staff.entity';
@@ -80,7 +79,7 @@ export class HousekeepingTask {
   @Column({ name: 'alert_sent', default: false })
   alertSent: boolean;
 
-  @CreateDateColumn()
+  @Column({ name: 'created_at', type: 'datetime', nullable: false, default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
   @UpdateDateColumn()
