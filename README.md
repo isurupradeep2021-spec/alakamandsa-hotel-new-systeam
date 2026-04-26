@@ -75,9 +75,21 @@ Password for all seeded users: `Password@123`
 
 
 npm init -y
+
+
 npm install express mongoose cors dotenv
-install nodemon --save-dev
-Nom run dev  
+
+
+npm install nodemon --save-dev
+
+
+Npm run dev  
+
+
 npm install mongodb 
+
+
 npm run dev  
+
+
 npm create vite@latest
