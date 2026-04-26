@@ -17,6 +17,9 @@ const MAINTENANCE_ALLOWED_STATUSES = [
   MaintenanceStatus.CLOSED,
 ];
 
+const RESOLVED_STATUSES = new Set([MaintenanceStatus.RESOLVED, MaintenanceStatus.CLOSED]);
+
+
 @Injectable()
 export class MaintenanceService {
   constructor(
@@ -51,7 +54,11 @@ export class MaintenanceService {
 
   async update(id: number, dto: UpdateMaintenanceTicketDto): Promise<MaintenanceTicket> {
     const ticket = await this.findOne(id);
+    const wasResolved = RESOLVED_STATUSES.has(ticket.status);
     Object.assign(ticket, dto);
+    if (dto.status && RESOLVED_STATUSES.has(dto.status) && !wasResolved) {
+      ticket.resolvedAt = new Date();
+    }
     return this.ticketRepository.save(ticket);
   }
 
@@ -70,6 +77,9 @@ export class MaintenanceService {
       throw new ForbiddenException('You can only update tickets assigned to you.');
     }
     ticket.status = status as MaintenanceStatus;
+    if (RESOLVED_STATUSES.has(ticket.status) && !ticket.resolvedAt) {
+      ticket.resolvedAt = new Date();
+    }
     return this.ticketRepository.save(ticket);
   }
 

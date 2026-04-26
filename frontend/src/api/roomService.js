@@ -52,3 +52,10 @@ export const deleteRoomServiceStaff = (id) =>
  */
 export const triggerBookingHousekeeping = (payload) =>
   roomServiceHttp.post("/housekeeping/booking-trigger", payload);
+
+// ── Analytics ────────────────────────────────────────────────────────────────
+export const getMonthlyAnalytics = (year, month) =>
+  roomServiceHttp.get("/analytics/monthly", { params: { year, month } });
+
+export const getTrendAnalytics = (months = 6) =>
+  roomServiceHttp.get("/analytics/trends", { params: { months } });

@@ -77,6 +77,9 @@ export class HousekeepingTask {
   @Column({ type: 'text', nullable: true })
   cleaningNotes: string;
 
+  @Column({ name: 'completed_at', type: 'datetime', nullable: true })
+  completedAt: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 

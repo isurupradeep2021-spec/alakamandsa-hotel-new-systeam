@@ -2,6 +2,7 @@ import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import HousekeepingPage from './HousekeepingPage';
 import MaintenancePage from './MaintenancePage';
 import RoomServiceStaffPage from './RoomServiceStaffPage';
+import OperationalAnalyticsPage from './OperationalAnalyticsPage';
 import { useAuth } from '../context/AuthContext';
 
 const tabsByRole = {
@@ -9,11 +10,13 @@ const tabsByRole = {
     { to: 'housekeeping-tickets', label: 'Housekeeping Tickets' },
     { to: 'maintenance-tickets', label: 'Maintenance Tickets' },
     { to: 'staff', label: 'Staff' },
+    { to: 'analytics', label: 'Analytics' },
   ],
   MANAGER: [
     { to: 'housekeeping-tickets', label: 'Housekeeping Tickets' },
     { to: 'maintenance-tickets', label: 'Maintenance Tickets' },
     { to: 'staff', label: 'Staff' },
+    { to: 'analytics', label: 'Analytics' },
   ],
   HOUSEKEEPER: [
     { to: 'housekeeping-tickets', label: 'Housekeeping Tickets' },
@@ -59,6 +62,7 @@ export default function HousekeepingMaintenancePage() {
           <Route path="housekeeping-tickets" element={<HousekeepingPage embedded />} />
           <Route path="maintenance-tickets" element={<MaintenancePage embedded />} />
           <Route path="staff" element={<RoomServiceStaffPage embedded />} />
+          <Route path="analytics" element={<OperationalAnalyticsPage embedded />} />
           <Route path="*" element={<Navigate to={defaultTab} replace />} />
         </Routes>
       </div>

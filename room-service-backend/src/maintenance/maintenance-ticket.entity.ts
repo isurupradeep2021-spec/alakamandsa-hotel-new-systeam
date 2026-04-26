@@ -69,6 +69,9 @@ export class MaintenanceTicket {
   @Column({ type: 'text', nullable: true })
   partsUsed: string;
 
+  @Column({ name: 'resolved_at', type: 'datetime', nullable: true })
+  resolvedAt: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 

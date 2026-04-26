@@ -26,31 +26,31 @@ export class MaintenanceController {
   constructor(private readonly maintenanceService: MaintenanceService) {}
 
   @Post()
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'MANAGER')
   create(@Body() dto: CreateMaintenanceTicketDto) {
     return this.maintenanceService.create(dto);
   }
 
   @Get()
-  @Roles('ADMIN', 'MANAGER', 'MAINTENANCE_STAFF')
+  @Roles('SUPER_ADMIN', 'MANAGER', 'MAINTENANCE_STAFF')
   findAll(@Request() req: any) {
     return this.maintenanceService.findAll(req.user);
   }
 
   @Get('stats')
-  @Roles('ADMIN', 'MANAGER', 'HOUSEKEEPER', 'MAINTENANCE_STAFF')
+  @Roles('SUPER_ADMIN', 'MANAGER', 'HOUSEKEEPER', 'MAINTENANCE_STAFF')
   getStats() {
     return this.maintenanceService.getStats();
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'MANAGER', 'MAINTENANCE_STAFF')
+  @Roles('SUPER_ADMIN', 'MANAGER', 'MAINTENANCE_STAFF')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.maintenanceService.findOne(id);
   }
 
   @Put(':id')
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'MANAGER')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateMaintenanceTicketDto,
@@ -70,7 +70,7 @@ export class MaintenanceController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'MANAGER')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.maintenanceService.remove(id);
   }

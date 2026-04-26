@@ -7,6 +7,7 @@ import { MaintenanceTicket } from './maintenance/maintenance-ticket.entity';
 import { StaffModule } from './staff/staff.module';
 import { HousekeepingModule } from './housekeeping/housekeeping.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 import { SeedService } from './seed.service';
 
 @Module({
@@ -29,6 +30,7 @@ import { SeedService } from './seed.service';
     StaffModule,
     HousekeepingModule,
     MaintenanceModule,
+    AnalyticsModule,
   ],
   providers: [SeedService],
 })

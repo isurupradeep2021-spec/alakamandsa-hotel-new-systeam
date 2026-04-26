@@ -24,6 +24,8 @@ const HOUSEKEEPER_ALLOWED_STATUSES = [
   HousekeepingStatus.INSPECTED,
 ];
 
+const COMPLETED_STATUSES = new Set([HousekeepingStatus.CLEANED, HousekeepingStatus.INSPECTED]);
+
 @Injectable()
 export class HousekeepingService {
   constructor(
@@ -58,7 +60,11 @@ export class HousekeepingService {
 
   async update(id: number, dto: UpdateHousekeepingTaskDto): Promise<HousekeepingTask> {
     const task = await this.findOne(id);
+    const wasCompleted = COMPLETED_STATUSES.has(task.status);
     Object.assign(task, dto);
+    if (dto.status && COMPLETED_STATUSES.has(dto.status) && !wasCompleted) {
+      task.completedAt = new Date();
+    }
     return this.taskRepository.save(task);
   }
 
@@ -77,6 +83,9 @@ export class HousekeepingService {
       throw new ForbiddenException('You can only update tasks assigned to you.');
     }
     task.status = status as HousekeepingStatus;
+    if (COMPLETED_STATUSES.has(task.status) && !task.completedAt) {
+      task.completedAt = new Date();
+    }
     return this.taskRepository.save(task);
   }
 
