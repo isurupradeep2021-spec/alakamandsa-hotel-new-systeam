@@ -250,10 +250,6 @@ export default function OperationalAnalyticsPage({ embedded = false }) {
                     <h3>By Priority</h3>
                     <BarChart data={mt.byPriority} colorClass="oa-bar--orange" />
                   </div>
-                  <div className="oa-chart-card">
-                    <h3>By Floor</h3>
-                    <BarChart data={mt.byFloor} colorClass="oa-bar--purple" />
-                  </div>
                 </div>
 
                 {mt.recurringRooms?.length > 0 && (

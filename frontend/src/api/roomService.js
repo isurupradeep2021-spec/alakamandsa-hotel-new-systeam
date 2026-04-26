@@ -65,3 +65,6 @@ export const checkRoomMaintenance = (roomNumber) =>
   roomServiceHttp.get(
     `/maintenance/check-room/${encodeURIComponent(roomNumber)}`,
   );
+
+// ── Rooms list (for dropdown population) ─────────────────────────────────
+export const getRooms = () => roomServiceHttp.get("/rooms");

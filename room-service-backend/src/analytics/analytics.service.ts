@@ -152,12 +152,6 @@ export class AnalyticsService {
       .slice(0, 10)
       .map(([room, count]) => ({ room, count }));
 
-    // Breakdown by floor
-    const byFloor = this.countByField(
-      tickets.filter((t) => t.floor != null),
-      'floor',
-    );
-
     // Breakdown by priority
     const byPriority = this.countByField(tickets, 'priority');
 
@@ -172,7 +166,6 @@ export class AnalyticsService {
       slaBreaches,
       avgResolutionHours,
       byFacilityType,
-      byFloor,
       byPriority,
       recurringRooms,
       staffWorkload,

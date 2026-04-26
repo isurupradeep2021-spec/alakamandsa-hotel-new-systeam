@@ -104,7 +104,7 @@ export class SeedService implements OnApplicationBootstrap {
 
     const hkTasks: Partial<HousekeepingTask>[] = [
       {
-        roomNumber: '101', floor: 1, roomCondition: RoomCondition.CHECKOUT,
+        roomNumber: '101', roomCondition: RoomCondition.CHECKOUT,
         taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.PENDING,
         priority: Priority.HIGH, staffId: savedHousekeepers[0].id,
         deadline: daysLater(0),
@@ -112,7 +112,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: undefined,
       },
       {
-        roomNumber: '102', floor: 1, roomCondition: RoomCondition.OCCUPIED,
+        roomNumber: '102', roomCondition: RoomCondition.OCCUPIED,
         taskType: HousekeepingTaskType.TURNDOWN, status: HousekeepingStatus.IN_PROGRESS,
         priority: Priority.MEDIUM, staffId: savedHousekeepers[1].id,
         deadline: daysLater(0),
@@ -120,7 +120,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: undefined,
       },
       {
-        roomNumber: '103', floor: 1, roomCondition: RoomCondition.PRE_CHECK_IN,
+        roomNumber: '103', roomCondition: RoomCondition.PRE_CHECK_IN,
         taskType: HousekeepingTaskType.INSPECTION, status: HousekeepingStatus.CLEANED,
         priority: Priority.HIGH, staffId: savedHousekeepers[4].id,
         deadline: daysLater(1),
@@ -128,7 +128,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: 'Room cleaned and refreshed. Awaiting supervisor inspection.',
       },
       {
-        roomNumber: '104', floor: 1, roomCondition: RoomCondition.CHECKOUT,
+        roomNumber: '104', roomCondition: RoomCondition.CHECKOUT,
         taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.INSPECTED,
         priority: Priority.LOW, staffId: savedHousekeepers[2].id,
         deadline: daysAgo(1),
@@ -136,7 +136,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: 'Completed. All items checked against inventory.',
       },
       {
-        roomNumber: '201', floor: 2, roomCondition: RoomCondition.OCCUPIED,
+        roomNumber: '201', roomCondition: RoomCondition.OCCUPIED,
         taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.PENDING,
         priority: Priority.MEDIUM, staffId: savedHousekeepers[3].id,
         deadline: daysLater(0),
@@ -144,7 +144,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: undefined,
       },
       {
-        roomNumber: '202', floor: 2, roomCondition: RoomCondition.CHECKOUT,
+        roomNumber: '202', roomCondition: RoomCondition.CHECKOUT,
         taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.IN_PROGRESS,
         priority: Priority.HIGH, staffId: savedHousekeepers[1].id,
         deadline: daysLater(0),
@@ -152,7 +152,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: undefined,
       },
       {
-        roomNumber: '203', floor: 2, roomCondition: RoomCondition.PRE_CHECK_IN,
+        roomNumber: '203', roomCondition: RoomCondition.PRE_CHECK_IN,
         taskType: HousekeepingTaskType.TURNDOWN, status: HousekeepingStatus.PENDING,
         priority: Priority.MEDIUM, staffId: savedHousekeepers[0].id,
         deadline: daysLater(1),
@@ -160,7 +160,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: undefined,
       },
       {
-        roomNumber: '301', floor: 3, roomCondition: RoomCondition.OCCUPIED,
+        roomNumber: '301', roomCondition: RoomCondition.OCCUPIED,
         taskType: HousekeepingTaskType.INSPECTION, status: HousekeepingStatus.INSPECTED,
         priority: Priority.LOW, staffId: savedHousekeepers[4].id,
         deadline: daysAgo(2),
@@ -168,7 +168,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: 'All items in order. Mini-bar restocked.',
       },
       {
-        roomNumber: '302', floor: 3, roomCondition: RoomCondition.CHECKOUT,
+        roomNumber: '302', roomCondition: RoomCondition.CHECKOUT,
         taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.PENDING,
         priority: Priority.HIGH, staffId: savedHousekeepers[2].id,
         deadline: daysLater(0),
@@ -176,7 +176,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: undefined,
       },
       {
-        roomNumber: '303', floor: 3, roomCondition: RoomCondition.OCCUPIED,
+        roomNumber: '303', roomCondition: RoomCondition.OCCUPIED,
         taskType: HousekeepingTaskType.TURNDOWN, status: HousekeepingStatus.CLEANED,
         priority: Priority.LOW, staffId: savedHousekeepers[3].id,
         deadline: daysLater(0),
@@ -188,28 +188,28 @@ export class SeedService implements OnApplicationBootstrap {
     // ── Maintenance Tickets ──────────────────────────────────────────────────
     const mTickets: Partial<MaintenanceTicket>[] = [
       {
-        roomNumber: '101', floor: 1, facilityType: FacilityType.AC,
+        roomNumber: '101', facilityType: FacilityType.AC,
         issueDescription: 'Air conditioning unit making a loud rattling noise and not cooling below 26°C.',
         status: MaintenanceStatus.ASSIGNED, priority: Priority.HIGH,
         staffId: savedMaintenance[0].id, deadline: daysLater(1),
         resolutionNotes: undefined, partsUsed: undefined,
       },
       {
-        roomNumber: '102', floor: 1, facilityType: FacilityType.PLUMBING,
+        roomNumber: '102', facilityType: FacilityType.PLUMBING,
         issueDescription: 'Bathroom tap dripping continuously. Guest reports water pooling on floor.',
         status: MaintenanceStatus.IN_PROGRESS, priority: Priority.HIGH,
         staffId: savedMaintenance[2].id, deadline: daysLater(0),
         resolutionNotes: undefined, partsUsed: undefined,
       },
       {
-        roomNumber: '103', floor: 1, facilityType: FacilityType.ELECTRICAL,
+        roomNumber: '103', facilityType: FacilityType.ELECTRICAL,
         issueDescription: 'Bedside lamp socket not working. Possible loose wiring in socket outlet.',
         status: MaintenanceStatus.OPEN, priority: Priority.MEDIUM,
         staffId: undefined, deadline: daysLater(2),
         resolutionNotes: undefined, partsUsed: undefined,
       },
       {
-        roomNumber: '104', floor: 1, facilityType: FacilityType.FURNITURE,
+        roomNumber: '104', facilityType: FacilityType.FURNITURE,
         issueDescription: 'Wardrobe door hinge broken. Door cannot close properly and is a safety hazard.',
         status: MaintenanceStatus.RESOLVED, priority: Priority.MEDIUM,
         staffId: savedMaintenance[3].id, deadline: daysAgo(1),
@@ -217,14 +217,14 @@ export class SeedService implements OnApplicationBootstrap {
         partsUsed: '2x 3-inch hinge pins, wood screws',
       },
       {
-        roomNumber: '201', floor: 2, facilityType: FacilityType.AC,
+        roomNumber: '201', facilityType: FacilityType.AC,
         issueDescription: 'AC thermostat unresponsive. Unit turns on but guest cannot change temperature.',
         status: MaintenanceStatus.ASSIGNED, priority: Priority.MEDIUM,
         staffId: savedMaintenance[0].id, deadline: daysLater(1),
         resolutionNotes: undefined, partsUsed: undefined,
       },
       {
-        roomNumber: '202', floor: 2, facilityType: FacilityType.PLUMBING,
+        roomNumber: '202', facilityType: FacilityType.PLUMBING,
         issueDescription: 'Shower head has low water pressure. Likely clogged filter.',
         status: MaintenanceStatus.RESOLVED, priority: Priority.LOW,
         staffId: savedMaintenance[2].id, deadline: daysAgo(3),
@@ -232,21 +232,21 @@ export class SeedService implements OnApplicationBootstrap {
         partsUsed: 'Descaling solution, replacement filter washer',
       },
       {
-        roomNumber: '203', floor: 2, facilityType: FacilityType.ELECTRICAL,
+        roomNumber: '203', facilityType: FacilityType.ELECTRICAL,
         issueDescription: 'Main room circuit breaker keeps tripping when multiple appliances are used simultaneously.',
         status: MaintenanceStatus.IN_PROGRESS, priority: Priority.HIGH,
         staffId: savedMaintenance[1].id, deadline: daysLater(0),
         resolutionNotes: undefined, partsUsed: undefined,
       },
       {
-        roomNumber: '301', floor: 3, facilityType: FacilityType.OTHER,
+        roomNumber: '301', facilityType: FacilityType.OTHER,
         issueDescription: 'Balcony sliding door lock faulty. Door cannot be secured from inside.',
         status: MaintenanceStatus.OPEN, priority: Priority.HIGH,
         staffId: undefined, deadline: daysLater(0),
         resolutionNotes: undefined, partsUsed: undefined,
       },
       {
-        roomNumber: '302', floor: 3, facilityType: FacilityType.FURNITURE,
+        roomNumber: '302', facilityType: FacilityType.FURNITURE,
         issueDescription: 'Desk chair wheel bracket cracked. Chair is unstable and unsafe to sit on.',
         status: MaintenanceStatus.CLOSED, priority: Priority.LOW,
         staffId: savedMaintenance[4].id, deadline: daysAgo(5),
@@ -254,7 +254,7 @@ export class SeedService implements OnApplicationBootstrap {
         partsUsed: 'Replacement office chair (spare stock)',
       },
       {
-        roomNumber: '303', floor: 3, facilityType: FacilityType.PLUMBING,
+        roomNumber: '303', facilityType: FacilityType.PLUMBING,
         issueDescription: 'Toilet flush mechanism not engaging properly. Requires two attempts to flush.',
         status: MaintenanceStatus.ASSIGNED, priority: Priority.MEDIUM,
         staffId: savedMaintenance[2].id, deadline: daysLater(1),

@@ -56,6 +56,11 @@ export class RoomSyncService {
     await this.setStatusIfCurrent(roomNumber, RoomStatus.CLEANING, RoomStatus.AVAILABLE);
   }
 
+  /** Returns all rooms ordered by room number — used for form dropdowns. */
+  findAll(): Promise<Room[]> {
+    return this.roomRepo.find({ order: { roomNumber: 'ASC' } });
+  }
+
   // ── private ──────────────────────────────────────────────────────────────
 
   private async setStatusIfCurrent(

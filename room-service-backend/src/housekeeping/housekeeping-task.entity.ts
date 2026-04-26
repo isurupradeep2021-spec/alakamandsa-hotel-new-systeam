@@ -42,9 +42,6 @@ export class HousekeepingTask {
   @Column({ length: 20 })
   roomNumber: string;
 
-  @Column({ nullable: true })
-  floor: number;
-
   @Column({ type: 'enum', enum: RoomCondition })
   roomCondition: RoomCondition;
 

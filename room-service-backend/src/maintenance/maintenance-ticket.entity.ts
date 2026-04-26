@@ -34,9 +34,6 @@ export class MaintenanceTicket {
   @Column({ length: 20 })
   roomNumber: string;
 
-  @Column({ nullable: true })
-  floor: number;
-
   @Column({ type: 'enum', enum: FacilityType })
   facilityType: FacilityType;
 

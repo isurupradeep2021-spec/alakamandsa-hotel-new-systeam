@@ -5,6 +5,7 @@ import {
   deleteHousekeepingTask,
   getHousekeepingStats,
   getHousekeepingTasks,
+  getRooms,
   getRoomServiceStaff,
   updateHousekeepingTask,
   updateHousekeepingTaskStatus,
@@ -19,7 +20,6 @@ const housekeeperStatusOptions = ['IN_PROGRESS', 'CLEANED', 'INSPECTED'];
 
 const initialForm = {
   roomNumber: '',
-  floor: '',
   roomCondition: 'OCCUPIED',
   taskType: 'CLEANING',
   status: 'PENDING',
@@ -56,6 +56,7 @@ export default function HousekeepingPage({ embedded = false }) {
   const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [staff, setStaff] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [stats, setStats] = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
@@ -81,6 +82,9 @@ export default function HousekeepingPage({ embedded = false }) {
     getHousekeepingStats()
       .then((res) => setStats(res.data))
       .catch(() => setStats(null));
+    getRooms()
+      .then((res) => setRooms(res.data || []))
+      .catch(() => setRooms([]));
   };
 
   useEffect(() => {
@@ -110,7 +114,6 @@ export default function HousekeepingPage({ embedded = false }) {
     setEditingTask(task);
     setForm({
       roomNumber: task.roomNumber || '',
-      floor: task.floor ?? '',
       roomCondition: task.roomCondition || 'OCCUPIED',
       taskType: task.taskType || 'CLEANING',
       status: task.status || 'PENDING',
@@ -134,12 +137,12 @@ export default function HousekeepingPage({ embedded = false }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!form.roomNumber.trim()) {
-      setError('Room number is required.');
+    if (!form.roomNumber) {
+      setError('Please select a room.');
       return;
     }
     const payload = {
-      roomNumber: form.roomNumber.trim(),
+      roomNumber: form.roomNumber,
       roomCondition: form.roomCondition,
       taskType: form.taskType,
       status: form.status,
@@ -147,7 +150,6 @@ export default function HousekeepingPage({ embedded = false }) {
       notes: form.notes || undefined,
       cleaningNotes: form.cleaningNotes || undefined,
       deadline: form.deadline || undefined,
-      floor: toNumber(form.floor),
       staffId: toNumber(form.staffId),
     };
     setSubmitting(true);
@@ -281,12 +283,7 @@ export default function HousekeepingPage({ embedded = false }) {
               ) : (
                 filteredTasks.map((task) => (
                   <tr key={task.id}>
-                    <td>
-                      <strong>{task.roomNumber}</strong>
-                      <div style={{ fontSize: '12px', color: '#7a8ea4' }}>
-                        Floor {task.floor ?? '-'}
-                      </div>
-                    </td>
+                    <td><strong>{task.roomNumber}</strong></td>
                     <td>{formatLabel(task.roomCondition)}</td>
                     <td>{formatLabel(task.taskType)}</td>
                     <td>
@@ -350,22 +347,20 @@ export default function HousekeepingPage({ embedded = false }) {
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div>
-                  <label htmlFor="hk-room-number">Room Number</label>
-                  <input
+                  <label htmlFor="hk-room-number">Room</label>
+                  <select
                     id="hk-room-number"
                     value={form.roomNumber}
                     onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
                     required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="hk-floor">Floor</label>
-                  <input
-                    id="hk-floor"
-                    type="number"
-                    value={form.floor}
-                    onChange={(e) => setForm({ ...form, floor: e.target.value })}
-                  />
+                  >
+                    <option value="">Select a room…</option>
+                    {rooms.map((r) => (
+                      <option key={r.id} value={r.roomNumber}>
+                        Room {r.roomNumber} — {r.roomStatus}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label htmlFor="hk-room-condition">Room Condition</label>

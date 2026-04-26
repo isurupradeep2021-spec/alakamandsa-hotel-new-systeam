@@ -116,12 +116,6 @@ export class HousekeepingService {
    * Deadline = check-in day at 13:30 (30 min before standard 14:00 check-in).
    */
   createFromBooking(dto: BookingTriggerDto): Promise<HousekeepingTask> {
-    // Derive floor from room number: "205" → 2, "1001" → 10
-    const roomNum = Number.parseInt(dto.roomNumber, 10);
-    const floor = Number.isFinite(roomNum) && roomNum >= 100
-      ? Math.floor(roomNum / 100)
-      : undefined;
-
     // Deadline: check-in date at 13:30 local time
     const deadline = new Date(`${dto.checkInDate}T13:30:00`);
 
@@ -132,7 +126,6 @@ export class HousekeepingService {
 
     const task = this.taskRepository.create({
       roomNumber: dto.roomNumber,
-      floor,
       roomCondition: RoomCondition.PRE_CHECK_IN,
       taskType: HousekeepingTaskType.CLEANING,
       status: HousekeepingStatus.PENDING,

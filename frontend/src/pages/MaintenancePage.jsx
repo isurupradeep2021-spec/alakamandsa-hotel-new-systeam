@@ -5,6 +5,7 @@ import {
   deleteMaintenanceTicket,
   getMaintenanceStats,
   getMaintenanceTickets,
+  getRooms,
   getRoomServiceStaff,
   updateMaintenanceTicket,
   updateMaintenanceTicketStatus,
@@ -18,7 +19,6 @@ const maintenanceStaffStatusOptions = ['IN_PROGRESS', 'RESOLVED', 'CLOSED'];
 
 const initialForm = {
   roomNumber: '',
-  floor: '',
   facilityType: 'AC',
   issueDescription: '',
   status: 'OPEN',
@@ -55,6 +55,7 @@ export default function MaintenancePage({ embedded = false }) {
   const { user } = useAuth();
   const [tickets, setTickets] = useState([]);
   const [staff, setStaff] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [stats, setStats] = useState(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
@@ -81,6 +82,9 @@ export default function MaintenancePage({ embedded = false }) {
     getMaintenanceStats()
       .then((res) => setStats(res.data))
       .catch(() => setStats(null));
+    getRooms()
+      .then((res) => setRooms(res.data || []))
+      .catch(() => setRooms([]));
   };
 
   useEffect(() => {
@@ -111,7 +115,6 @@ export default function MaintenancePage({ embedded = false }) {
     setEditingTicket(ticket);
     setForm({
       roomNumber: ticket.roomNumber || '',
-      floor: ticket.floor ?? '',
       facilityType: ticket.facilityType || 'AC',
       issueDescription: ticket.issueDescription || '',
       status: ticket.status || 'OPEN',
@@ -135,12 +138,12 @@ export default function MaintenancePage({ embedded = false }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!form.roomNumber.trim() || !form.issueDescription.trim()) {
-      setError('Room number and issue description are required.');
+    if (!form.roomNumber || !form.issueDescription.trim()) {
+      setError('Please select a room and enter an issue description.');
       return;
     }
     const payload = {
-      roomNumber: form.roomNumber.trim(),
+      roomNumber: form.roomNumber,
       facilityType: form.facilityType,
       issueDescription: form.issueDescription.trim(),
       status: form.status,
@@ -148,7 +151,6 @@ export default function MaintenancePage({ embedded = false }) {
       resolutionNotes: form.resolutionNotes || undefined,
       partsUsed: form.partsUsed || undefined,
       deadline: form.deadline || undefined,
-      floor: toNumber(form.floor),
       staffId: toNumber(form.staffId),
     };
     setSubmitting(true);
@@ -290,12 +292,7 @@ export default function MaintenancePage({ embedded = false }) {
               ) : (
                 filteredTickets.map((ticket) => (
                   <tr key={ticket.id}>
-                    <td>
-                      <strong>{ticket.roomNumber}</strong>
-                      <div style={{ fontSize: '12px', color: '#7a8ea4' }}>
-                        Floor {ticket.floor ?? '-'}
-                      </div>
-                    </td>
+                    <td><strong>{ticket.roomNumber}</strong></td>
                     <td>{formatLabel(ticket.facilityType)}</td>
                     <td style={{ maxWidth: '200px' }}>
                       <div
@@ -371,22 +368,20 @@ export default function MaintenancePage({ embedded = false }) {
             <form onSubmit={handleSubmit}>
               <div className="form-grid">
                 <div>
-                  <label htmlFor="mt-room-number">Room Number</label>
-                  <input
+                  <label htmlFor="mt-room-number">Room</label>
+                  <select
                     id="mt-room-number"
                     value={form.roomNumber}
                     onChange={(e) => setForm({ ...form, roomNumber: e.target.value })}
                     required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="mt-floor">Floor</label>
-                  <input
-                    id="mt-floor"
-                    type="number"
-                    value={form.floor}
-                    onChange={(e) => setForm({ ...form, floor: e.target.value })}
-                  />
+                  >
+                    <option value="">Select a room…</option>
+                    {rooms.map((r) => (
+                      <option key={r.id} value={r.roomNumber}>
+                        Room {r.roomNumber} — {r.roomStatus}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label htmlFor="mt-facility">Facility Type</label>
