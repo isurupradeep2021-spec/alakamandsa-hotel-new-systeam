@@ -1,4 +1,5 @@
 import {
+  IsEmail,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -45,5 +46,9 @@ export class CreateStaffDto {
   @IsNumber()
   @Min(0)
   overtimeRate?: number;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
 }
 
