@@ -80,8 +80,18 @@ export default function OperationalAnalyticsPage({ embedded = false }) {
 
   // month picker helpers
   const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
   const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i);
 
@@ -159,10 +169,7 @@ export default function OperationalAnalyticsPage({ embedded = false }) {
                     value={hk.inProgress}
                     accent="blue"
                   />
-                  <StatCard
-                    label="Pending"
-                    value={hk.pending}
-                  />
+                  <StatCard label="Pending" value={hk.pending} />
                   <StatCard
                     label="Overdue"
                     value={hk.overdue}
@@ -187,18 +194,27 @@ export default function OperationalAnalyticsPage({ embedded = false }) {
                   </div>
                   <div className="oa-chart-card">
                     <h3>By Room Condition</h3>
-                    <BarChart data={hk.byRoomCondition} colorClass="oa-bar--purple" />
+                    <BarChart
+                      data={hk.byRoomCondition}
+                      colorClass="oa-bar--purple"
+                    />
                   </div>
                   <div className="oa-chart-card">
                     <h3>By Priority</h3>
-                    <BarChart data={hk.byPriority} colorClass="oa-bar--orange" />
+                    <BarChart
+                      data={hk.byPriority}
+                      colorClass="oa-bar--orange"
+                    />
                   </div>
                 </div>
 
                 {Object.keys(hk.staffWorkload ?? {}).length > 0 && (
                   <div className="oa-chart-card oa-chart-card--wide">
                     <h3>Staff Workload (completed tasks)</h3>
-                    <BarChart data={hk.staffWorkload} colorClass="oa-bar--teal" />
+                    <BarChart
+                      data={hk.staffWorkload}
+                      colorClass="oa-bar--teal"
+                    />
                   </div>
                 )}
               </>
@@ -230,25 +246,36 @@ export default function OperationalAnalyticsPage({ embedded = false }) {
                   />
                   <StatCard label="Open" value={mt.open} />
                   <StatCard
-                    label="SLA Breaches"
-                    value={mt.slaBreaches}
-                    accent={mt.slaBreaches > 0 ? "red" : undefined}
+                    label="Overdue"
+                    value={mt.overdue}
+                    accent={mt.overdue > 0 ? "red" : undefined}
                   />
                   <StatCard
                     label="Avg Resolution"
                     value={fmtHours(mt.avgResolutionHours)}
                     accent="purple"
                   />
+                  <StatCard
+                    label="On-Time Rate"
+                    value={mt.onTimeRate != null ? `${mt.onTimeRate}%` : "—"}
+                    accent="green"
+                  />
                 </div>
 
                 <div className="oa-charts-row">
                   <div className="oa-chart-card">
                     <h3>By Facility Type</h3>
-                    <BarChart data={mt.byFacilityType} colorClass="oa-bar--blue" />
+                    <BarChart
+                      data={mt.byFacilityType}
+                      colorClass="oa-bar--blue"
+                    />
                   </div>
                   <div className="oa-chart-card">
                     <h3>By Priority</h3>
-                    <BarChart data={mt.byPriority} colorClass="oa-bar--orange" />
+                    <BarChart
+                      data={mt.byPriority}
+                      colorClass="oa-bar--orange"
+                    />
                   </div>
                 </div>
 
@@ -267,7 +294,9 @@ export default function OperationalAnalyticsPage({ embedded = false }) {
                           <tr key={r.room}>
                             <td>{r.room}</td>
                             <td>
-                              <span className="oa-badge oa-badge--red">{r.count}</span>
+                              <span className="oa-badge oa-badge--red">
+                                {r.count}
+                              </span>
                             </td>
                           </tr>
                         ))}
@@ -279,7 +308,10 @@ export default function OperationalAnalyticsPage({ embedded = false }) {
                 {Object.keys(mt.staffWorkload ?? {}).length > 0 && (
                   <div className="oa-chart-card oa-chart-card--wide">
                     <h3>Staff Workload (resolved tickets)</h3>
-                    <BarChart data={mt.staffWorkload} colorClass="oa-bar--blue" />
+                    <BarChart
+                      data={mt.staffWorkload}
+                      colorClass="oa-bar--blue"
+                    />
                   </div>
                 )}
               </>

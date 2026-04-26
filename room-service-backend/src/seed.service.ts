@@ -246,7 +246,7 @@ export class SeedService implements OnApplicationBootstrap {
         roomNumber: '301', facilityType: FacilityType.OTHER,
         issueDescription: 'Balcony sliding door lock faulty. Door cannot be secured from inside.',
         status: MaintenanceStatus.OPEN, priority: Priority.HIGH,
-        staffId: undefined, deadline: daysLater(0),
+        staffId: undefined, deadline: daysLater(1),
         resolutionNotes: undefined, partsUsed: undefined,
       },
       {

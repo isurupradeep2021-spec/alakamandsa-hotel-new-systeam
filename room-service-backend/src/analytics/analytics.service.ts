@@ -26,10 +26,12 @@ export class AnalyticsService {
     const [hkTasks, mtTickets] = await Promise.all([
       this.hkRepo
         .createQueryBuilder('t')
+        .leftJoinAndSelect('t.staff', 'staff')
         .where('t.createdAt >= :start AND t.createdAt < :end', { start, end })
         .getMany(),
       this.mtRepo
         .createQueryBuilder('t')
+        .leftJoinAndSelect('t.staff', 'staff')
         .where('t.createdAt >= :start AND t.createdAt < :end', { start, end })
         .getMany(),
     ]);
@@ -71,16 +73,24 @@ export class AnalyticsService {
         ? Math.round((resolutionTimes.reduce((s, v) => s + v, 0) / resolutionTimes.length) * 10) / 10
         : null;
 
-    // On-time rate: completed before deadline
-    const withDeadline = completed.filter((t) => t.deadline && t.completedAt);
-    const onTime = withDeadline.filter(
-      (t) => new Date(t.completedAt) <= new Date(t.deadline),
+    // On-time rate: denominator = completed tasks + overdue-but-not-completed tasks
+    // This ensures missed deadlines reduce the rate, not just completed ones
+    const now = new Date();
+    const dueOrClosed = tasks.filter(
+      (t) =>
+        t.deadline &&
+        (
+          [HousekeepingStatus.CLEANED, HousekeepingStatus.INSPECTED].includes(t.status) ||
+          new Date(t.deadline) < now
+        ),
+    );
+    const onTime = dueOrClosed.filter(
+      (t) => t.completedAt && new Date(t.completedAt) <= new Date(t.deadline),
     ).length;
     const onTimeRate =
-      withDeadline.length > 0 ? Math.round((onTime / withDeadline.length) * 100) : null;
+      dueOrClosed.length > 0 ? Math.round((onTime / dueOrClosed.length) * 100) : null;
 
     // Overdue: deadline passed but not completed
-    const now = new Date();
     const overdue = tasks.filter(
       (t) =>
         t.deadline &&
@@ -138,12 +148,27 @@ export class AnalyticsService {
 
     // SLA breach: deadline passed but not resolved/closed
     const now = new Date();
-    const slaBreaches = tickets.filter(
+    const overdue = tickets.filter(
       (t) =>
         t.deadline &&
         new Date(t.deadline) < now &&
         ![MaintenanceStatus.RESOLVED, MaintenanceStatus.CLOSED].includes(t.status),
     ).length;
+
+    // On-time rate: denominator = resolved + overdue-but-not-resolved
+    const dueOrClosed = tickets.filter(
+      (t) =>
+        t.deadline &&
+        (
+          [MaintenanceStatus.RESOLVED, MaintenanceStatus.CLOSED].includes(t.status) ||
+          new Date(t.deadline) < now
+        ),
+    );
+    const onTime = dueOrClosed.filter(
+      (t) => t.resolvedAt && new Date(t.resolvedAt) <= new Date(t.deadline),
+    ).length;
+    const onTimeRate =
+      dueOrClosed.length > 0 ? Math.round((onTime / dueOrClosed.length) * 100) : null;
 
     // Recurring faults: group by facilityType
     const byFacilityType = this.countByField(tickets, 'facilityType');
@@ -171,7 +196,8 @@ export class AnalyticsService {
       resolved: resolved.length,
       open,
       inProgress,
-      slaBreaches,
+      overdue,
+      onTimeRate,
       avgResolutionHours,
       byFacilityType,
       byPriority,
