@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import AiAssistantWidget from "./AiAssistantWidget";
 
 const menuByRole = {
   SUPER_ADMIN: [
@@ -117,6 +118,7 @@ function Layout() {
           </div>
         </header>
         <Outlet />
+        <AiAssistantWidget />
       </main>
     </div>
   );

@@ -9,6 +9,7 @@ import {
 } from '../eventBookingUtils';
 import {
   createEventBooking,
+  downloadEventBookingPdf,
   getEventBookings
 } from '../api/service';
 import { eventHalls } from '../eventHallsData';
@@ -28,6 +29,8 @@ function EventManagerBookingPage() {
   const [pageError, setPageError] = useState('');
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
+  const [successModalBooking, setSuccessModalBooking] = useState(null);
+  const [printingBookingId, setPrintingBookingId] = useState(null);
 
   const durationHours = useMemo(
     () => calculateDurationHours(form.eventDateTime, form.endDateTime),
@@ -66,6 +69,35 @@ function EventManagerBookingPage() {
     setForm(createEmptyEventForm(null));
     setFormError('');
     setFormSuccess('');
+  };
+
+  const openPdfForPrint = async (bookingId) => {
+    setPrintingBookingId(bookingId);
+    setPageError('');
+
+    try {
+      const response = await downloadEventBookingPdf(bookingId);
+      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      const pdfUrl = window.URL.createObjectURL(pdfBlob);
+      const printWindow = window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+
+      if (!printWindow) {
+        const downloadLink = document.createElement('a');
+        downloadLink.href = pdfUrl;
+        downloadLink.download = `event-booking-${bookingId}.pdf`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+      }
+
+      setTimeout(() => {
+        window.URL.revokeObjectURL(pdfUrl);
+      }, 60000);
+    } catch (error) {
+      setPageError(error.response?.data?.message || error.message || 'Failed to open booking PDF');
+    } finally {
+      setPrintingBookingId(null);
+    }
   };
 
   const setField = (field, value) => {
@@ -115,7 +147,7 @@ function EventManagerBookingPage() {
         throw new Error('End date & time must be after starting date & time');
       }
 
-      await createEventBooking({
+      const response = await createEventBooking({
         ...form,
         durationHours,
         totalPrice,
@@ -123,8 +155,9 @@ function EventManagerBookingPage() {
       });
 
       setForm(createEmptyEventForm(null));
-      setFormSuccess('Event booking created successfully.');
+      setFormSuccess('Event booking created successfully. A confirmation email is being sent to the customer email address.');
       setFormError('');
+      setSuccessModalBooking(response.data || null);
       await loadRows();
     } catch (error) {
       setFormError(error.response?.data?.message || error.message || 'Failed to create event booking');
@@ -168,6 +201,64 @@ function EventManagerBookingPage() {
       </div>
 
       <EventManagerRecordsTable rows={latestRows} loading={loading} />
+
+      {successModalBooking && (
+        <div className="modal-backdrop">
+          <div className="modal-card event-success-modal">
+            <div className="event-success-modal__header">
+              <div>
+                <p className="event-panel-eyebrow">Booking Created</p>
+                <h3>Event booking created successfully</h3>
+              </div>
+              <button
+                type="button"
+                className="btn ghost small"
+                onClick={() => setSuccessModalBooking(null)}
+              >
+                Close
+              </button>
+            </div>
+
+            <p className="event-success-modal__message">
+              Booking #{successModalBooking.id} was saved successfully. A confirmation email is being sent to{' '}
+              <strong>{successModalBooking.customerEmail}</strong>.
+            </p>
+
+            <div className="event-success-modal__summary">
+              <div>
+                <small>Customer</small>
+                <strong>{successModalBooking.customerName}</strong>
+              </div>
+              <div>
+                <small>Hall</small>
+                <strong>{successModalBooking.hallName}</strong>
+              </div>
+              <div>
+                <small>Status</small>
+                <strong>{successModalBooking.status}</strong>
+              </div>
+            </div>
+
+            <div className="form-actions">
+              <button
+                type="button"
+                className="btn primary"
+                onClick={() => openPdfForPrint(successModalBooking.id)}
+                disabled={printingBookingId === successModalBooking.id}
+              >
+                {printingBookingId === successModalBooking.id ? 'Preparing PDF...' : 'Print Booking PDF'}
+              </button>
+              <button
+                type="button"
+                className="btn secondary"
+                onClick={() => setSuccessModalBooking(null)}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="HotelPayrollApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+    <envs>
+      <env name="OPENAI_API_KEY" value="&#9; sk-...O_8A" />
+    </envs>
+    <module name="hotel-payroll-backend" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="com.hotelpayroll.HotelPayrollApplication" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
