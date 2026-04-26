@@ -6,11 +6,13 @@ import { UserAccount, StaffDetail } from './staff/staff.entity';
 import { StaffContact } from './staff/staff-contact.entity';
 import { HousekeepingTask } from './housekeeping/housekeeping-task.entity';
 import { MaintenanceTicket } from './maintenance/maintenance-ticket.entity';
+import { Room } from './rooms/room.entity';
 import { StaffModule } from './staff/staff.module';
 import { HousekeepingModule } from './housekeeping/housekeeping.module';
 import { MaintenanceModule } from './maintenance/maintenance.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { SlaModule } from './sla/sla.module';
+import { RoomsModule } from './rooms/rooms.module';
 import { SeedService } from './seed.service';
 
 @Module({
@@ -26,7 +28,7 @@ import { SeedService } from './seed.service';
       username: process.env.DB_USER || 'root',
       password: process.env.DB_PASS || '123456789',
       database: process.env.DB_NAME || 'hotel_management',
-      entities: [UserAccount, StaffDetail, StaffContact, HousekeepingTask, MaintenanceTicket],
+      entities: [UserAccount, StaffDetail, StaffContact, HousekeepingTask, MaintenanceTicket, Room],
       synchronize: true,
     }),
     TypeOrmModule.forFeature([UserAccount, StaffDetail, StaffContact, HousekeepingTask, MaintenanceTicket]),
@@ -36,6 +38,7 @@ import { SeedService } from './seed.service';
     MaintenanceModule,
     AnalyticsModule,
     SlaModule,
+    RoomsModule,
   ],
   providers: [SeedService],
 })

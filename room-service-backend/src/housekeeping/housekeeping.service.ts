@@ -12,6 +12,7 @@ import { UserAccount } from '../staff/staff.entity';
 import { CreateHousekeepingTaskDto } from './dto/create-housekeeping-task.dto';
 import { UpdateHousekeepingTaskDto } from './dto/update-housekeeping-task.dto';
 import { BookingTriggerDto } from './dto/booking-trigger.dto';
+import { RoomSyncService } from '../rooms/room-sync.service';
 
 interface RequestUser {
   username: string;
@@ -33,11 +34,15 @@ export class HousekeepingService {
     private readonly taskRepository: Repository<HousekeepingTask>,
     @InjectRepository(UserAccount)
     private readonly staffRepository: Repository<UserAccount>,
+    private readonly roomSync: RoomSyncService,
   ) {}
 
-  create(dto: CreateHousekeepingTaskDto): Promise<HousekeepingTask> {
+  async create(dto: CreateHousekeepingTaskDto): Promise<HousekeepingTask> {
     const task = this.taskRepository.create(dto);
-    return this.taskRepository.save(task);
+    const saved = await this.taskRepository.save(task);
+    // Set room to CLEANING if currently AVAILABLE (only for actual cleaning tasks)
+    await this.roomSync.setCleaningIfAvailable(saved.roomNumber);
+    return saved;
   }
 
   async findAll(requestUser?: RequestUser): Promise<HousekeepingTask[]> {
@@ -64,6 +69,7 @@ export class HousekeepingService {
     Object.assign(task, dto);
     if (dto.status && COMPLETED_STATUSES.has(dto.status) && !wasCompleted) {
       task.completedAt = new Date();
+      await this.roomSync.clearCleaningStatus(task.roomNumber);
     }
     return this.taskRepository.save(task);
   }
@@ -86,7 +92,11 @@ export class HousekeepingService {
     if (COMPLETED_STATUSES.has(task.status) && !task.completedAt) {
       task.completedAt = new Date();
     }
-    return this.taskRepository.save(task);
+    const saved = await this.taskRepository.save(task);
+    if (COMPLETED_STATUSES.has(task.status)) {
+      await this.roomSync.clearCleaningStatus(task.roomNumber);
+    }
+    return saved;
   }
 
   async getStats(): Promise<Record<string, number>> {

@@ -59,3 +59,9 @@ export const getMonthlyAnalytics = (year, month) =>
 
 export const getTrendAnalytics = (months = 6) =>
   roomServiceHttp.get("/analytics/trends", { params: { months } });
+
+// ── Room maintenance check (public — no auth) ─────────────────────────────
+export const checkRoomMaintenance = (roomNumber) =>
+  roomServiceHttp.get(
+    `/maintenance/check-room/${encodeURIComponent(roomNumber)}`,
+  );
