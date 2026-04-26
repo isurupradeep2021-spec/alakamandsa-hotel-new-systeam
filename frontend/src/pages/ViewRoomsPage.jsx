@@ -25,7 +25,7 @@ function ViewRoomsPage() {
                 }
 
                 const apiMessage = err?.response?.data?.message;
-                setError(apiMessage || "Failed to load rooms. Please ensure backend is running on port 8088.");
+                setError(apiMessage || "Failed to load rooms. Please check your login session and backend connection.");
             })
             .finally(() => setLoading(false));
     };

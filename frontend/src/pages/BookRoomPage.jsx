@@ -374,7 +374,7 @@ function BookRoomPage() {
     };
 
     const canRequestCancellation = (bookingStatus) => {
-        return bookingStatus === "BOOKED" || bookingStatus === "CHECKED_IN";
+        return bookingStatus === "BOOKED";
     };
 
     const isApprovedCancellation = (bookingStatus) => {

@@ -33,6 +33,8 @@ export const getRoomBookings = () => http.get("/room-bookings");
 export const getMyRoomBookings = () => http.get("/room-bookings/my");
 export const updateRoomBooking = (id, payload) => http.put(`/room-bookings/${id}`, payload);
 export const deleteRoomBooking = (id) => http.delete(`/room-bookings/${id}`);
+export const checkInRoomBooking = (id) => http.patch(`/room-bookings/${id}/check-in`);
+export const checkOutRoomBooking = (id) => http.patch(`/room-bookings/${id}/check-out`);
 export const requestRoomBookingCancellation = (id) =>
   http.patch(`/room-bookings/${id}/request-cancellation`);
 export const approveRoomBookingCancellation = (id) =>

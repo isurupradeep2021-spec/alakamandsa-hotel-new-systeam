@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+    checkInRoomBooking,
+    checkOutRoomBooking,
     approveRoomBookingCancellation,
     createRoomBooking,
     createRoomRecord,
@@ -47,6 +49,7 @@ function RoomManagementPage() {
     const [bookingError, setBookingError] = useState("");
     const [editingRoomId, setEditingRoomId] = useState(null);
     const [editingBookingId, setEditingBookingId] = useState(null);
+    const [bookingActionLoadingId, setBookingActionLoadingId] = useState(null);
 
     const roomOverview = useMemo(() => {
         const totalRooms = rooms.reduce((sum, room) => {
@@ -259,6 +262,40 @@ function RoomManagementPage() {
         } catch (err) {
             const apiMsg = err?.response?.data?.message;
             setBookingError(apiMsg || "Failed to approve cancellation request");
+        }
+    };
+
+    const handleCheckIn = async (id) => {
+        setBookingMessage("");
+        setBookingError("");
+        setBookingActionLoadingId(id);
+
+        try {
+            await checkInRoomBooking(id);
+            setBookingMessage("Booking checked in successfully");
+            await loadLatestRecords();
+        } catch (err) {
+            const apiMsg = err?.response?.data?.message;
+            setBookingError(apiMsg || "Failed to check in booking");
+        } finally {
+            setBookingActionLoadingId(null);
+        }
+    };
+
+    const handleCheckOut = async (id) => {
+        setBookingMessage("");
+        setBookingError("");
+        setBookingActionLoadingId(id);
+
+        try {
+            await checkOutRoomBooking(id);
+            setBookingMessage("Booking checked out successfully");
+            await loadLatestRecords();
+        } catch (err) {
+            const apiMsg = err?.response?.data?.message;
+            setBookingError(apiMsg || "Failed to check out booking");
+        } finally {
+            setBookingActionLoadingId(null);
         }
     };
 
@@ -530,6 +567,26 @@ function RoomManagementPage() {
                                                     <button className="btn danger small" type="button" onClick={() => removeBooking(booking.id)}>
                                                         Delete
                                                     </button>
+                                                    {booking.bookingStatus === "BOOKED" && (
+                                                        <button
+                                                            className="btn small"
+                                                            type="button"
+                                                            disabled={bookingActionLoadingId === booking.id}
+                                                            onClick={() => handleCheckIn(booking.id)}
+                                                        >
+                                                            Check-in
+                                                        </button>
+                                                    )}
+                                                    {booking.bookingStatus === "CHECKED_IN" && (
+                                                        <button
+                                                            className="btn small"
+                                                            type="button"
+                                                            disabled={bookingActionLoadingId === booking.id}
+                                                            onClick={() => handleCheckOut(booking.id)}
+                                                        >
+                                                            Check-out
+                                                        </button>
+                                                    )}
                                                     {booking.bookingStatus === "CANCELLATION_REQUESTED" && (
                                                         <button className="btn small" type="button" onClick={() => approveCancellation(booking.id)}>
                                                             Approve Cancel

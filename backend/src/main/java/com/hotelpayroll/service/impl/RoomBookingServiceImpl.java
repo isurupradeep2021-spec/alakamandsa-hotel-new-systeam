@@ -81,6 +81,36 @@ public class RoomBookingServiceImpl implements RoomBookingService {
     }
 
     @Override
+    public RoomBookingResponse checkIn(Long id) {
+        RoomBooking booking = roomBookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Room booking not found"));
+
+        if (booking.getBookingStatus() != RoomBookingStatus.BOOKED) {
+            throw new BadRequestException("Only booked reservations can be checked in");
+        }
+
+        booking.setBookingStatus(RoomBookingStatus.CHECKED_IN);
+        RoomBooking saved = roomBookingRepository.save(booking);
+        auditService.log("CHECK_IN", "RoomBooking", id.toString(), getCurrentUsername(), "Checked in room booking");
+        return toResponse(saved);
+    }
+
+    @Override
+    public RoomBookingResponse checkOut(Long id) {
+        RoomBooking booking = roomBookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Room booking not found"));
+
+        if (booking.getBookingStatus() != RoomBookingStatus.CHECKED_IN) {
+            throw new BadRequestException("Only checked-in reservations can be checked out");
+        }
+
+        booking.setBookingStatus(RoomBookingStatus.CHECKED_OUT);
+        RoomBooking saved = roomBookingRepository.save(booking);
+        auditService.log("CHECK_OUT", "RoomBooking", id.toString(), getCurrentUsername(), "Checked out room booking");
+        return toResponse(saved);
+    }
+
+    @Override
     public RoomBookingResponse requestCancellation(Long id) {
         RoomBooking booking = roomBookingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Room booking not found"));

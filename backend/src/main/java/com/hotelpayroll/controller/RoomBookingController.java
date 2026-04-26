@@ -51,6 +51,18 @@ public class RoomBookingController {
     }
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','MANAGER')")
+    @PatchMapping("/{id}/check-in")
+    public RoomBookingResponse checkIn(@PathVariable Long id) {
+        return roomBookingService.checkIn(id);
+    }
+
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','MANAGER')")
+    @PatchMapping("/{id}/check-out")
+    public RoomBookingResponse checkOut(@PathVariable Long id) {
+        return roomBookingService.checkOut(id);
+    }
+
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','MANAGER')")
     @PatchMapping("/{id}/approve-cancellation")
     public RoomBookingResponse approveCancellation(@PathVariable Long id) {
         return roomBookingService.approveCancellation(id);
