@@ -1,19 +1,5 @@
 /**
- * Room Service – System / E2E Tests
- *
- * Boots the full NestJS application against a dedicated test MySQL database
- * and fires real HTTP requests through supertest.
- *
- * Auth strategy: JwtAuthGuard is replaced with a lightweight mock that reads
- * the role from the `x-role` request header so tests never touch the users
- * table. RolesGuard remains real and enforces role-based access control.
- *
- * Prerequisites
- * ─────────────
- *   1. `.env.test` exists at the root of room-service-backend/ (already created).
- *   2. `npm install --save-dev cross-env` has been run (one-time).
- *   3. MySQL is running and the credentials in .env.test are valid.
- *
+ * System / E2E Test
  * Run with:  npm run test:e2e
  */
 
