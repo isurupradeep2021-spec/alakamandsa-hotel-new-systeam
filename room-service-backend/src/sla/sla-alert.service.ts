@@ -34,7 +34,7 @@ export class SlaAlertService {
    * Runs every 30 minutes.
    * Finds overdue tasks/tickets with an assigned staff and unsent alert, sends email.
    */
-  @Cron(CronExpression.EVERY_30_MINUTES)
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async checkOverdue(): Promise<void> {
     this.logger.log('Checking overdue SLA items…');
     const now = new Date();
