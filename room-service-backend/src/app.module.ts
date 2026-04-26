@@ -19,17 +19,19 @@ import { SeedService } from './seed.service';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: process.env.NODE_ENV === 'test' ? '.env.test' : '.env',
     }),
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: process.env.DB_HOST || 'localhost',
-      port: Number.parseInt(process.env.DB_PORT || '3306', 10),
-      username: process.env.DB_USER || 'root',
-      password: process.env.DB_PASS || '123456789',
-      database: process.env.DB_NAME || 'hotel_management',
-      entities: [UserAccount, StaffDetail, StaffContact, HousekeepingTask, MaintenanceTicket, Room],
-      synchronize: true,
+    TypeOrmModule.forRootAsync({
+      useFactory: () => ({
+        type: 'mysql' as const,
+        host: process.env.DB_HOST || 'localhost',
+        port: Number.parseInt(process.env.DB_PORT || '3306', 10),
+        username: process.env.DB_USER || 'root',
+        password: process.env.DB_PASS,
+        database: process.env.DB_NAME || 'hotel_management',
+        entities: [UserAccount, StaffDetail, StaffContact, HousekeepingTask, MaintenanceTicket, Room],
+        synchronize: true,
+      }),
     }),
     TypeOrmModule.forFeature([UserAccount, StaffDetail, StaffContact, HousekeepingTask, MaintenanceTicket]),
     ScheduleModule.forRoot(),
