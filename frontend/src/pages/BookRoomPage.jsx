@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useLocation } from "react-router-dom";
 import { createRoomBooking, getMyRoomBookings, getRooms, requestRoomBookingCancellation } from "../api/service";
+import { checkRoomMaintenance, triggerBookingHousekeeping } from "../api/roomService";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const ROOM_TYPE_GUEST_LIMITS = {
@@ -145,6 +146,17 @@ function BookRoomPage() {
         }
 
         try {
+            // Block booking if room has an active maintenance ticket
+            try {
+                const maintenanceCheck = await checkRoomMaintenance(roomNumber);
+                if (maintenanceCheck?.data?.blocked) {
+                    setBookingError(maintenanceCheck.data.reason || `Room ${roomNumber} is currently under maintenance and cannot be booked.`);
+                    return;
+                }
+            } catch {
+                // Non-critical — if the check service is unavailable, don't block the booking
+            }
+
             const res = await createRoomBooking({
                 bookingCustomer,
                 customerEmail,
@@ -158,6 +170,16 @@ function BookRoomPage() {
             if (savedBooking?.id) {
                 setMyBookings((prev) => [savedBooking, ...prev.filter((item) => item.id !== savedBooking.id)]);
                 await downloadBookingQrPng(savedBooking);
+
+                // Auto-create a PRE_CHECK_IN housekeeping task — fire and forget
+                triggerBookingHousekeeping({
+                    roomNumber,
+                    checkInDate,
+                    bookingCustomer,
+                    bookingId: String(savedBooking.bookingSequence ?? savedBooking.id),
+                }).catch(() => {
+                    // Non-critical: silently swallow if NestJS backend is unavailable
+                });
             }
             setBookingMessage(`Booking created successfully for Room ${roomNumber}.`);
             setBookingForm({

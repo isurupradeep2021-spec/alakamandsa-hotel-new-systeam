@@ -4,10 +4,9 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
-  CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Staff } from '../staff/staff.entity';
+import { UserAccount } from '../staff/staff.entity';
 import { Priority } from '../housekeeping/housekeeping-task.entity';
 
 export enum FacilityType {
@@ -34,9 +33,6 @@ export class MaintenanceTicket {
   @Column({ length: 20 })
   roomNumber: string;
 
-  @Column({ nullable: true })
-  floor: number;
-
   @Column({ type: 'enum', enum: FacilityType })
   facilityType: FacilityType;
 
@@ -53,9 +49,9 @@ export class MaintenanceTicket {
   @Column({ type: 'enum', enum: Priority, default: Priority.MEDIUM })
   priority: Priority;
 
-  @ManyToOne(() => Staff, { nullable: true, eager: true, onDelete: 'SET NULL' })
+  @ManyToOne(() => UserAccount, { nullable: true, eager: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'staffId' })
-  staff: Staff;
+  staff: UserAccount;
 
   @Column({ nullable: true })
   staffId: number;
@@ -69,7 +65,13 @@ export class MaintenanceTicket {
   @Column({ type: 'text', nullable: true })
   partsUsed: string;
 
-  @CreateDateColumn()
+  @Column({ name: 'resolved_at', type: 'datetime', nullable: true })
+  resolvedAt: Date;
+
+  @Column({ name: 'alert_sent', default: false })
+  alertSent: boolean;
+
+  @Column({ name: 'created_at', type: 'datetime', nullable: false, default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
   @UpdateDateColumn()

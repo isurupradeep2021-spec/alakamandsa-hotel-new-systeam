@@ -11,21 +11,31 @@ const menuByRole = {
     { to: "/menu-management", label: "Menu Management" },
     { to: "/table-reservations", label: "Table Reservations" },
     { to: "/event-management", label: "Event Management" },
-    { to: "/profile", label: "My Profile" },
+    { to: '/housekeeping-maintenance', label: 'Housekeeping & Maintenance' },
+    { to: '/profile', label: 'My Profile' },
   ],
   MANAGER: [
-    { to: "/dashboard", label: "Dashboard" },
-    { to: "/rooms", label: "Room Management" },
-    { to: "/staff", label: "Staff Management" },
-    { to: "/payroll", label: "Payroll System" },
-    { to: "/menu-management", label: "Menu Management" },
-    { to: "/table-reservations", label: "Table Reservations" },
-    { to: "/event-management", label: "Event Management" },
-    { to: "/profile", label: "My Profile" },
+    { to: '/dashboard', label: 'Dashboard' },
+    { to: '/rooms', label: 'Room Management' },
+    { to: '/staff', label: 'Staff Management' },
+    { to: '/payroll', label: 'Payroll System' },
+    { to: '/menu-management', label: 'Menu Management' },
+    { to: '/table-reservations', label: 'Table Reservations' },
+    { to: '/event-management', label: 'Event Management' },
+    { to: '/housekeeping-maintenance', label: 'Housekeeping & Maintenance' },
+    { to: '/profile', label: 'My Profile' },
   ],
   STAFF_MEMBER: [
     { to: "/my-payroll", label: "My Salary" },
     { to: "/profile", label: "My Profile" },
+  ],
+  HOUSEKEEPER: [
+    { to: '/housekeeping-maintenance/housekeeping-tickets', label: 'Housekeeping Tickets' },
+    { to: '/profile', label: 'My Profile' }
+  ],
+  MAINTENANCE_STAFF: [
+    { to: '/housekeeping-maintenance/maintenance-tickets', label: 'Maintenance Tickets' },
+    { to: '/profile', label: 'My Profile' }
   ],
   CUSTOMER: [
     { to: "/dashboard", label: "Customer Dashboard" },

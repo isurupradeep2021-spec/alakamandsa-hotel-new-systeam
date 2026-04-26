@@ -16,10 +16,6 @@ export class CreateMaintenanceTicketDto {
   @Length(1, 20)
   roomNumber: string;
 
-  @IsOptional()
-  @IsInt()
-  floor?: number;
-
   @IsEnum(FacilityType)
   facilityType: FacilityType;
 

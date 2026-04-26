@@ -13,10 +13,6 @@ export class UpdateHousekeepingTaskDto {
   roomNumber?: string;
 
   @IsOptional()
-  @IsInt()
-  floor?: number;
-
-  @IsOptional()
   @IsEnum(RoomCondition)
   roomCondition?: RoomCondition;
 

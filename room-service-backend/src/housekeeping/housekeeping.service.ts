@@ -1,13 +1,21 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { HousekeepingTask, HousekeepingStatus } from './housekeeping-task.entity';
-import { Staff } from '../staff/staff.entity';
+import {
+  HousekeepingTask,
+  HousekeepingStatus,
+  HousekeepingTaskType,
+  Priority,
+  RoomCondition,
+} from './housekeeping-task.entity';
+import { UserAccount } from '../staff/staff.entity';
 import { CreateHousekeepingTaskDto } from './dto/create-housekeeping-task.dto';
 import { UpdateHousekeepingTaskDto } from './dto/update-housekeeping-task.dto';
+import { BookingTriggerDto } from './dto/booking-trigger.dto';
+import { RoomSyncService } from '../rooms/room-sync.service';
 
 interface RequestUser {
-  email: string;
+  username: string;
   role: string;
 }
 
@@ -17,23 +25,29 @@ const HOUSEKEEPER_ALLOWED_STATUSES = [
   HousekeepingStatus.INSPECTED,
 ];
 
+const COMPLETED_STATUSES = new Set([HousekeepingStatus.CLEANED, HousekeepingStatus.INSPECTED]);
+
 @Injectable()
 export class HousekeepingService {
   constructor(
     @InjectRepository(HousekeepingTask)
     private readonly taskRepository: Repository<HousekeepingTask>,
-    @InjectRepository(Staff)
-    private readonly staffRepository: Repository<Staff>,
+    @InjectRepository(UserAccount)
+    private readonly staffRepository: Repository<UserAccount>,
+    private readonly roomSync: RoomSyncService,
   ) {}
 
-  create(dto: CreateHousekeepingTaskDto): Promise<HousekeepingTask> {
+  async create(dto: CreateHousekeepingTaskDto): Promise<HousekeepingTask> {
     const task = this.taskRepository.create(dto);
-    return this.taskRepository.save(task);
+    const saved = await this.taskRepository.save(task);
+    // Set room to CLEANING if currently AVAILABLE (only for actual cleaning tasks)
+    await this.roomSync.setCleaningIfAvailable(saved.roomNumber);
+    return saved;
   }
 
   async findAll(requestUser?: RequestUser): Promise<HousekeepingTask[]> {
     if (requestUser?.role === 'HOUSEKEEPER') {
-      const staff = await this.staffRepository.findOne({ where: { email: requestUser.email } });
+      const staff = await this.staffRepository.findOne({ where: { username: requestUser.username } });
       if (!staff) return [];
       return this.taskRepository.find({
         where: { staffId: Number(staff.id) },
@@ -51,7 +65,12 @@ export class HousekeepingService {
 
   async update(id: number, dto: UpdateHousekeepingTaskDto): Promise<HousekeepingTask> {
     const task = await this.findOne(id);
+    const wasCompleted = COMPLETED_STATUSES.has(task.status);
     Object.assign(task, dto);
+    if (dto.status && COMPLETED_STATUSES.has(dto.status) && !wasCompleted) {
+      task.completedAt = new Date();
+      await this.roomSync.clearCleaningStatus(task.roomNumber);
+    }
     return this.taskRepository.save(task);
   }
 
@@ -65,12 +84,19 @@ export class HousekeepingService {
       throw new ForbiddenException(`Status must be one of: ${HOUSEKEEPER_ALLOWED_STATUSES.join(', ')}`);
     }
     const task = await this.findOne(id);
-    const staff = await this.staffRepository.findOne({ where: { email: requestUser.email } });
+    const staff = await this.staffRepository.findOne({ where: { username: requestUser.username } });
     if (!staff || Number(task.staffId) !== Number(staff.id)) {
       throw new ForbiddenException('You can only update tasks assigned to you.');
     }
     task.status = status as HousekeepingStatus;
-    return this.taskRepository.save(task);
+    if (COMPLETED_STATUSES.has(task.status) && !task.completedAt) {
+      task.completedAt = new Date();
+    }
+    const saved = await this.taskRepository.save(task);
+    if (COMPLETED_STATUSES.has(task.status)) {
+      await this.roomSync.clearCleaningStatus(task.roomNumber);
+    }
+    return saved;
   }
 
   async getStats(): Promise<Record<string, number>> {
@@ -82,5 +108,31 @@ export class HousekeepingService {
       cleaned: tasks.filter((t) => t.status === 'CLEANED').length,
       inspected: tasks.filter((t) => t.status === 'INSPECTED').length,
     };
+  }
+
+  /**
+   * Automatically called when a room booking is confirmed.
+   * Creates an unassigned PRE_CHECK_IN CLEANING task with HIGH priority.
+   * Deadline = check-in day at 13:30 (30 min before standard 14:00 check-in).
+   */
+  createFromBooking(dto: BookingTriggerDto): Promise<HousekeepingTask> {
+    // Deadline: check-in date at 13:30 local time
+    const deadline = new Date(`${dto.checkInDate}T13:30:00`);
+
+    const bookingRef = dto.bookingId ? ` #${dto.bookingId}` : '';
+    const guestNote = dto.bookingCustomer
+      ? `Auto-created for booking${bookingRef}. Guest: ${dto.bookingCustomer}. Check-in: ${dto.checkInDate}.`
+      : `Auto-created for check-in on ${dto.checkInDate}.`;
+
+    const task = this.taskRepository.create({
+      roomNumber: dto.roomNumber,
+      roomCondition: RoomCondition.PRE_CHECK_IN,
+      taskType: HousekeepingTaskType.CLEANING,
+      status: HousekeepingStatus.PENDING,
+      priority: Priority.HIGH,
+      deadline,
+      notes: guestNote,
+    });
+    return this.taskRepository.save(task);
   }
 }

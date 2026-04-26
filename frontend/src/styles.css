@@ -2548,6 +2548,60 @@ td {
   }
 }
 
+/* ── Room Service Status Pills ────────────────────────────────────────── */
+.rs-status-pending        { background: #fff4d6; color: #6a4b00; }
+.rs-status-in-progress    { background: #dff3ff; color: #0b4d73; }
+.rs-status-cleaned        { background: #e6f9ee; color: #17643f; }
+.rs-status-inspected      { background: #e8ecf4; color: #334155; }
+.rs-status-open           { background: #ffe4e8; color: #8a2431; }
+.rs-status-assigned       { background: #fff4d6; color: #6a4b00; }
+.rs-status-resolved       { background: #e6f9ee; color: #17643f; }
+.rs-status-closed         { background: #e8ecf4; color: #334155; }
+.rs-status-low            { background: #e6f9ee; color: #17643f; }
+.rs-status-medium         { background: #fff4d6; color: #6a4b00; }
+.rs-status-high           { background: #ffe4e8; color: #8a2431; }
+.rs-status-housekeeper    { background: #dff3ff; color: #0b4d73; }
+.rs-status-maintenance-staff { background: #f3ecff; color: #4c2a91; }
+.rs-status-active         { background: #e6f9ee; color: #17643f; }
+.rs-status-inactive       { background: #e8ecf4; color: #334155; }
+
+/* ── Housekeeping & Maintenance panel tab nav ─────────────────────────────── */
+.hm-tab-nav {
+  display: flex;
+  gap: 4px;
+  margin-top: 20px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0;
+}
+
+.hm-tab {
+  padding: 8px 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  text-decoration: none;
+  border-radius: 6px 6px 0 0;
+  border: 1px solid transparent;
+  border-bottom: none;
+  transition: color 0.15s, background 0.15s;
+  position: relative;
+  bottom: -2px;
+}
+
+.hm-tab:hover {
+  color: #1e3a5f;
+  background: #f1f5f9;
+}
+
+.hm-tab.active {
+  color: #1e3a5f;
+  background: #fff;
+  border-color: #e2e8f0;
+  border-bottom-color: #fff;
+}
+
+.hm-tab-content {
+  margin-top: 0;
 .ai-assistant {
   position: fixed;
   right: 24px;

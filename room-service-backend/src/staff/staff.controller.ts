@@ -24,7 +24,7 @@ export class StaffController {
   constructor(private readonly staffService: StaffService) {}
 
   @Post()
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'MANAGER')
   create(@Body() dto: CreateStaffDto) {
     // dto.role is validated to only accept HOUSEKEEPER or MAINTENANCE_STAFF
     return this.staffService.create(dto);
@@ -43,14 +43,14 @@ export class StaffController {
   }
 
   @Put(':id')
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'MANAGER')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateStaffDto) {
     return this.staffService.update(id, dto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Roles('ADMIN', 'MANAGER')
+  @Roles('SUPER_ADMIN', 'MANAGER')
   remove(@Param('id', ParseIntPipe) id: number) {
     // Only deletes users whose role is HOUSEKEEPER or MAINTENANCE_STAFF
     return this.staffService.remove(id);

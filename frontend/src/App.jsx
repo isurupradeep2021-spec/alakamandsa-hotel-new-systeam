@@ -15,6 +15,7 @@ import RoomManagementPage from "./pages/RoomManagementPage";
 import StaffPage from "./pages/StaffPage";
 import TableReservationsPage from "./pages/TableReservationsPage";
 import ViewRoomsPage from "./pages/ViewRoomsPage";
+import HousekeepingMaintenancePage from "./pages/HousekeepingMaintenancePage";
 
 function App() {
   return (
@@ -155,6 +156,19 @@ function App() {
         />
 
         <Route path="/profile" element={<ProfilePage />} />
+
+        <Route
+          path="/housekeeping-maintenance/*"
+          element={
+            <ProtectedRoute allowedRoles={["SUPER_ADMIN", "MANAGER", "HOUSEKEEPER", "MAINTENANCE_STAFF"]}>
+              <HousekeepingMaintenancePage />
+            </ProtectedRoute>
+          }
+        />
+        {/* Legacy redirects */}
+        <Route path="/housekeeping" element={<Navigate to="/housekeeping-maintenance/housekeeping-tickets" replace />} />
+        <Route path="/maintenance" element={<Navigate to="/housekeeping-maintenance/maintenance-tickets" replace />} />
+        <Route path="/room-service-staff" element={<Navigate to="/housekeeping-maintenance/staff" replace />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />

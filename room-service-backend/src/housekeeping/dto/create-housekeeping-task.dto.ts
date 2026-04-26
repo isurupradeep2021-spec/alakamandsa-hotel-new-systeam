@@ -1,9 +1,9 @@
 import {
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsInt,
   IsDateString,
   Length,
 } from 'class-validator';
@@ -19,10 +19,6 @@ export class CreateHousekeepingTaskDto {
   @IsString()
   @Length(1, 20)
   roomNumber: string;
-
-  @IsOptional()
-  @IsInt()
-  floor?: number;
 
   @IsEnum(RoomCondition)
   roomCondition: RoomCondition;

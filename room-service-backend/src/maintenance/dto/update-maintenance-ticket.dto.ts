@@ -9,10 +9,6 @@ export class UpdateMaintenanceTicketDto {
   roomNumber?: string;
 
   @IsOptional()
-  @IsInt()
-  floor?: number;
-
-  @IsOptional()
   @IsEnum(FacilityType)
   facilityType?: FacilityType;
 
