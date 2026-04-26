@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { UserAccount, StaffDetail } from './staff/staff.entity';
+import { StaffContact } from './staff/staff-contact.entity';
 import {
   HousekeepingTask,
   HousekeepingStatus,
@@ -29,6 +30,8 @@ export class SeedService implements OnApplicationBootstrap {
     private readonly housekeepingRepo: Repository<HousekeepingTask>,
     @InjectRepository(MaintenanceTicket)
     private readonly maintenanceRepo: Repository<MaintenanceTicket>,
+    @InjectRepository(StaffContact)
+    private readonly staffContactRepo: Repository<StaffContact>,
   ) {}
 
   async onApplicationBootstrap() {
@@ -44,21 +47,21 @@ export class SeedService implements OnApplicationBootstrap {
     const password = await bcrypt.hash('Password@123', 10);
 
     // ── Housekeepers ────────────────────────────────────────────────────────
-    const housekeeperSeed: Array<{ username: string; fullName: string; position: string; salary: number; rate: number }> = [
-      { username: 'nimalee_p', fullName: 'Nimalee Perera',     position: 'Senior Housekeeper',    salary: 48000, rate: 2000 },
-      { username: 'sanduni_w', fullName: 'Sanduni Wickrama',   position: 'Housekeeper',            salary: 42000, rate: 1750 },
-      { username: 'dilrukshi_f', fullName: 'Dilrukshi Fernando', position: 'Housekeeper',          salary: 42000, rate: 1750 },
-      { username: 'kumari_d',  fullName: 'Kumari Dissanayake', position: 'Room Attendant',         salary: 38000, rate: 1600 },
-      { username: 'chamari_j', fullName: 'Chamari Jayasinghe', position: 'Housekeeping Supervisor', salary: 55000, rate: 2300 },
+    const housekeeperSeed: Array<{ username: string; fullName: string; position: string; salary: number; rate: number; email: string }> = [
+      { username: 'nimalee_p',   fullName: 'Nimalee Perera',      position: 'Senior Housekeeper',     salary: 48000, rate: 2000, email: 'nimalee.perera@alakamandsa.lk'    },
+      { username: 'sanduni_w',   fullName: 'Sanduni Wickrama',    position: 'Housekeeper',             salary: 42000, rate: 1750, email: 'sanduni.wickrama@alakamandsa.lk'  },
+      { username: 'dilrukshi_f', fullName: 'Dilrukshi Fernando',  position: 'Housekeeper',             salary: 42000, rate: 1750, email: 'dilrukshi.fernando@alakamandsa.lk' },
+      { username: 'kumari_d',    fullName: 'Kumari Dissanayake',  position: 'Room Attendant',          salary: 38000, rate: 1600, email: 'kumari.dissanayake@alakamandsa.lk' },
+      { username: 'chamari_j',   fullName: 'Chamari Jayasinghe',  position: 'Housekeeping Supervisor', salary: 55000, rate: 2300, email: 'chamari.jayasinghe@alakamandsa.lk' },
     ];
 
     // ── Maintenance Staff ────────────────────────────────────────────────────
-    const maintenanceSeed: Array<{ username: string; fullName: string; position: string; salary: number; rate: number }> = [
-      { username: 'ruwan_s',   fullName: 'Ruwan Silva',        position: 'HVAC Technician',        salary: 60000, rate: 2500 },
-      { username: 'pradeep_k', fullName: 'Pradeep Kumara',     position: 'Electrician',            salary: 58000, rate: 2400 },
-      { username: 'asanka_r',  fullName: 'Asanka Rajapaksha',  position: 'Plumber',                salary: 54000, rate: 2250 },
-      { username: 'thilina_b', fullName: 'Thilina Bandara',    position: 'Maintenance Technician', salary: 50000, rate: 2100 },
-      { username: 'sampath_g', fullName: 'Sampath Gunasekara', position: 'General Maintenance',    salary: 46000, rate: 1900 },
+    const maintenanceSeed: Array<{ username: string; fullName: string; position: string; salary: number; rate: number; email: string }> = [
+      { username: 'ruwan_s',    fullName: 'Ruwan Silva',           position: 'HVAC Technician',        salary: 60000, rate: 2500, email: 'ruwan.silva@alakamandsa.lk'        },
+      { username: 'pradeep_k',  fullName: 'Pradeep Kumara',        position: 'Electrician',            salary: 58000, rate: 2400, email: 'pradeep.kumara@alakamandsa.lk'     },
+      { username: 'ishanka_s',  fullName: 'Ishanka Senevirathne',  position: 'Plumber',                salary: 54000, rate: 2250, email: 'ishanka@fcodelabs.com'             },
+      { username: 'thilina_b',  fullName: 'Thilina Bandara',       position: 'Maintenance Technician', salary: 50000, rate: 2100, email: 'thilina.bandara@alakamandsa.lk'    },
+      { username: 'sampath_g',  fullName: 'Sampath Gunasekara',    position: 'General Maintenance',    salary: 46000, rate: 1900, email: 'sampath.gunasekara@alakamandsa.lk' },
     ];
 
     const savedHousekeepers: UserAccount[] = [];
@@ -75,6 +78,7 @@ export class SeedService implements OnApplicationBootstrap {
           attendance: 22, overtimeHours: 4, absentDays: 0, status: 'ACTIVE', userId: user.id,
         }),
       );
+      await this.staffContactRepo.save(this.staffContactRepo.create({ userId: user.id, email: s.email }));
       savedHousekeepers.push(user);
     }
 
@@ -89,6 +93,7 @@ export class SeedService implements OnApplicationBootstrap {
           attendance: 21, overtimeHours: 6, absentDays: 1, status: 'ACTIVE', userId: user.id,
         }),
       );
+      await this.staffContactRepo.save(this.staffContactRepo.create({ userId: user.id, email: s.email }));
       savedMaintenance.push(user);
     }
 
@@ -107,7 +112,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: undefined,
       },
       {
-        roomNumber: '205', floor: 2, roomCondition: RoomCondition.OCCUPIED,
+        roomNumber: '102', floor: 1, roomCondition: RoomCondition.OCCUPIED,
         taskType: HousekeepingTaskType.TURNDOWN, status: HousekeepingStatus.IN_PROGRESS,
         priority: Priority.MEDIUM, staffId: savedHousekeepers[1].id,
         deadline: daysLater(0),
@@ -115,7 +120,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: undefined,
       },
       {
-        roomNumber: '312', floor: 3, roomCondition: RoomCondition.PRE_CHECK_IN,
+        roomNumber: '103', floor: 1, roomCondition: RoomCondition.PRE_CHECK_IN,
         taskType: HousekeepingTaskType.INSPECTION, status: HousekeepingStatus.CLEANED,
         priority: Priority.HIGH, staffId: savedHousekeepers[4].id,
         deadline: daysLater(1),
@@ -123,7 +128,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: 'Room cleaned and refreshed. Awaiting supervisor inspection.',
       },
       {
-        roomNumber: '418', floor: 4, roomCondition: RoomCondition.CHECKOUT,
+        roomNumber: '104', floor: 1, roomCondition: RoomCondition.CHECKOUT,
         taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.INSPECTED,
         priority: Priority.LOW, staffId: savedHousekeepers[2].id,
         deadline: daysAgo(1),
@@ -131,7 +136,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: 'Completed. All items checked against inventory.',
       },
       {
-        roomNumber: '507', floor: 5, roomCondition: RoomCondition.OCCUPIED,
+        roomNumber: '201', floor: 2, roomCondition: RoomCondition.OCCUPIED,
         taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.PENDING,
         priority: Priority.MEDIUM, staffId: savedHousekeepers[3].id,
         deadline: daysLater(0),
@@ -139,7 +144,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: undefined,
       },
       {
-        roomNumber: '210', floor: 2, roomCondition: RoomCondition.CHECKOUT,
+        roomNumber: '202', floor: 2, roomCondition: RoomCondition.CHECKOUT,
         taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.IN_PROGRESS,
         priority: Priority.HIGH, staffId: savedHousekeepers[1].id,
         deadline: daysLater(0),
@@ -147,7 +152,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: undefined,
       },
       {
-        roomNumber: '603', floor: 6, roomCondition: RoomCondition.PRE_CHECK_IN,
+        roomNumber: '203', floor: 2, roomCondition: RoomCondition.PRE_CHECK_IN,
         taskType: HousekeepingTaskType.TURNDOWN, status: HousekeepingStatus.PENDING,
         priority: Priority.MEDIUM, staffId: savedHousekeepers[0].id,
         deadline: daysLater(1),
@@ -155,7 +160,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: undefined,
       },
       {
-        roomNumber: '115', floor: 1, roomCondition: RoomCondition.OCCUPIED,
+        roomNumber: '301', floor: 3, roomCondition: RoomCondition.OCCUPIED,
         taskType: HousekeepingTaskType.INSPECTION, status: HousekeepingStatus.INSPECTED,
         priority: Priority.LOW, staffId: savedHousekeepers[4].id,
         deadline: daysAgo(2),
@@ -163,7 +168,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: 'All items in order. Mini-bar restocked.',
       },
       {
-        roomNumber: '320', floor: 3, roomCondition: RoomCondition.CHECKOUT,
+        roomNumber: '302', floor: 3, roomCondition: RoomCondition.CHECKOUT,
         taskType: HousekeepingTaskType.CLEANING, status: HousekeepingStatus.PENDING,
         priority: Priority.HIGH, staffId: savedHousekeepers[2].id,
         deadline: daysLater(0),
@@ -171,7 +176,7 @@ export class SeedService implements OnApplicationBootstrap {
         cleaningNotes: undefined,
       },
       {
-        roomNumber: '412', floor: 4, roomCondition: RoomCondition.OCCUPIED,
+        roomNumber: '303', floor: 3, roomCondition: RoomCondition.OCCUPIED,
         taskType: HousekeepingTaskType.TURNDOWN, status: HousekeepingStatus.CLEANED,
         priority: Priority.LOW, staffId: savedHousekeepers[3].id,
         deadline: daysLater(0),
@@ -183,28 +188,28 @@ export class SeedService implements OnApplicationBootstrap {
     // ── Maintenance Tickets ──────────────────────────────────────────────────
     const mTickets: Partial<MaintenanceTicket>[] = [
       {
-        roomNumber: '104', floor: 1, facilityType: FacilityType.AC,
+        roomNumber: '101', floor: 1, facilityType: FacilityType.AC,
         issueDescription: 'Air conditioning unit making a loud rattling noise and not cooling below 26°C.',
         status: MaintenanceStatus.ASSIGNED, priority: Priority.HIGH,
         staffId: savedMaintenance[0].id, deadline: daysLater(1),
         resolutionNotes: undefined, partsUsed: undefined,
       },
       {
-        roomNumber: '208', floor: 2, facilityType: FacilityType.PLUMBING,
+        roomNumber: '102', floor: 1, facilityType: FacilityType.PLUMBING,
         issueDescription: 'Bathroom tap dripping continuously. Guest reports water pooling on floor.',
         status: MaintenanceStatus.IN_PROGRESS, priority: Priority.HIGH,
         staffId: savedMaintenance[2].id, deadline: daysLater(0),
         resolutionNotes: undefined, partsUsed: undefined,
       },
       {
-        roomNumber: '315', floor: 3, facilityType: FacilityType.ELECTRICAL,
+        roomNumber: '103', floor: 1, facilityType: FacilityType.ELECTRICAL,
         issueDescription: 'Bedside lamp socket not working. Possible loose wiring in socket outlet.',
         status: MaintenanceStatus.OPEN, priority: Priority.MEDIUM,
         staffId: undefined, deadline: daysLater(2),
         resolutionNotes: undefined, partsUsed: undefined,
       },
       {
-        roomNumber: '401', floor: 4, facilityType: FacilityType.FURNITURE,
+        roomNumber: '104', floor: 1, facilityType: FacilityType.FURNITURE,
         issueDescription: 'Wardrobe door hinge broken. Door cannot close properly and is a safety hazard.',
         status: MaintenanceStatus.RESOLVED, priority: Priority.MEDIUM,
         staffId: savedMaintenance[3].id, deadline: daysAgo(1),
@@ -212,14 +217,14 @@ export class SeedService implements OnApplicationBootstrap {
         partsUsed: '2x 3-inch hinge pins, wood screws',
       },
       {
-        roomNumber: '502', floor: 5, facilityType: FacilityType.AC,
+        roomNumber: '201', floor: 2, facilityType: FacilityType.AC,
         issueDescription: 'AC thermostat unresponsive. Unit turns on but guest cannot change temperature.',
         status: MaintenanceStatus.ASSIGNED, priority: Priority.MEDIUM,
         staffId: savedMaintenance[0].id, deadline: daysLater(1),
         resolutionNotes: undefined, partsUsed: undefined,
       },
       {
-        roomNumber: '110', floor: 1, facilityType: FacilityType.PLUMBING,
+        roomNumber: '202', floor: 2, facilityType: FacilityType.PLUMBING,
         issueDescription: 'Shower head has low water pressure. Likely clogged filter.',
         status: MaintenanceStatus.RESOLVED, priority: Priority.LOW,
         staffId: savedMaintenance[2].id, deadline: daysAgo(3),
@@ -227,21 +232,21 @@ export class SeedService implements OnApplicationBootstrap {
         partsUsed: 'Descaling solution, replacement filter washer',
       },
       {
-        roomNumber: '217', floor: 2, facilityType: FacilityType.ELECTRICAL,
+        roomNumber: '203', floor: 2, facilityType: FacilityType.ELECTRICAL,
         issueDescription: 'Main room circuit breaker keeps tripping when multiple appliances are used simultaneously.',
         status: MaintenanceStatus.IN_PROGRESS, priority: Priority.HIGH,
         staffId: savedMaintenance[1].id, deadline: daysLater(0),
         resolutionNotes: undefined, partsUsed: undefined,
       },
       {
-        roomNumber: '606', floor: 6, facilityType: FacilityType.OTHER,
+        roomNumber: '301', floor: 3, facilityType: FacilityType.OTHER,
         issueDescription: 'Balcony sliding door lock faulty. Door cannot be secured from inside.',
         status: MaintenanceStatus.OPEN, priority: Priority.HIGH,
         staffId: undefined, deadline: daysLater(0),
         resolutionNotes: undefined, partsUsed: undefined,
       },
       {
-        roomNumber: '304', floor: 3, facilityType: FacilityType.FURNITURE,
+        roomNumber: '302', floor: 3, facilityType: FacilityType.FURNITURE,
         issueDescription: 'Desk chair wheel bracket cracked. Chair is unstable and unsafe to sit on.',
         status: MaintenanceStatus.CLOSED, priority: Priority.LOW,
         staffId: savedMaintenance[4].id, deadline: daysAgo(5),
@@ -249,7 +254,7 @@ export class SeedService implements OnApplicationBootstrap {
         partsUsed: 'Replacement office chair (spare stock)',
       },
       {
-        roomNumber: '509', floor: 5, facilityType: FacilityType.PLUMBING,
+        roomNumber: '303', floor: 3, facilityType: FacilityType.PLUMBING,
         issueDescription: 'Toilet flush mechanism not engaging properly. Requires two attempts to flush.',
         status: MaintenanceStatus.ASSIGNED, priority: Priority.MEDIUM,
         staffId: savedMaintenance[2].id, deadline: daysLater(1),
