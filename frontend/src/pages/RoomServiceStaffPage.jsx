@@ -18,6 +18,7 @@ const initialForm = {
   basicSalary: '',
   dailyRate: '',
   overtimeRate: '',
+  email: '',
 };
 
 const formatLabel = (value) => (value ? value.replaceAll('_', ' ') : '-');
@@ -84,6 +85,7 @@ export default function RoomServiceStaffPage({ embedded = false }) {
       basicSalary: member.staffDetail?.basicSalary ?? '',
       dailyRate: member.staffDetail?.dailyRate ?? '',
       overtimeRate: member.staffDetail?.overtimeRate ?? '',
+      email: member.email || '',
     });
     setError('');
     setMessage('');
@@ -115,6 +117,7 @@ export default function RoomServiceStaffPage({ embedded = false }) {
       basicSalary: form.basicSalary === '' ? undefined : Number(form.basicSalary),
       dailyRate: form.dailyRate === '' ? undefined : Number(form.dailyRate),
       overtimeRate: form.overtimeRate === '' ? undefined : Number(form.overtimeRate),
+      email: form.email.trim() || undefined,
     };
     try {
       if (editingMember) {
@@ -211,6 +214,7 @@ export default function RoomServiceStaffPage({ embedded = false }) {
                 <th>Username</th>
                 <th>Role</th>
                 <th>Position</th>
+                <th>Email</th>
                 <th>Basic Salary</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -234,6 +238,7 @@ export default function RoomServiceStaffPage({ embedded = false }) {
                       <StatusPill value={member.role} />
                     </td>
                     <td>{member.staffDetail?.position || '-'}</td>
+                    <td>{member.email || <span style={{ color: '#94a3b8' }}>No email</span>}</td>
                     <td>{member.staffDetail?.basicSalary != null ? `Rs. ${Number(member.staffDetail.basicSalary).toFixed(2)}` : '-'}</td>
                     <td>
                       <StatusPill value={member.staffDetail?.status || 'ACTIVE'} />
@@ -357,6 +362,16 @@ export default function RoomServiceStaffPage({ embedded = false }) {
                     step="0.01"
                     value={form.overtimeRate}
                     onChange={(e) => setForm({ ...form, overtimeRate: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="rss-email">Email (for SLA alerts)</label>
+                  <input
+                    id="rss-email"
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="staff@example.com"
                   />
                 </div>
               </div>

@@ -80,6 +80,9 @@ export class HousekeepingTask {
   @Column({ name: 'completed_at', type: 'datetime', nullable: true })
   completedAt: Date;
 
+  @Column({ name: 'alert_sent', default: false })
+  alertSent: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

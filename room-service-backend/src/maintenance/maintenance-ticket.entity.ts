@@ -72,6 +72,9 @@ export class MaintenanceTicket {
   @Column({ name: 'resolved_at', type: 'datetime', nullable: true })
   resolvedAt: Date;
 
+  @Column({ name: 'alert_sent', default: false })
+  alertSent: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 

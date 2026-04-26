@@ -1,4 +1,4 @@
-import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsEmail, IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 import { StaffRole } from '../staff.entity';
 
 export class UpdateStaffDto {
@@ -29,5 +29,9 @@ export class UpdateStaffDto {
   @IsNumber()
   @Min(0)
   overtimeRate?: number;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
 }
 
