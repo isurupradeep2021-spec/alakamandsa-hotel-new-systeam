@@ -68,3 +68,16 @@ Password for all seeded users: `Password@123`
 - `GET /api/users/me`
 - `PUT /api/users/me`
 - `POST /api/users/me/change-password`
+
+
+
+
+
+
+npm init -y
+npm install express mongoose cors dotenv
+install nodemon --save-dev
+Nom run dev  
+npm install mongodb 
+npm run dev  
+npm create vite@latest
