@@ -35,7 +35,6 @@ export function AuthProvider({ children }) {
         setUser(null);
     };
 
-<<<<<<< Updated upstream
   const updateUser = (updates) => {
     const next = { ...user, ...updates };
     localStorage.setItem('user', JSON.stringify(next));
@@ -45,10 +44,6 @@ export function AuthProvider({ children }) {
 
   const value = useMemo(() => ({ user, login, logout, updateUser }), [user]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-=======
-    const value = useMemo(() => ({ user, login, logout }), [user]);
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
->>>>>>> Stashed changes
 }
 
 export const useAuth = () => useContext(AuthContext);

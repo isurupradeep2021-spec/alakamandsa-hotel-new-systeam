@@ -568,22 +568,12 @@ function RoomManagementPage() {
                                                         Delete
                                                     </button>
                                                     {booking.bookingStatus === "BOOKED" && (
-                                                        <button
-                                                            className="btn small"
-                                                            type="button"
-                                                            disabled={bookingActionLoadingId === booking.id}
-                                                            onClick={() => handleCheckIn(booking.id)}
-                                                        >
+                                                        <button className="btn small" type="button" disabled={bookingActionLoadingId === booking.id} onClick={() => handleCheckIn(booking.id)}>
                                                             Check-in
                                                         </button>
                                                     )}
                                                     {booking.bookingStatus === "CHECKED_IN" && (
-                                                        <button
-                                                            className="btn small"
-                                                            type="button"
-                                                            disabled={bookingActionLoadingId === booking.id}
-                                                            onClick={() => handleCheckOut(booking.id)}
-                                                        >
+                                                        <button className="btn small" type="button" disabled={bookingActionLoadingId === booking.id} onClick={() => handleCheckOut(booking.id)}>
                                                             Check-out
                                                         </button>
                                                     )}
