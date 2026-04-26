@@ -73,3 +73,5 @@ export const deleteEventBooking = (id) => http.delete(`/event-bookings/${id}`);
 export const eventAnalytics = () => http.get("/event-bookings/analytics");
 export const downloadEventBookingPdf = (id) =>
   http.get(`/event-bookings/${id}/pdf`, { responseType: "blob" });
+
+export const askChatbot = (payload) => http.post("/chatbot/ask", payload);

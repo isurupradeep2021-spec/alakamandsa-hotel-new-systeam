@@ -35,29 +35,48 @@ function LoginPage() {
 
   return (
     <div className="login-wrap">
-      <div className="login-card">
-        <h1>Hotel Payroll Management</h1>
-        <p>Sign in with your account</p>
-        <form onSubmit={submit}>
-          <input
-            placeholder="Username"
-            value={form.username}
-            onChange={(event) => setForm({ ...form, username: event.target.value })}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={(event) => setForm({ ...form, password: event.target.value })}
-            required
-          />
-          {error && <div className="error">{error}</div>}
-          <button className="btn" type="submit">
-            Login
-          </button>
-        </form>
-        <small>Demo password for seeded users: Password@123</small>
+      <div className="login-lux-stage">
+        <div className="login-lux-backdrop" />
+        <div className="login-lux-orb login-lux-orb-one" />
+        <div className="login-lux-orb login-lux-orb-two" />
+        <div className="login-lux-grid" />
+
+        <section className="login-lux-panel">
+          <div className="login-lux-shine" />
+          <div className="login-lux-head">
+            <span className="login-lux-mark">ALAKAMANDA</span>
+            <h1>AI Assistant</h1>
+          </div>
+
+          <form onSubmit={submit}>
+            <label className="login-field">
+              <span>Username</span>
+              <input
+                placeholder="Enter username"
+                value={form.username}
+                onChange={(event) => setForm({ ...form, username: event.target.value })}
+                required
+              />
+            </label>
+
+            <label className="login-field">
+              <span>Password</span>
+              <input
+                type="password"
+                placeholder="Enter password"
+                value={form.password}
+                onChange={(event) => setForm({ ...form, password: event.target.value })}
+                required
+              />
+            </label>
+
+            {error && <div className="error">{error}</div>}
+
+            <button className="btn login-submit" type="submit">
+              Enter
+            </button>
+          </form>
+        </section>
       </div>
     </div>
   );
