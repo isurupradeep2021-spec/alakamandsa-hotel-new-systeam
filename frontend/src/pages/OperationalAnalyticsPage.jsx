@@ -280,28 +280,30 @@ export default function OperationalAnalyticsPage({ embedded = false }) {
                 </div>
 
                 {mt.recurringRooms?.length > 0 && (
-                  <div className="oa-chart-card oa-chart-card--wide">
-                    <h3>Recurring Faults — Top Rooms</h3>
-                    <table className="oa-table">
-                      <thead>
-                        <tr>
-                          <th>Room</th>
-                          <th>Tickets</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {mt.recurringRooms.map((r) => (
-                          <tr key={r.room}>
-                            <td>{r.room}</td>
-                            <td>
-                              <span className="oa-badge oa-badge--red">
-                                {r.count}
-                              </span>
-                            </td>
+                  <div className="oa-charts-row">
+                    <div className="oa-chart-card oa-chart-card--wide">
+                      <h3>Recurring Faults — Top Rooms</h3>
+                      <table className="oa-table">
+                        <thead>
+                          <tr>
+                            <th>Room</th>
+                            <th>Tickets</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {mt.recurringRooms.map((r) => (
+                            <tr key={r.room}>
+                              <td>{r.room}</td>
+                              <td>
+                                <span className="oa-badge oa-badge--red">
+                                  {r.count}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
 
