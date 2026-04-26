@@ -97,8 +97,12 @@ export class AnalyticsService {
     // Breakdown by priority
     const byPriority = this.countByField(tasks, 'priority');
 
-    // Staff workload (completed tasks per staffId)
-    const staffWorkload = this.countByField(completed, 'staffId');
+    // Staff workload (completed tasks per staff name)
+    const staffWorkload = completed.reduce<Record<string, number>>((acc, t) => {
+      const name = (t.staff as any)?.fullName ?? `Staff #${t.staffId ?? 'Unassigned'}`;
+      acc[name] = (acc[name] ?? 0) + 1;
+      return acc;
+    }, {});
 
     return {
       total,
@@ -155,8 +159,12 @@ export class AnalyticsService {
     // Breakdown by priority
     const byPriority = this.countByField(tickets, 'priority');
 
-    // Staff workload
-    const staffWorkload = this.countByField(resolved, 'staffId');
+    // Staff workload (resolved tickets per staff name)
+    const staffWorkload = resolved.reduce<Record<string, number>>((acc, t) => {
+      const name = (t.staff as any)?.fullName ?? `Staff #${t.staffId ?? 'Unassigned'}`;
+      acc[name] = (acc[name] ?? 0) + 1;
+      return acc;
+    }, {});
 
     return {
       total,
