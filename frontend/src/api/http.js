@@ -6,7 +6,15 @@ const http = axios.create({
 
 http.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+  const requestPath = config.url ?? '';
+  const isAuthRequest = requestPath.startsWith('/auth/');
+
+  if (token && !isAuthRequest) {
+    config.headers.Authorization = `Bearer ${token}`;
+  } else if (config.headers?.Authorization) {
+    delete config.headers.Authorization;
+  }
+
   return config;
 });
 
