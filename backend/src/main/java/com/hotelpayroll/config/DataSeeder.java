@@ -11,10 +11,14 @@ import com.hotelpayroll.entity.Reservation;
 import com.hotelpayroll.entity.MealType;
 import com.hotelpayroll.entity.SeatingPreference;
 import com.hotelpayroll.entity.ReservationStatus;
+import com.hotelpayroll.entity.Room;
+import com.hotelpayroll.entity.RoomStatus;
+import com.hotelpayroll.entity.RoomType;
 import com.hotelpayroll.repository.MenuItemRepository;
 import com.hotelpayroll.repository.StaffRepository;
 import com.hotelpayroll.repository.UserRepository;
 import com.hotelpayroll.repository.ReservationRepository;
+import com.hotelpayroll.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import java.time.LocalDate;
@@ -31,6 +35,7 @@ public class DataSeeder implements CommandLineRunner {
     private final StaffRepository staffRepository;
     private final MenuItemRepository menuItemRepository;
     private final ReservationRepository reservationRepository;
+    private final RoomRepository roomRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -141,6 +146,66 @@ public class DataSeeder implements CommandLineRunner {
         upsertReservation("Dilini Perera", "dilini@gmail.com", "0778899001", "2026-04-28", MealType.DINNER, 3, SeatingPreference.OUTDOOR, "Birthday cake");
         upsertReservation("Hasitha Bandara", "hasitha@gmail.com", "0767788990", "2026-04-29", MealType.LUNCH, 2, SeatingPreference.INDOOR, "Fast service");
         upsertReservation("Sanduni Rajapaksha", "sanduni@gmail.com", "0714455667", "2026-04-29", MealType.DINNER, 6, SeatingPreference.OUTDOOR, "Large table for group");
+
+        seedRooms();
+    }
+
+    private void seedRooms() {
+        if (roomRepository.count() > 0) return;
+
+        // Floor 1 — Standard rooms (101–104)
+        upsertRoom("101", RoomType.STANDARD, 2,
+                "Cozy standard room with city view, queen bed, and en-suite bathroom.",
+                "8500.00", "10500.00");
+        upsertRoom("102", RoomType.STANDARD, 2,
+                "Standard room with garden view, twin beds, and modern amenities.",
+                "8500.00", "10500.00");
+        upsertRoom("103", RoomType.STANDARD, 2,
+                "Comfortable standard room on the first floor with a private balcony.",
+                "9000.00", "11000.00");
+        upsertRoom("104", RoomType.STANDARD, 2,
+                "Corner standard room with dual-aspect windows and a king bed.",
+                "9000.00", "11000.00");
+
+        // Floor 2 — Deluxe rooms (201–203)
+        upsertRoom("201", RoomType.DELUXE, 3,
+                "Spacious deluxe room with ocean view, king bed, and a separate living area.",
+                "14000.00", "17000.00");
+        upsertRoom("202", RoomType.DELUXE, 3,
+                "Elegant deluxe room featuring a rain shower, king bed, and premium minibar.",
+                "14000.00", "17000.00");
+        upsertRoom("203", RoomType.DELUXE, 3,
+                "Deluxe double room with panoramic garden view and plush king bed.",
+                "15000.00", "18000.00");
+
+        // Floor 3 — Suite rooms (301–302)
+        upsertRoom("301", RoomType.SUITE, 4,
+                "Luxury suite with separate bedroom, lounge, jacuzzi, and butler service.",
+                "28000.00", "33000.00");
+        upsertRoom("302", RoomType.SUITE, 4,
+                "Presidential suite with panoramic views, private dining area, and premium bar.",
+                "35000.00", "42000.00");
+
+        // Floor 3 — Family room (303)
+        upsertRoom("303", RoomType.FAMILY, 6,
+                "Spacious family room with two bedrooms, bunk beds for children, and a shared lounge.",
+                "22000.00", "26000.00");
+    }
+
+    private void upsertRoom(String roomNumber, RoomType roomType, int capacity,
+                            String description, String normalPrice, String weekendPrice) {
+        if (roomRepository.findByRoomNumberIgnoreCase(roomNumber).isPresent()) return;
+        roomRepository.save(Room.builder()
+                .roomNumber(roomNumber)
+                .roomType(roomType)
+                .roomStatus(RoomStatus.AVAILABLE)
+                .capacity(capacity)
+                .roomDescription(description)
+                .photoUrl("")
+                .totalRooms(1)
+                .normalPrice(new BigDecimal(normalPrice))
+                .weekendPrice(new BigDecimal(weekendPrice))
+                .build());
     }
 
     private void upsertMenuItem(String name,
