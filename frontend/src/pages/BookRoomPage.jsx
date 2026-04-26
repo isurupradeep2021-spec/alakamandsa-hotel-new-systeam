@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useLocation } from "react-router-dom";
 import { createRoomBooking, getMyRoomBookings, getRooms, requestRoomBookingCancellation } from "../api/service";
+import { triggerBookingHousekeeping } from "../api/roomService";
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 const ROOM_TYPE_GUEST_LIMITS = {
@@ -158,6 +159,16 @@ function BookRoomPage() {
             if (savedBooking?.id) {
                 setMyBookings((prev) => [savedBooking, ...prev.filter((item) => item.id !== savedBooking.id)]);
                 await downloadBookingQrPng(savedBooking);
+
+                // Auto-create a PRE_CHECK_IN housekeeping task — fire and forget
+                triggerBookingHousekeeping({
+                    roomNumber,
+                    checkInDate,
+                    bookingCustomer,
+                    bookingId: String(savedBooking.bookingSequence ?? savedBooking.id),
+                }).catch(() => {
+                    // Non-critical: silently swallow if NestJS backend is unavailable
+                });
             }
             setBookingMessage(`Booking created successfully for Room ${roomNumber}.`);
             setBookingForm({

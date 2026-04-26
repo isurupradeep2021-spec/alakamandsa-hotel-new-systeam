@@ -44,3 +44,11 @@ export const updateRoomServiceStaff = (id, payload) =>
   roomServiceHttp.put(`/staff/${id}`, payload);
 export const deleteRoomServiceStaff = (id) =>
   roomServiceHttp.delete(`/staff/${id}`);
+
+/**
+ * Fired automatically after a room booking is confirmed.
+ * Creates an unassigned PRE_CHECK_IN housekeeping task with HIGH priority.
+ * @param {{ roomNumber: string, checkInDate: string, bookingCustomer?: string, bookingId?: string }} payload
+ */
+export const triggerBookingHousekeeping = (payload) =>
+  roomServiceHttp.post("/housekeeping/booking-trigger", payload);
