@@ -7,6 +7,6 @@ import { RolesGuard } from './roles.guard';
 @Module({
   imports: [TypeOrmModule.forFeature([UserAccount])],
   providers: [JwtAuthGuard, RolesGuard],
-  exports: [JwtAuthGuard, RolesGuard],
+  exports: [JwtAuthGuard, RolesGuard, TypeOrmModule],
 })
 export class AuthModule {}
